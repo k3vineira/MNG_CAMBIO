@@ -51,7 +51,7 @@
           <li class="nav-item mt-2"><hr class="border-secondary mx-2 my-1"></li>
 
           <li class="nav-item">
-            <button class="nav-link text-white w-100 d-flex justify-content-between align-items-center {% if request.resolver_match.url_name not in 'mis_reservas_usuario mis_cancelaciones_usuario mis_rechazos mis_comprobantes mis_facturas' %}collapsed opacity-75{% else %}text-success fw-bold{% endif %}" 
+            <button type="button" class="nav-link text-white w-100 d-flex justify-content-between align-items-center {% if request.resolver_match.url_name not in 'mis_reservas_usuario mis_cancelaciones_usuario mis_rechazos mis_comprobantes mis_facturas' %}collapsed opacity-75{% else %}text-success fw-bold{% endif %}" 
                     data-bs-toggle="collapse" data-bs-target="#menuViajes" aria-expanded="{% if 'mis_reservas_usuario' in request.resolver_match.url_name or 'mis_cancelaciones_usuario' in request.resolver_match.url_name or 'mis_rechazos' in request.resolver_match.url_name or 'mis_comprobantes' in request.resolver_match.url_name or 'mis_facturas' in request.resolver_match.url_name %}true{% else %}false{% endif %}">
               <div class="d-flex align-items-center gap-2"><i class="bi bi-compass"></i> Mis Viajes</div>
               <i class="bi bi-chevron-down small"></i>
@@ -68,7 +68,7 @@
           </li>
 
           <li class="nav-item">
-            <button class="nav-link text-white w-100 d-flex justify-content-between align-items-center {% if request.resolver_match.url_name not in 'mis_resenas blog_usuario mis_pqrs' %}collapsed opacity-75{% else %}text-success fw-bold{% endif %}" 
+            <button type="button" class="nav-link text-white w-100 d-flex justify-content-between align-items-center {% if request.resolver_match.url_name not in 'mis_resenas blog_usuario mis_pqrs' %}collapsed opacity-75{% else %}text-success fw-bold{% endif %}" 
                     data-bs-toggle="collapse" data-bs-target="#menuComunidad" aria-expanded="{% if 'mis_resenas' in request.resolver_match.url_name or 'blog_usuario' in request.resolver_match.url_name or 'mis_pqrs' in request.resolver_match.url_name %}true{% else %}false{% endif %}">
               <div class="d-flex align-items-center gap-2"><i class="bi bi-chat-left-heart"></i> Comunidad</div>
               <i class="bi bi-chevron-down small"></i>
