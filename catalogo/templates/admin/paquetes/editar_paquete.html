@@ -131,11 +131,16 @@
                         <i class="bi bi-activity me-2"></i>Actividades y Estado
                     </h5>
                     
-                    <div class="mb-4">
-                        <label class="form-label text-secondary small fw-bold mb-1">Actividades Incluidas *</label>
-                        {{ form.actividades }}
-                        <small class="text-muted d-block mt-1">Mantén presionado Ctrl (o Cmd) para seleccionar múltiples actividades.</small>
-                    </div>
+                   <div class="mb-4">
+    <label class="form-label text-secondary small fw-bold mb-2">Actividades Incluidas *</label>
+    
+    <!-- Contenedor con scroll si hay muchas actividades -->
+    <div class="p-3 border rounded-3 bg-light contenedor-actividades" style="max-height: 200px; overflow-y: auto;">
+        {{ form.actividades }}
+    </div>
+    
+    <small class="text-muted d-block mt-1">Selecciona las casillas de las actividades que aplican para este paquete.</small>
+</div>
 
                     <div class="p-3 bg-success bg-opacity-10 rounded-3 border border-success border-opacity-25">
                         <div class="form-check form-switch d-flex align-items-center justify-content-between p-0 m-0">
