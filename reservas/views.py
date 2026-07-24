@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect
 from catalogo.models import Paquete
 from .forms import CancelacionForm
+from datetime import date, timedelta
 from decimal import Decimal, InvalidOperation
 from django.core.mail import send_mail
 from datetime import datetime
@@ -541,9 +542,7 @@ def guardar_reserva(request, paquete_id):
     guardar_reserva.
     
     :param request: guardar reserva para un paquete específico.
-    
     :param paquete_id: guarda la reserva para el paquete con el ID especificado.
-    
     :return: guardar reserva y redirige a la página de mis reservas del usuario.
     """
     if request.method == 'POST':
@@ -559,6 +558,16 @@ def guardar_reserva(request, paquete_id):
         except ValueError:
             messages.error(request, "El formato de la fecha no es válido.")
             return redirect(f"/reservas/reservar/?paquete_id={paquete_id}")
+
+        fecha_minima = date.today() + timedelta(days=2)
+        if fecha_date < fecha_minima:
+            messages.error(
+                request, 
+                f"No es posible reservar para fechas pasadas ni con menos de 2 días de anticipación. "
+                f"La fecha mínima permitida es {fecha_minima.strftime('%d/%m/%Y')}."
+            )
+            return redirect(f"/reservas/reservar/?paquete_id={paquete_id}")
+      
 
         tarifa = Tarifa.objects.filter(
             paquete=paquete,
@@ -605,17 +614,18 @@ def guardar_reserva(request, paquete_id):
         mensaje_texto = f"Hola {nombre_cliente}, hemos recibido tu solicitud de reserva para {paquete.nombre}."
 
         html_bonito = plantilla_reserva_html(
-    nombre_cliente=nombre_cliente,
-    paquete=paquete.nombre,
-    fecha=reserva.fecha.strftime('%d/%m/%Y'),  
-    adultos=reserva.numero_adultos,
-    menores=reserva.numero_menores,
-    punto_encuentro="Por definir (Sujeto a confirmación)", 
-    hora_encuentro="08:00",
-    estado=reserva.estado,
-    reserva_id=reserva.id,
-    monto_total=str(reserva.monto_total)
-)
+            nombre_cliente=nombre_cliente,
+            paquete=paquete.nombre,
+            fecha=reserva.fecha.strftime('%d/%m/%Y'),  
+            adultos=reserva.numero_adultos,
+            menores=reserva.numero_menores,
+            punto_encuentro="Por definir (Sujeto a confirmación)", 
+            hora_encuentro="08:00",
+            estado=reserva.estado,
+            reserva_id=reserva.id,
+            monto_total=str(reserva.monto_total)
+        )
+        
         enviar_correo_html_monagua(
             asunto, mensaje_texto, request.user.email, html_bonito)
 
@@ -624,7 +634,6 @@ def guardar_reserva(request, paquete_id):
         return redirect('mis_reservas_usuario')
 
     return redirect('reservas')
-
 
 @login_required(login_url='login')
 def mis_facturas(request):

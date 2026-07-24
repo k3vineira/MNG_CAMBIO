@@ -6,7 +6,9 @@ Incluye Temporada, Categoría, Actividades, Paquete, Tarifa y PaqueteActividad.
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
-
+from django.core.validators import MinValueValidator
+from django.core.exceptions import ValidationError 
+import re
 
 class Temporada(models.Model):
     """
@@ -74,17 +76,23 @@ class Actividades(models.Model):
         """Retorna el nombre de la actividad como representación textual."""
         return self.nombre
 
-
+def validar_punto_encuentro(value):
+    val_str = str(value).strip()
+    if val_str.isdigit():
+        raise ValidationError("El punto de encuentro no puede ser solo números. Ingresa un lugar o dirección válida.")
+    if not re.search(r'[a-zA-ZáéíóúÁÉÍÓÚñÑ]', val_str):
+        raise ValidationError("El punto de encuentro debe incluir texto o el nombre de un lugar.")
+    
 class Paquete(models.Model):
     """
     Paquete turístico ofrecido por Monagua, conformado por actividades y con tarifas por temporada.
     """
-    imagen = models.ImageField(upload_to='destinos/', null=True, blank=True)
+    imagen = models.ImageField(upload_to='destinos/', verbose_name='Imagen del Destino')
     nombre = models.CharField(max_length=100, verbose_name='Nombre del Paquete')
     descripcion = models.TextField(verbose_name='Descripción')
-    dias_duracion = models.PositiveIntegerField(verbose_name='Días de Duración', default=1)
-    noches_duracion = models.PositiveIntegerField(verbose_name='Noches de Duración', default=0)
-    punto_encuentro = models.CharField(max_length=200)
+    dias_duracion = models.PositiveIntegerField(verbose_name='Días de Duración', default=1,validators=[MinValueValidator(1, message="Los días de duración deben ser al menos 1.")])
+    noches_duracion = models.PositiveIntegerField(verbose_name='Noches de Duración', default=1,validators=[MinValueValidator(1, message="Las noches de duración deben ser al menos 1.")])
+    punto_encuentro = models.CharField(max_length=200, validators=[validar_punto_encuentro])
     hora_encuentro = models.TimeField()
     categoria = models.ForeignKey(Categoria, models.CASCADE, related_name='paquetes')
     actividades = models.ManyToManyField('Actividades', through='PaqueteActividad')
