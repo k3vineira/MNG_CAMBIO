@@ -84,12 +84,26 @@ def enviar_comprobante(request):
 
 @requiere_autenticacion
 def mis_comprobantes(request):
-    """Usuario ve el historial de sus comprobantes."""
-    comprobantes = ComprobantePago.objects.filter(usuario=request.user)
+    """Usuario ve el historial de sus comprobantes optimizado."""
+    from django.db.models import Sum, DecimalField
+    from django.db.models.functions import Coalesce, Cast
+
+    comprobantes = ComprobantePago.objects.filter(usuario=request.user)\
+        .select_related('reserva', 'reserva__paquete')\
+        .order_by('-fecha_envio')
+        
+    monto_aprobado = comprobantes.filter(estado='aprobado').aggregate(
+        total=Sum(Coalesce(
+            'monto',
+            Cast('reserva__monto_total', DecimalField(max_digits=12, decimal_places=2)),
+            output_field=DecimalField(max_digits=12, decimal_places=2)
+        ))
+    )['total'] or 0
+
     context = {
         'comprobantes':     comprobantes,
         'total_pendientes': comprobantes.filter(estado='pendiente').count(),
-        'total_aprobados':  sum(p.monto or (p.reserva.monto_total if p.reserva else 0) for p in comprobantes.filter(estado='aprobado').select_related('reserva')),
+        'total_aprobados':  monto_aprobado,
         'total_rechazados': comprobantes.filter(estado='rechazado').count(),
     }
     return render(request, 'pagos/mis_comprobantes.html', context)

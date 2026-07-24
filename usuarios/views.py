@@ -38,31 +38,38 @@ def index_turista(request):
 
 @requiere_autenticacion
 def dashboard_turista(request):
-    """Renderiza el tablero de control del turista (Dashboard estadístico)."""
+    """Renderiza el tablero de control del turista (Dashboard estadístico) de manera optimizada."""
     if request.user.is_staff:
         return redirect('dashboard')
 
     from reservas.models import Reserva
     from pagos.models import ComprobantePago
     from comunidad.models import Comentario, PQRS
-    from django.db.models import Sum
+    from django.db.models import Sum, Count, Q, DecimalField
+    from django.db.models.functions import Coalesce, Cast
 
-    # Calculate stats for the dashboard
-    from django.db.models import Count, Q
-    total_invertido = ComprobantePago.objects.filter(usuario=request.user, estado='aprobado').aggregate(Sum('monto'))['monto__sum'] or 0
-    total_comentarios = Comentario.objects.filter(usuario=request.user).count()
-    total_pqrs = PQRS.objects.filter(cliente__usuario=request.user).count()
-
+    # 1 consulta agregada para todas las estadísticas de reservas
     res_stats = Reserva.objects.filter(usuario=request.user).aggregate(
         total=Count('id'),
         confirmadas=Count('id', filter=Q(estado='confirmada')),
         pendientes=Count('id', filter=Q(estado='pendiente')),
         canceladas=Count('id', filter=Q(estado='cancelada'))
     )
-    total_reservas = res_stats['total']
-    reservas_confirmadas = res_stats['confirmadas']
-    reservas_pendientes = res_stats['pendientes']
-    reservas_canceladas = res_stats['canceladas']
+    total_reservas = res_stats['total'] or 0
+    reservas_confirmadas = res_stats['confirmadas'] or 0
+    reservas_pendientes = res_stats['pendientes'] or 0
+    reservas_canceladas = res_stats['canceladas'] or 0
+
+    total_invertido = ComprobantePago.objects.filter(usuario=request.user, estado='aprobado').aggregate(
+        total=Sum(Coalesce(
+            'monto',
+            Cast('reserva__monto_total', DecimalField(max_digits=12, decimal_places=2)),
+            output_field=DecimalField(max_digits=12, decimal_places=2)
+        ))
+    )['total'] or 0
+
+    total_comentarios = Comentario.objects.filter(usuario=request.user).count()
+    total_pqrs = PQRS.objects.filter(cliente__usuario=request.user).count()
 
     tasa_confirmacion = int(reservas_confirmadas / total_reservas * 100) if total_reservas > 0 else 0
     ultimas_reservas = Reserva.objects.filter(usuario=request.user).select_related('paquete').order_by('-fecha_registro')[:5]
@@ -585,27 +592,45 @@ def get_estadisticas_context(user, is_admin=False):
         comentarios = Comentario.objects.filter(usuario=user)
         pqrs_qs = PQRS.objects.filter(cliente__usuario=user)
 
-    # Basic KPI metrics
-    total_invertido = pagos.filter(estado='aprobado').aggregate(Sum('monto'))['monto__sum'] or 0
-    total_reservas = reservas.count()
+    from django.db.models import Q, DecimalField
+    from django.db.models.functions import Coalesce, Cast
+
+    # Basic KPI metrics (optimizado con agregación en BD)
+    today = datetime.date.today()
+    total_invertido = pagos.filter(estado='aprobado').aggregate(
+        total=Sum(Coalesce(
+            'monto',
+            Cast('reserva__monto_total', DecimalField(max_digits=12, decimal_places=2)),
+            output_field=DecimalField(max_digits=12, decimal_places=2)
+        ))
+    )['total'] or 0
+
+    res_metrics = reservas.aggregate(
+        total=Count('id'),
+        confirmadas=Count('id', filter=Q(estado='confirmada', fecha__gte=today)),
+        completadas=Count('id', filter=Q(estado='confirmada', fecha__lt=today)),
+        pendientes=Count('id', filter=Q(estado='pendiente')),
+        canceladas=Count('id', filter=Q(estado='cancelada'))
+    )
+    total_reservas = res_metrics['total'] or 0
+    reservas_confirmadas = res_metrics['confirmadas'] or 0
+    reservas_completadas = res_metrics['completadas'] or 0
+    reservas_pendientes = res_metrics['pendientes'] or 0
+    reservas_canceladas = res_metrics['canceladas'] or 0
+
     promedio_por_reserva = total_invertido / total_reservas if total_reservas > 0 else 0
     destinos_total = reservas.filter(estado='confirmada').values('paquete').distinct().count()
-    
-    reservas_confirmadas = reservas.filter(estado='confirmada').count()
-    reservas_pendientes = reservas.filter(estado='pendiente').count()
-    reservas_canceladas = reservas.filter(estado='cancelada').count()
-    reservas_completadas = 0
-    
-    # Calculate completed vs confirmed based on date
-    today = datetime.date.today()
-    reservas_completadas = reservas.filter(estado='confirmada', fecha__lt=today).count()
-    reservas_confirmadas = reservas.filter(estado='confirmada', fecha__gte=today).count()
 
     tasa_exito = int((reservas_confirmadas + reservas_completadas) / total_reservas * 100) if total_reservas > 0 else 0
     
-    pqrs_abiertas = pqrs_qs.filter(estado='abierto').count()
-    pqrs_en_gestion = pqrs_qs.filter(estado='en_proceso').count()
-    pqrs_cerradas = pqrs_qs.filter(estado='cerrado').count()
+    pqrs_metrics = pqrs_qs.aggregate(
+        abiertas=Count('id', filter=Q(estado='abierto')),
+        en_gestion=Count('id', filter=Q(estado='en_proceso')),
+        cerradas=Count('id', filter=Q(estado='cerrado'))
+    )
+    pqrs_abiertas = pqrs_metrics['abiertas'] or 0
+    pqrs_en_gestion = pqrs_metrics['en_gestion'] or 0
+    pqrs_cerradas = pqrs_metrics['cerradas'] or 0
     pqrs_total = pqrs_abiertas + pqrs_en_gestion + pqrs_cerradas
     pqrs_tasa_resolucion = int(pqrs_cerradas / pqrs_total * 100) if pqrs_total > 0 else 0
     
