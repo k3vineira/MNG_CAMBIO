@@ -19,43 +19,44 @@
     </button>
 
     <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 overflow-hidden mt-2 u-style-60eeacd2" 
-        aria-labelledby="dropdownPanelNotif">
-        
-        <li class="dropdown-header text-white fw-bold py-3 fs-6 bg-success d-flex align-items-center justify-content-between">
-            <span><i class="bi bi-bell me-2"></i>Notificaciones Recientes</span>
-            {% if contador_notificaciones > 0 %}
-                <span class="badge bg-white text-success small rounded-pill px-2">{{ contador_notificaciones }} nuevas</span>
-            {% endif %}
-        </li>
+    aria-labelledby="dropdownPanelNotif">
+    
+    <li class="dropdown-header text-white fw-bold py-3 fs-6 bg-success d-flex align-items-center justify-content-between">
+        <span><i class="bi bi-bell me-2"></i>Notificaciones </span>
+        {% if contador_notificaciones > 0 %}
+            <span class="badge bg-white text-success small rounded-pill px-2">{{ contador_notificaciones }} nuevas</span>
+        {% endif %}
+    </li>
 
-        <div class="u-style-b40b0ada">
-            {% if notificaciones_globales %}
-                {% for noti in notificaciones_globales %}
-                    <li>
-                        <a class="dropdown-item p-3 border-bottom d-block text-decoration-none {% if noti.leida %}opacity-50 bg-light{% endif %}" href="{% url 'marcar_leida' noti.id %}">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <span class="badge {% if noti.tipo == 'reserva' or noti.tipo == 'paquete' %}bg-success bg-opacity-10 text-success{% elif noti.tipo == 'pqrs' %}bg-primary bg-opacity-10 text-primary{% else %}bg-warning bg-opacity-15 text-dark{% endif %} text-uppercase px-2 py-1 rounded u-style-10b9dc21">
-                                    {{ noti.tipo }}
-                                </span>
-                                <div class="d-flex align-items-center gap-1">
-                                    {% if not noti.leida %}
-                                        <span class="p-1 bg-danger rounded-circle d-inline-block u-style-285b47d4"></span>
-                                    {% endif %}
-                                    <small class="text-muted u-style-dd8eb2f6">{{ noti.fecha_creacion|timesince }}</small>
-                                </div>
+    <!-- Contenedor con Scroll Y y altura máxima -->
+    <div class="u-style-b40b0ada overflow-y-auto" style="max-height: 350px;">
+        {% if notificaciones_globales %}
+            {% for noti in notificaciones_globales %}
+                <li>
+                    <a class="dropdown-item p-3 border-bottom d-block text-decoration-none {% if noti.leida %}opacity-50 bg-light{% endif %}" href="{% url 'marcar_leida' noti.id %}">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="badge {% if noti.tipo == 'reserva' or noti.tipo == 'paquete' %}bg-success bg-opacity-10 text-success{% elif noti.tipo == 'pqrs' %}bg-primary bg-opacity-10 text-primary{% else %}bg-warning bg-opacity-15 text-dark{% endif %} text-uppercase px-2 py-1 rounded u-style-10b9dc21">
+                                {{ noti.tipo }}
+                            </span>
+                            <div class="d-flex align-items-center gap-1">
+                                {% if not noti.leida %}
+                                    <span class="p-1 bg-danger rounded-circle d-inline-block u-style-285b47d4"></span>
+                                {% endif %}
+                                <small class="text-muted u-style-dd8eb2f6">{{ noti.fecha_creacion|timesince }}</small>
                             </div>
-                            <strong class="text-dark d-block text-truncate u-style-8e9648ec">{{ noti.titulo }}</strong>
-                            <p class="mb-0 text-secondary small text-wrap text-truncate u-style-12deccef">{{ noti.mensaje }}</p>
-                        </a>
-                    </li>
-                {% endfor %}
-            {% else %}
-                <li class="p-4 text-center text-muted small">
-                    <i class="bi bi-bell-slash d-block mb-2 fs-4 text-secondary"></i>No tienes alertas pendientes.
+                        </div>
+                        <strong class="text-dark d-block text-truncate u-style-8e9648ec">{{ noti.titulo }}</strong>
+                        <p class="mb-0 text-secondary small text-wrap text-truncate u-style-12deccef">{{ noti.mensaje }}</p>
+                    </a>
                 </li>
-            {% endif %}
-        </div>
-    </ul>
+            {% endfor %}
+        {% else %}
+            <li class="p-4 text-center text-muted small">
+                <i class="bi bi-bell-slash d-block mb-2 fs-4 text-secondary"></i>No tienes alertas pendientes.
+            </li>
+        {% endif %}
+    </div>
+</ul>
 </div>
 
 <script>
@@ -147,4 +148,4 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, true);
 });
-</script>
+</script>
