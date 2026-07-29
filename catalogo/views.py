@@ -5,7 +5,9 @@ from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from .models import Paquete, Actividades, Categoria, Tarifa, Temporada
 from django.db.models import Count, Q
 from django import forms
+from .forms import PaqueteForm
 from notificaciones.utils import crear_notificacion_sistema
+
 
  
 
@@ -105,10 +107,7 @@ class PaqueteListView(ListView):
 
 class PaqueteCreateView(CreateView):
     model = Paquete
-    fields = [
-        'imagen', 'nombre', 'descripcion', 'hora_encuentro',
-        'dias_duracion', 'noches_duracion', 'punto_encuentro', 'categoria', 'actividades'
-    ]
+    form_class = PaqueteForm
     template_name = 'admin/paquetes/agregar_paquete.html'
     success_url = reverse_lazy('listar_paquetes')
 

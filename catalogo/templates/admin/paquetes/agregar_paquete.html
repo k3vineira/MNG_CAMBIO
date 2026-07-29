@@ -124,18 +124,33 @@
                     <h5 class="fw-bold text-success mb-3 border-bottom pb-2">
                         <i class="bi bi-activity me-2"></i>Actividades y Estado
                     </h5>
-                    
-                   <div class="mb-4">
-    <label class="form-label text-secondary small fw-bold mb-2">Actividades Incluidas *</label>
+                 <div class="mb-4">
+    <label class="form-label text-secondary small fw-bold mb-2 d-flex justify-content-between align-items-center">
+        <span>Actividades Incluidas *</span>
+        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">Selección múltiple</span>
+    </label>
     
-    <!-- Contenedor con scroll si hay muchas actividades -->
-    <div class="p-3 border rounded-3 bg-light contenedor-actividades" style="max-height: 200px; overflow-y: auto;">
-        {{ form.actividades }}
+    <!-- Contenedor general -->
+    <div class="p-3 border border-2 border-secondary border-opacity-25 rounded-3 bg-white shadow-sm contenedor-actividades" style="max-height: 220px; overflow-y: auto;">
+        {% for widget in form.actividades %}
+            <!-- El label envuelve toda la tarjeta para que todo el recuadro sea seleccionable -->
+            <label for="{{ widget.id_for_label }}" class="d-flex align-items-center p-2 mb-2 rounded-2 border bg-light option-card w-100 cursor-pointer">
+                <input type="checkbox" name="{{ widget.data.name }}" value="{{ widget.data.value }}" id="{{ widget.id_for_label }}" class="form-check-input my-0 me-2" {% if widget.data.selected %}checked{% endif %}>
+                <span class="fw-semibold text-dark user-select-none">
+                    {{ widget.choice_label }}
+                </span>
+            </label>
+        {% empty %}
+            <p class="text-muted small m-0 text-center py-3">No hay actividades disponibles.</p>
+        {% endfor %}
     </div>
     
-    <small class="text-muted d-block mt-1">Selecciona las casillas de las actividades que aplican para este paquete.</small>
+    <small class="text-muted d-block mt-1">
+        <i class="bi bi-info-circle me-1"></i>Haz clic sobre cualquier casilla para incluir la actividad en el paquete.
+    </small>
 </div>
-                    <div class="p-3 bg-success bg-opacity-10 rounded-3 border border-success border-opacity-25">
+                    
+                         <div class="p-3 bg-success bg-opacity-10 rounded-3 border border-success border-opacity-25">
                         <div class="form-check form-switch d-flex align-items-center justify-content-between p-0 m-0">
                             <div>
                                 <label class="form-check-label fw-bold text-success" for="{{ form.estado.id_for_label }}">¿Paquete Activo?</label>

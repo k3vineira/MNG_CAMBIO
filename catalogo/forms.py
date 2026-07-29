@@ -60,7 +60,9 @@ class PaqueteForm(ModelForm):
             }),
             'hora_encuentro': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
             'categoria': forms.Select(attrs={'class': 'form-select'}),
-            'actividades': forms.CheckboxSelectMultiple(),
+            'actividades': forms.CheckboxSelectMultiple(attrs={
+            'class': 'form-check-input'
+            }),
             
         }
 
