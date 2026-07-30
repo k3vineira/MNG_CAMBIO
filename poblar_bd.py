@@ -10,7 +10,7 @@ from catalogo.models import Categoria, Actividades, Paquete, Temporada, Tarifa
 from usuarios.models import Usuario, Cliente, GuiaTuristico
 from pagos.models import ComprobantePago
 from promociones.models import Promocion
-from notificaciones.models import Notificacion
+from notificaciones.models import Auditoria
 import random
 from datetime import timedelta, date, datetime
 from django.utils import timezone

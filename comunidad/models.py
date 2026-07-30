@@ -49,32 +49,57 @@ class Blog(models.Model):
 
 
 class PQRS(models.Model):
-    """
-    Solicitud de Petición, Queja, Reclamo o Sugerencia enviada por un usuario.
-    """
+    """Solicitud de Petición, Queja, Reclamo o Sugerencia enviada por un
+    usuario."""
+
     TIPO_CHOICES = [
-        ('peticion',    'Petición'),
-        ('queja',       'Queja'),
-        ('reclamo',     'Reclamo'),
-        ('sugerencia',  'Sugerencia'),
+        ('peticion', 'Petición'),
+        ('queja', 'Queja'),
+        ('reclamo', 'Reclamo'),
+        ('sugerencia', 'Sugerencia'),
     ]
     ESTADO_CHOICES = [
-        ('abierto',    'Abierto'),
+        ('abierto', 'Abierto'),
         ('en_proceso', 'En Proceso'),
-        ('cerrado',    'Cerrado'),
+        ('cerrado', 'Cerrado'),
     ]
     cliente = models.ForeignKey(
-        'usuarios.Cliente', on_delete=models.CASCADE, related_name='pqrs', null=True, blank=True)
+        'usuarios.Cliente',
+        on_delete=models.CASCADE,
+        related_name='pqrs',
+        null=True,
+        blank=True,
+    )
     tipo = models.CharField(max_length=15, choices=TIPO_CHOICES)
     asunto = models.CharField(max_length=200)
     descripcion = models.TextField()
     estado = models.CharField(
-        max_length=15, choices=ESTADO_CHOICES, default='abierto')
+        max_length=15, choices=ESTADO_CHOICES, default='abierto'
+    )
     respuesta = models.TextField(blank=True)
     fecha = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name_plural = 'PQRS'
+
+    def __str__(self):
+        return f'{self.get_tipo_display()} - {self.asunto}'
+
+
+class Historial(models.Model):
+    """Guarda las respuestas o seguimiento histórico de una PQRS."""
+
+    pqrs = models.ForeignKey(
+        PQRS, on_delete=models.CASCADE, related_name='historiales'
+    )
+    fecha_respuesta = models.DateTimeField(auto_now_add=True)
+    respuesta = models.TextField()
+
+    class Meta:
+        verbose_name_plural = 'Historiales'
+
+    def __str__(self):
+        return f'Historial de PQRS #{self.pqrs.id}'
 
 
 class Comentario(models.Model):

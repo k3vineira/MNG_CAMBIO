@@ -26,7 +26,7 @@ from core.utils import (
 from django.contrib.messages.views import SuccessMessageMixin
 from django.http import HttpResponse
 from django.template.loader import render_to_string
-from notificaciones.models import Notificacion
+from notificaciones.models import Auditoria
 # =========================
 # RESERVAS ADMIN 
 # =========================
@@ -118,11 +118,11 @@ class ReservaUpdateView(UpdateView):
         nombre_cliente = reserva.usuario.first_name or reserva.usuario.username
         
         if reserva.estado in ['confirmada', 'cancelada']:
-            Notificacion.objects.create(
-                cliente=reserva.usuario,
-                titulo=f"Reserva {reserva.estado.upper()}",
-                mensaje=f"Tu reserva #{reserva.id} para el paquete '{reserva.paquete.nombre}' ha sido {reserva.estado}.",
-                tipo='reserva'
+            Auditoria.objects.create(
+                codigo_usuario=reserva.usuario,
+                acciones_realizada=f"Reserva {reserva.estado.upper()}",
+                tabla_afectada="Reserva",
+                observacion=f"Tu reserva #{reserva.id} para el paquete '{reserva.paquete.nombre}' ha sido {reserva.estado}."
             )
 
             if reserva.estado == 'confirmada':

@@ -4,7 +4,7 @@ Vistas para la gestión de notificaciones de usuario.
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
-from .models import Notificacion
+from .models import Auditoria
 
 @login_required
 def marcar_notificacion_leida(request, noti_id):
@@ -12,7 +12,7 @@ def marcar_notificacion_leida(request, noti_id):
     Marca una notificación como leída y redirige al módulo o vista exacta.
     """
    
-    noti = get_object_or_404(Notificacion, id=noti_id)
+    noti = get_object_or_404(Auditoria, id=noti_id)
     
     noti.leida = True
     noti.save()
@@ -74,15 +74,16 @@ def marcar_notificacion_leida(request, noti_id):
 @login_required
 def lista_notificaciones(request):
     """
-    Muestra el historial completo de notificaciones del usuario autenticado.
-
-    Args:
-        request (HttpRequest): Objeto de solicitud HTTP.
-
-    Returns:
-        HttpResponse: Página con la lista de notificaciones del usuario.
+    Obtiene las auditorías asociadas al usuario y las sirve en la interfaz como Notificaciones.
     """
-    notificaciones = Notificacion.objects.filter(cliente=request.user).order_by('-id')
-    return render(request, 'historial_completo.html', {
-        'notificaciones': notificaciones
-    })
+   
+    notificaciones = Auditoria.objects.filter(
+        codigo_usuario=request.user
+    ).order_by('-fecha', '-hora')
+
+
+    return render(
+        request,
+        'notificaciones.html',
+        {'notificaciones': notificaciones},
+    )

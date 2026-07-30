@@ -1,32 +1,32 @@
 """
-Modelo de datos para las notificaciones del sistema dirigidas a los usuarios.
+Modelo de datos para la auditoría del sistema registrada para los usuarios.
 """
 
-from django.db import models
 from django.conf import settings
+from django.db import models
 
-class Notificacion(models.Model):
-    """
-    Notificación generada por el sistema y asociada a un usuario específico.
-    Puede ser de tipo reserva, PQRS o sistema general.
-    """
-    TIPO_CHOICES = [
-        ('reserva', 'Reserva'),
-        ('pqrs', 'PQRS'),
-        ('sistema', 'Sistema'),
-    ]
 
-    # Vincula la notificación al usuario conectado
-    cliente = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    titulo = models.CharField(max_length=150)
-    mensaje = models.TextField()
-    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='sistema')
-    leida = models.BooleanField(default=False)
-    fecha_creacion = models.DateTimeField(auto_now_add=True)
+class Auditoria(models.Model):
+    """
+    Registro de auditoría del sistema sobre acciones realizadas por los usuarios.
+    """
+    acciones_realizada = models.CharField(max_length=255)
+    tabla_afectada = models.CharField(max_length=100)
+    fecha = models.DateField(auto_now_add=True)
+    hora = models.TimeField(auto_now_add=True)
+    observacion = models.TextField(blank=True, null=True)
+    valor_anterior = models.TextField(blank=True, null=True)
+    nuevo_valor = models.TextField(blank=True, null=True)
+    codigo_usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='auditorias',
+    )
 
     class Meta:
-        ordering = ['-fecha_creacion']
+        ordering = ['-fecha', '-hora']
+        verbose_name = 'Notificación'
+        verbose_name_plural = 'Notificaciones'
 
     def __str__(self):
-        """Retorna el título y el nombre de usuario como representación textual."""
-        return f"{self.titulo} - {self.cliente.username}"
+        return f'{self.acciones_realizada} - {self.codigo_usuario.username}'

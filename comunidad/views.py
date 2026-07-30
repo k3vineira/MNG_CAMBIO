@@ -8,7 +8,7 @@ from django.contrib import messages
 from core.decoradores import requiere_autenticacion, requiere_administrador
 from usuarios.models import Cliente
 from django.db.models import Count, Q
-from notificaciones.models import Notificacion
+from notificaciones.models import Auditoria
 from notificaciones.utils import crear_notificacion_sistema
 from django.core.paginator import Paginator
 
@@ -73,11 +73,11 @@ def contestar_pqrs(request, pqrs_id):
         pqr.save()  
 
         if pqr.cliente and pqr.cliente.usuario:
-            Notificacion.objects.create(
-                cliente=pqr.cliente.usuario,
-                titulo="PQRS Respondida",
-                mensaje=f"El administrador ha respondido a tu solicitud sobre: '{pqr.asunto or 'Tu PQRS'}'.",
-                tipo='pqrs'  
+            Auditoria.objects.create(
+                codigo_usuario=pqr.cliente.usuario,
+                acciones_realizada="PQRS Respondida",
+                tabla_afectada="PQRS",
+                observacion=f"El administrador ha respondido a tu solicitud sobre: '{pqr.asunto or 'Tu PQRS'}'.",
             )
         return redirect('listar_pqrs')
 
