@@ -42,7 +42,7 @@ def poblar_base_datos():
     print("Iniciando el poblado de la base de datos...")
     print("0. Limpiando la base de datos...")
     
-    Notificacion.objects.all().delete()
+    Auditoria.objects.all().delete()
     ComprobantePago.objects.all().delete()
     Promocion.objects.all().delete()
     Comentario.objects.all().delete()
@@ -577,36 +577,40 @@ def poblar_base_datos():
             fecha_fin=date(2026, 12, 31) - timedelta(days=random.randint(0, 180)),
             activa=random.choice([True, True, True, False])
         )
-
+# ─────────────────────────────────────────────
+    # 8. AUDITORÍA (Acciones del sistema)
     # ─────────────────────────────────────────────
-    # 8. NOTIFICACIONES
-    # ─────────────────────────────────────────────
-    print("8. Creando Notificaciones...")
-    notificaciones_data = [
-        ("Reserva confirmada", "Tu reserva ha sido confirmada exitosamente. ¡Prepárate para tu aventura!", "reserva"),
-        ("Nuevo paquete disponible", "Se ha agregado un nuevo paquete turístico que te puede interesar.", "sistema"),
-        ("Comprobante aprobado", "Tu comprobante de pago ha sido revisado y aprobado por la administración.", "reserva"),
-        ("Respuesta a tu PQRS", "Hemos respondido a tu solicitud PQRS. Revisa tu bandeja.", "pqrs"),
-        ("Promoción especial", "¡Hay una nueva promoción disponible! Aprovecha el descuento antes de que termine.", "sistema"),
-        ("Recordatorio de viaje", "Tu viaje está programado para los próximos días. No olvides preparar tu equipaje.", "reserva"),
-        ("Cancelación procesada", "Tu solicitud de cancelación ha sido procesada. Revisa los detalles.", "reserva"),
-        ("Bienvenido a Monagua", "¡Gracias por registrarte! Explora nuestros paquetes turísticos.", "sistema"),
-        ("Califica tu experiencia", "¿Ya regresaste de tu viaje? Cuéntanos cómo te fue.", "sistema"),
-        ("Actualización del sistema", "Hemos mejorado nuestra plataforma para brindarte una mejor experiencia.", "sistema"),
+    print("8. Creando registros de Auditoría...")
+    auditoria_data = [
+        ("Inicio de sesión exitoso", "usuarios_usuario", "El cliente inició sesión desde la web."),
+        ("Reserva realizada", "reservas_reserva", "Se registró una nueva reserva para paquete turístico."),
+        ("Comprobante de pago subido", "pagos_comprobantepago", "El usuario adjuntó comprobante de pago."),
+        ("PQRS enviada", "comunidad_pqrs", "Se generó una solicitud de PQRS en la plataforma."),
+        ("Perfil actualizado", "usuarios_cliente", "El usuario actualizó sus datos de contacto."),
+        ("Reserva cancelada", "reservas_cancelacion", "El cliente solicitó la cancelación de su reserva."),
+        ("Calificación agregada", "comunidad_calificacion", "El usuario valoró una actividad turística."),
+        ("Comentario publicado", "comunidad_comentario", "Se agregó un nuevo comentario en la sección del blog."),
+        ("Registro de usuario", "usuarios_usuario", "Creación de cuenta en la plataforma Monagua."),
+        ("Consulta de catálogo", "catalogo_paquete", "Búsqueda y visualización de paquetes turísticos.")
     ]
-    for titulo, mensaje, tipo in notificaciones_data:
-        usuario_destino = random.choice(clientes_creados).usuario
-        Notificacion.objects.create(
-            cliente=usuario_destino,
-            titulo=titulo,
-            mensaje=mensaje,
-            tipo=tipo,
-            leida=random.choice([True, False])
+
+    for accion, tabla, observacion in auditoria_data:
+        cliente_random = random.choice(clientes_creados)
+        # Obtenemos la instancia de User asociada al cliente
+        usuario_destino = cliente_random.usuario if hasattr(cliente_random, 'usuario') else cliente_random
+
+        Auditoria.objects.create(
+            codigo_usuario=usuario_destino,
+            acciones_realizada=accion,
+            tabla_afectada=tabla,
+            observacion=observacion,
+            valor_anterior=None,
+            nuevo_valor=None
         )
 
     # ─────────────────────────────────────────────
     print("\n" + "=" * 60)
-    print("[OK] Poblado de base de datos finalizado con exito!")
+    print("[OK] Poblado de base de datos finalizado con éxito!")
     print(f"   • {len(clientes_creados)} Clientes")
     print(f"   • {len(guias_creados)} Guías Turísticos")
     print(f"   • {len(categorias_creadas)} Categorías")
@@ -621,7 +625,7 @@ def poblar_base_datos():
     print(f"   • 10 Calificaciones")
     print(f"   • 10 Comentarios")
     print(f"   • 10 Promociones")
-    print(f"   • 10 Notificaciones")
+    print(f"   • 10 Registros de Auditoría")
     print("=" * 60)
 
 

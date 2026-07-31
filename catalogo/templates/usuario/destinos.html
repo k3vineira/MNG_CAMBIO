@@ -71,76 +71,85 @@
             <p class="text-muted">Encuentra el destino perfecto en Mongua.</p>
         </div>
         
-        <form method="GET" action="{% url 'destinos' %}" class="mx-auto" style="max-width: 900px;">
-            <div class="row g-3">
-                <div class="col-md-5">
-                    <div class="input-group input-group-lg shadow-sm">
-                        <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
-                        <input 
-                            type="text" 
-                            name="q" 
-                            class="form-control border-start-0 ps-0" 
-                            placeholder="¿cual destino de Monagua?" 
-                            value="{{ request.GET.q }}"
-                            list="lista-destinos"
-                            autocomplete="off">
-                        
-                   
-                        <datalist id="lista-destinos">
-                            {% for sug in destinos_sugerencias %}
-                                <option value="{{ sug.nombre }}"></option>
-                            {% endfor %}
-                        </datalist>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="input-group input-group-lg shadow-sm">
-                        <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-currency-dollar"></i></span>
-                        <input type="number" name="precio_max" class="form-control border-start-0 ps-0" placeholder="Precio máximo" value="{{ request.GET.precio_max }}">
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <button class="btn btn-success btn-lg w-100 shadow-sm fw-bold" type="submit">BUSCAR</button>
-                </div>
+      <form method="GET" action="{% url 'destinos' %}" class="mx-auto" style="max-width: 900px;">
+    <div class="row g-3">
+        <div class="col-md-5">
+            <div class="input-group input-group-lg shadow-sm">
+                <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                <input 
+                    type="text" 
+                    id="input-destino"
+                    name="q" 
+                    class="form-control border-start-0 ps-0" 
+                    placeholder="¿cuál destino de Monagua?" 
+                    value="{{ request.GET.q }}"
+                    list="lista-destinos"
+                    autocomplete="off">
+                
+                <datalist id="lista-destinos">
+                    {% for sug in destinos_sugerencias %}
+                        <option value="{{ sug.nombre }}"></option>
+                    {% endfor %}
+                </datalist>
             </div>
+            <!-- Mensaje de alerta en tiempo real -->
+            <div id="alerta-no-existe" class="text-danger small mt-1 fw-bold style-alert" style="display: none;">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i> Este destino o paquete no existe.
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="input-group input-group-lg shadow-sm">
+                <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-currency-dollar"></i></span>
+                <input type="number" name="precio_max" class="form-control border-start-0 ps-0" placeholder="Precio máximo" value="{{ request.GET.precio_max }}">
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <button class="btn btn-success btn-lg w-100 shadow-sm fw-bold" type="submit">BUSCAR</button>
+        </div>
+    </div>
 
-            <div class="row mt-4 justify-content-center">
-                <div class="col-md-9"> 
-                    <div class="input-group input-group-lg shadow-sm">
-                        <span class="input-group-text bg-white text-muted fs-5"><i class="bi bi-people-fill"></i></span>
-                        <select name="apto_menores" class="form-select fw-semibold text-dark fs-5" onchange="this.form.submit()" style="cursor: pointer;">
-                            <option value="" class="fw-normal text-muted">¿Viajas con menores? (Mostrar todos los planes)</option>
-                            <option value="si" {% if request.GET.apto_menores == 'si' %}selected{% endif %} class="text-success">¡Sí! Solo paquetes aptos para menores</option>
-                            <option value="no" {% if request.GET.apto_menores == 'no' %}selected{% endif %}>Solo adultos / No aptos para menores</option>
-                        </select>
-                    </div>
-                </div>
+    <div class="row mt-4 justify-content-center">
+        <div class="col-md-9"> 
+            <div class="input-group input-group-lg shadow-sm">
+                <span class="input-group-text bg-white text-muted fs-5"><i class="bi bi-people-fill"></i></span>
+                <select name="apto_menores" class="form-select fw-semibold text-dark fs-5" onchange="this.form.submit()" style="cursor: pointer;">
+                    <option value="" class="fw-normal text-muted">¿Viajas con menores? (Mostrar todos los planes)</option>
+                    <option value="si" {% if request.GET.apto_menores == 'si' %}selected{% endif %} class="text-success">¡Sí! Solo paquetes aptos para menores</option>
+                    <option value="no" {% if request.GET.apto_menores == 'no' %}selected{% endif %}>Solo adultos / No aptos para menores</option>
+                </select>
             </div>
+        </div>
+    </div>
 
-            <div class="row mt-3 justify-content-center">
-                <div class="col-md-9"> 
-                    <div class="input-group input-group-lg shadow-sm">
-                        <span class="input-group-text bg-white text-muted fs-5"><i class="bi bi-stars"></i></span>
-                        <select name="categoria" class="form-select fw-semibold text-dark fs-5" onchange="this.form.submit()" style="cursor: pointer;">
-                            <option value="" class="fw-normal text-muted">Filtrar por categoría (Mostrar todos los planes)</option>
-                            {% for cat in categorias %}
-                                <option value="{{ cat.id }}" {% if request.GET.categoria == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.nombre }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
+    <div class="row mt-3 justify-content-center">
+        <div class="col-md-9"> 
+            <div class="input-group input-group-lg shadow-sm">
+                <span class="input-group-text bg-white text-muted fs-5"><i class="bi bi-stars"></i></span>
+                <select name="categoria" class="form-select fw-semibold text-dark fs-5" onchange="this.form.submit()" style="cursor: pointer;">
+                    <option value="" class="fw-normal text-muted">Filtrar por categoría (Mostrar todos los planes)</option>
+                    {% for cat in categorias %}
+                        <option value="{{ cat.id }}" {% if request.GET.categoria == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.nombre }}</option>
+                    {% endfor %}
+                </select>
             </div>
+        </div>
+    </div>
 
-            <div class="mt-3 text-center text-md-start">
-                <a href="{% url 'destinos' %}" class="text-decoration-none small text-muted hover-success"><i class="bi bi-x-circle me-1"></i>Limpiar filtros</a>
-            </div>
-        </form>
+    <div class="mt-3 text-center text-md-start">
+        <a href="{% url 'destinos' %}" class="text-decoration-none small text-muted hover-success"><i class="bi bi-x-circle me-1"></i>Limpiar filtros</a>
+    </div>
+</form>
     </div>
 </section>
+<!-- ... tu código HTML anterior del formulario ... -->
+
     <section class="container my-5"> 
-        <div class="row g-4"> 
+        <div class="row g-4" id="contenedor-destinos"> 
             {% for destino in destinos %}
-                <div class="col-md-6 col-lg-4">
+                <!-- Le agregamos una clase 'tarjeta-destino' y un data-attribute con el nombre para filtrar en JS -->
+                <div class="col-md-6 col-lg-4 tarjeta-destino" data-nombre="{{ destino.nombre|lower }}">
                     <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden card-hover-lift" style="transition: all 0.2s ease;">
                         
                         <div class="ratio ratio-16x9 position-relative">
@@ -214,5 +223,41 @@
             {% endfor %}
         </div> 
     </section>
+
+    <!-- ⚠️ EL SCRIPT DEBE IR DENTRO DE CONTENT -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputDestino = document.getElementById('input-destino');
+            const alertaNoExiste = document.getElementById('alerta-no-existe');
+            const tarjetas = document.querySelectorAll('.tarjeta-destino');
+
+            if (inputDestino) {
+                inputDestino.addEventListener('input', function() {
+                    const valorEscrito = this.value.toLowerCase().trim();
+                    let Coincidencias = 0;
+
+                    tarjetas.forEach(tarjeta => {
+                        const nombreDestino = tarjeta.getAttribute('data-nombre') || tarjeta.innerText.toLowerCase();
+                        
+                        if (nombreDestino.includes(valorEscrito)) {
+                            tarjeta.style.display = ''; // Mostrar tarjeta
+                            Coincidencias++;
+                        } else {
+                            tarjeta.style.display = 'none'; // Ocultar tarjeta
+                        }
+                    });
+
+                    // Si no hay ninguna tarjeta visible y el usuario ha escrito algo
+                    if (Coincidencias === 0 && valorEscrito !== '') {
+                        alertaNoExiste.style.display = 'block';
+                        inputDestino.classList.add('is-invalid');
+                    } else {
+                        alertaNoExiste.style.display = 'none';
+                        inputDestino.classList.remove('is-invalid');
+                    }
+                });
+            }
+        });
+    </script>
 
 {% endblock %}

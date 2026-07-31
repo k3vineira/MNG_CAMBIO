@@ -374,7 +374,7 @@ def administrar_cancelaciones(request):
         
         cancelacion.reserva.save()
 
-        Notificacion.objects.create(
+        Auditoria.objects.create(
             cliente=cancelacion.reserva.usuario,
             titulo=f"Cancelación {cancelacion.estado.upper()}",
             mensaje=f"Tu solicitud de cancelación para la reserva #{cancelacion.reserva.id} ha sido {cancelacion.estado}.",
