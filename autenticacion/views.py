@@ -199,7 +199,9 @@ def registro_otp_verify_view(request):
         return redirect('registro')
 
     if request.method == 'POST':
-        otp_ingresado = request.POST.get('otp', '').strip()
+        otp_ingresado = request.P
+        
+        OST.get('otp', '').strip()
         if otp_ingresado == request.session['registro_otp']:
             # OTP correcto, crear usuario
             form = RegistroForm(request.session['registro_data'])
