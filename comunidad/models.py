@@ -4,7 +4,7 @@ Modelos de datos para la comunidad: Calificaciones, Blog, PQRS y Comentarios.
 
 from django.db import models
 from django.urls import reverse
-
+from django.conf import settings
 
 # Create your models here.
 
@@ -47,10 +47,8 @@ class Blog(models.Model):
         """Retorna el título del blog como representación textual."""
         return self.titulo
 
-
 class PQRS(models.Model):
-    """Solicitud de Petición, Queja, Reclamo o Sugerencia enviada por un
-    usuario."""
+    """Solicitud de Petición, Queja, Reclamo o Sugerencia enviada por un usuario."""
 
     TIPO_CHOICES = [
         ('peticion', 'Petición'),
@@ -76,7 +74,7 @@ class PQRS(models.Model):
     estado = models.CharField(
         max_length=15, choices=ESTADO_CHOICES, default='abierto'
     )
-    respuesta = models.TextField(blank=True)
+    # SE ELIMINA EL CAMPO 'respuesta' DIRECTO PARA EVITAR SOBREESCRITURA
     fecha = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -92,15 +90,21 @@ class Historial(models.Model):
     pqrs = models.ForeignKey(
         PQRS, on_delete=models.CASCADE, related_name='historiales'
     )
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
     fecha_respuesta = models.DateTimeField(auto_now_add=True)
     respuesta = models.TextField()
 
     class Meta:
         verbose_name_plural = 'Historiales'
+        ordering = ['fecha_respuesta']  
 
     def __str__(self):
         return f'Historial de PQRS #{self.pqrs.id}'
-
 
 class Comentario(models.Model):
     """Comentarios y reseñas de experiencias de usuarios."""

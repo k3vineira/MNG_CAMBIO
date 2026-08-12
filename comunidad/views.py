@@ -1,7 +1,7 @@
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.shortcuts import render, redirect
-from .models import PQRS, Blog
+from .models import PQRS, Blog , Historial
 from django.shortcuts import get_object_or_404
 from .forms import PqrsForm, BlogForm
 from django.contrib import messages
@@ -67,19 +67,36 @@ class PQRSListView(ListView):
 
 def contestar_pqrs(request, pqrs_id):
     pqr = get_object_or_404(PQRS, pk=pqrs_id)
+    
     if request.method == 'POST':
-        pqr.respuesta = request.POST.get('respuesta')
-        pqr.estado = 'cerrado'
-        pqr.save()  
+        texto_respuesta = request.POST.get('respuesta')
+        nuevo_estado = request.POST.get('estado', 'en_proceso')  # Recibe el estado o lo asigna en proceso/cerrado
 
-        if pqr.cliente and pqr.cliente.usuario:
-            Auditoria.objects.create(
-                codigo_usuario=pqr.cliente.usuario,
-                acciones_realizada="PQRS Respondida",
-                tabla_afectada="PQRS",
-                observacion=f"El administrador ha respondido a tu solicitud sobre: '{pqr.asunto or 'Tu PQRS'}'.",
+        if texto_respuesta and texto_respuesta.strip():
+            # 1. Guarda la nueva respuesta en la tabla Historial (Evita la sobreescritura)
+            Historial.objects.create(
+                pqrs=pqr,
+                usuario=request.user if request.user.is_authenticated else None,
+                respuesta=texto_respuesta.strip()
             )
-        return redirect('listar_pqrs')
+
+            # 2. Actualiza el estado general de la PQRS
+            pqr.estado = nuevo_estado
+            pqr.save()
+
+            # 3. Registra el evento en Auditoría con el usuario que ejecuta la acción (request.user)
+            Auditoria.objects.create(
+                codigo_usuario=request.user if request.user.is_authenticated else None,
+                acciones_realizada="PQRS Respondida",
+                tabla_afectada="PQRS / Historial",
+                observacion=f"Se agregó respuesta a la PQRS #{pqr.id} ('{pqr.asunto}'). Estado: {pqr.get_estado_display()}."
+            )
+
+            messages.success(request, "La respuesta se ha guardado correctamente en el historial.")
+        else:
+            messages.error(request, "El texto de la respuesta no puede estar vacío.")
+
+    return redirect('listar_pqrs')
 
 
 def guardar_pqrs(request):
