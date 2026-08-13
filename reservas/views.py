@@ -39,27 +39,18 @@ class ReservaListView(ListView):
     context_object_name = 'reservas'
 
     def get_queryset(self):
-        """
-        Controla los estados. Si es 'todas', trae el historial completo sin omitir nada.
-        """
         estado_param = self.request.GET.get('estado')
 
         if estado_param == 'todas':
-            # 1. SI SELECCIONA "VER TODO": Trae absolutamente todas las reservas
             queryset = Reserva.objects.all()
         elif estado_param:
-            # 2. SI SELECCIONA UN ESTADO ESPECÍFICO: Filtra (ej. solo pendientes)
             queryset = Reserva.objects.filter(estado=estado_param)
         else:
-            # 3. POR DEFECTO (SIN FILTRO): Mantiene tu vista limpia ocultando las canceladas
             queryset = Reserva.objects.exclude(estado='cancelada')
             
         return queryset.select_related('usuario', 'paquete').order_by('-id')
 
     def get_context_data(self, **kwargs):
-        """
-        Estadísticas globales sincronizadas.
-        """
         context = super().get_context_data(**kwargs)
         
         stats = Reserva.objects.aggregate(
@@ -78,7 +69,6 @@ class ReservaListView(ListView):
         ]
 
         context['estado_seleccionado'] = self.request.GET.get('estado', '')
-        
         return context
 
     
@@ -89,8 +79,24 @@ class ReservaCreateView(SuccessMessageMixin, CreateView):
     success_url = reverse_lazy('listar_reservas')
     success_message = "¡La reserva ha sido creada con éxito!"
 
+    # --- VALIDACIÓN AGREGADA ---
     def form_valid(self, form):
-        form.instance.usuario = self.request.user
+        adultos = form.cleaned_data.get('numero_adultos', 0)
+        menores = form.cleaned_data.get('numero_menores', 0)
+        fecha = form.cleaned_data.get('fecha')
+
+        if adultos < 1:
+            form.add_error('numero_adultos', 'Debe haber al menos 1 adulto en la reserva.')
+            return self.form_invalid(form)
+
+        if menores < 0:
+            form.add_error('numero_menores', 'El número de menores no puede ser negativo.')
+            return self.form_invalid(form)
+
+        if fecha and fecha < date.today():
+            form.add_error('fecha', 'No puedes crear reservas en fechas pasadas.')
+            return self.form_invalid(form)
+
         response = super().form_valid(form)
 
         crear_notificacion_sistema(
@@ -111,7 +117,19 @@ class ReservaUpdateView(UpdateView):
     template_name = 'admin/reservas/editar_reserva.html'
     success_url = reverse_lazy('listar_reservas')
 
+    # --- VALIDACIÓN AGREGADA ---
     def form_valid(self, form):
+        adultos = form.cleaned_data.get('numero_adultos', 0)
+        menores = form.cleaned_data.get('numero_menores', 0)
+
+        if adultos < 1:
+            form.add_error('numero_adultos', 'Debe haber al menos 1 adulto en la reserva.')
+            return self.form_invalid(form)
+
+        if menores < 0:
+            form.add_error('numero_menores', 'El número de menores no puede ser negativo.')
+            return self.form_invalid(form)
+
         reserva_antigua = self.get_object()
         valor_viejo = f"Estado: {reserva_antigua.estado}, Fecha: {reserva_antigua.fecha}, Adultos: {reserva_antigua.numero_adultos}, Menores: {reserva_antigua.numero_menores}"
 
@@ -252,7 +270,13 @@ class CancelacionCreateView(CreateView):
     def get_success_url(self):
         return reverse_lazy('mis_reservas_usuario')
 
+    # --- VALIDACIONES AGREGADAS ---
     def form_valid(self, form):
+        motivo = form.cleaned_data.get('motivo', '').strip()
+        if not motivo or len(motivo) < 10:
+            messages.error(self.request, 'Por favor ingresa un motivo detallado (mínimo 10 caracteres).')
+            return self.form_invalid(form)
+
         reserva_id = self.request.GET.get('reserva_id')
         if not reserva_id:
             messages.error(self.request, 'No se encontró la reserva para la cancelación.')
@@ -341,7 +365,15 @@ class CancelacionUpdateView(UpdateView):
     fields = ['estado', 'penalidad']
     template_name = 'admin/cancelaciones/editar_cancelacion.html'
     success_url = reverse_lazy('administrar_cancelaciones')
-    
+
+    # --- VALIDACIÓN AGREGADA ---
+    def form_valid(self, form):
+        penalidad = form.cleaned_data.get('penalidad')
+        if penalidad is not None and penalidad < Decimal('0.00'):
+            form.add_error('penalidad', 'La penalidad no puede ser un valor negativo.')
+            return self.form_invalid(form)
+        return super().form_valid(form)
+
 
 class CancelacionDeleteView(DeleteView):
     model = Cancelacion
@@ -362,7 +394,13 @@ def mis_cancelaciones_usuario(request):
     return render(request, 'usuario/cancelaciones/mis_cancelaciones.html', context)
 
 
+@login_required(login_url='login')
 def administrar_cancelaciones(request):
+    # --- VALIDACIÓN DE ACCESO DE ADMIN ---
+    if not request.user.is_staff:
+        messages.error(request, "Acceso denegado. Se requieren permisos de administrador.")
+        return redirect('mis_reservas_usuario')
+
     if request.method == 'POST':
         cancelacion_id = request.POST.get('cancelacion_id')
         cancelacion = get_object_or_404(Cancelacion, id=cancelacion_id)
@@ -374,7 +412,12 @@ def administrar_cancelaciones(request):
 
         penalidad_raw = request.POST.get('penalidad', '0').strip()
         try:
-            cancelacion.penalidad = Decimal(penalidad_raw) if penalidad_raw else Decimal('0.00')
+            penalidad_val = Decimal(penalidad_raw) if penalidad_raw else Decimal('0.00')
+            # --- VALIDACIÓN AGREGADA ---
+            if penalidad_val < Decimal('0.00'):
+                messages.error(request, 'La penalidad no puede ser un número negativo.')
+                return redirect('administrar_cancelaciones')
+            cancelacion.penalidad = penalidad_val
         except (InvalidOperation, ValueError):
             cancelacion.penalidad = Decimal('0.00')
 
@@ -504,17 +547,20 @@ def comprobante_multiple(request):
 
     ids = request.POST.getlist('reservas')
     if not ids:
+        messages.error(request, 'Debes seleccionar al menos una reserva para continuar.')
         return redirect('carrito')
 
     try:
         ids_int = [int(i) for i in ids]
     except ValueError:
+        messages.error(request, 'Selección de reservas inválida.')
         return redirect('carrito')
 
     reservas_qs = Reserva.objects.filter(id__in=ids_int, usuario=request.user).select_related('paquete')
     reservas = list(reservas_qs)
 
     if not reservas:
+        messages.error(request, 'No se encontraron reservas asociadas a tu usuario.')
         return redirect('carrito')
 
     total = sum((r.monto_total or 0) for r in reservas)
@@ -550,7 +596,6 @@ def guardar_reserva(request, paquete_id):
                 f"La fecha mínima permitida es {fecha_minima.strftime('%d/%m/%Y')}."
             )
             return redirect(f"/reservas/reservar/?paquete_id={paquete_id}")
-      
 
         tarifa = Tarifa.objects.filter(
             paquete=paquete,
@@ -568,6 +613,15 @@ def guardar_reserva(request, paquete_id):
             menores = int(request.POST.get('menores', 0))
         except ValueError:
             adultos, menores = 1, 0
+
+        # --- VALIDACIONES AGREGADAS ---
+        if adultos < 1:
+            messages.error(request, "Debes seleccionar al menos 1 adulto para realizar la reserva.")
+            return redirect(f"/reservas/reservar/?paquete_id={paquete_id}")
+
+        if menores < 0:
+            messages.error(request, "El número de menores no puede ser un valor negativo.")
+            return redirect(f"/reservas/reservar/?paquete_id={paquete_id}")
 
         ya_existe = Reserva.objects.filter(
             usuario=request.user,
@@ -626,6 +680,7 @@ def guardar_reserva(request, paquete_id):
         return redirect('mis_reservas_usuario')
 
     return redirect('reservas')
+
 
 @login_required(login_url='login')
 def mis_facturas(request):
@@ -700,4 +755,3 @@ def descargar_factura(request, reserva_id):
     except Exception as e:
         print(f"Error al descargar la factura PDF: {e}")
         return HttpResponse("Error al generar el PDF de la factura.", status=500)
-    

@@ -1,68 +1,114 @@
+from decimal import Decimal, InvalidOperation
+from datetime import datetime
 from django.urls import reverse_lazy
 from django.shortcuts import render
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
-from .models import Paquete, Actividades, Categoria, Tarifa, Temporada
-from django.db.models import Count, Q
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.core.exceptions import ValidationError
+from django.contrib import messages
 from django import forms
+from django.db.models import Count, Q
+
+from .models import Paquete, Actividades, Categoria, Tarifa, Temporada
 from .forms import PaqueteForm
 from auditoria.utils import crear_notificacion_sistema
 
 
+# ==========================================
+# MIXINS DE VALIDACIÓN Y PERMISOS
+# ==========================================
+
+class StaffRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
+    """
+    Mixin para asegurar que solo usuarios autenticados con permisos
+    de staff/administrador puedan acceder a las vistas administrativas.
+    """
+    def test_func(self):
+        return self.request.user.is_active and self.request.user.is_staff
+
+
+# ==========================================
+# VISTAS PÚBLICAS
+# ==========================================
+
 def destinos(request):
     """
-    Vista que filtra y devuelve la lista de paquetes turísticos disponibles
-    según los criterios de búsqueda (nombre, precio máximo, apto para menores y categoría).
+    Vista pública que filtra y devuelve la lista de paquetes turísticos disponibles.
+    Incluye validaciones y sanitización para los parámetros GET.
     """
     destinos_list = Paquete.objects.filter(estado=True)
     destinos_sugerencias = Paquete.objects.filter(estado=True).values('nombre').distinct()
 
+    # Validar y sanitizar búsqueda textual
     busqueda = request.GET.get('q', '').strip()
-    precio_max = request.GET.get('precio_max')
-    apto_menores = request.GET.get('apto_menores')
-    categoria_id = request.GET.get('categoria')
-
-    if busqueda:
+    if busqueda and len(busqueda) <= 100:
         destinos_list = destinos_list.filter(nombre__icontains=busqueda)
 
+    # Validar que precio_max sea un decimal/entero positivo válido
+    precio_max = request.GET.get('precio_max', '').strip()
     if precio_max:
-        destinos_list = destinos_list.filter(
-            tarifas__precio_adulto__lte=precio_max
-        ).distinct()
+        try:
+            precio_decimal = Decimal(precio_max)
+            if precio_decimal >= 0:
+                destinos_list = destinos_list.filter(
+                    tarifas__precio_adulto__lte=precio_decimal
+                ).distinct()
+        except (InvalidOperation, TypeError):
+            pass  # Ignorar filtro si envían un valor no numérico o malicioso
 
+    # Validar parámetro estricto de apto_menores
+    apto_menores = request.GET.get('apto_menores', '').strip().lower()
     if apto_menores == 'si':
         destinos_list = destinos_list.exclude(actividades__apto_para_menores=False).distinct()
     elif apto_menores == 'no':
         destinos_list = destinos_list.exclude(actividades__apto_para_menores=True).distinct()
 
+    # Validar que categoria_id sea un entero válido
+    categoria_id = request.GET.get('categoria', '').strip()
     if categoria_id:
-        destinos_list = destinos_list.filter(categoria_id=categoria_id)
+        try:
+            cat_id = int(categoria_id)
+            if cat_id > 0:
+                destinos_list = destinos_list.filter(categoria_id=cat_id)
+        except (ValueError, TypeError):
+            pass
 
-    # Carga optimizada en lote
+    # Carga optimizada
     destinos_list = destinos_list.select_related('categoria').prefetch_related('actividades', 'tarifas__temporada')
-    categorias_list = Categoria.objects.all()
+    categorias_list = Categoria.objects.filter(estado=True)
 
     context = {
-        'destinos': destinos_list,                 
+        'destinos': destinos_list,
         'destinos_sugerencias': destinos_sugerencias,
         'categorias': categorias_list
     }
     return render(request, 'usuario/destinos.html', context)
 
 
+def reservas(request):
+    context = {'reservas': []}
+    return render(request, 'usuario/reservas.html', context)
+
+
 # ==========================================
 # PAQUETES
 # ==========================================
 
-class PaqueteListView(ListView):
+class PaqueteListView(StaffRequiredMixin, ListView):
     model = Paquete
     template_name = 'admin/paquetes/paquetes.html'
     context_object_name = 'paquetes'
 
     def get_queryset(self):
         queryset = super().get_queryset().select_related('categoria').prefetch_related('actividades', 'tarifas')
-        categoria_id = self.request.GET.get('categoria')
+        categoria_id = self.request.GET.get('categoria', '').strip()
         if categoria_id:
-            queryset = queryset.filter(categoria_id=categoria_id)
+            try:
+                cat_id = int(categoria_id)
+                if cat_id > 0:
+                    queryset = queryset.filter(categoria_id=cat_id)
+            except (ValueError, TypeError):
+                pass
         return queryset.order_by('-id')
 
     def get_context_data(self, **kwargs):
@@ -83,7 +129,7 @@ class PaqueteListView(ListView):
         return context
 
 
-class PaqueteCreateView(CreateView):
+class PaqueteCreateView(StaffRequiredMixin, CreateView):
     model = Paquete
     form_class = PaqueteForm
     template_name = 'admin/paquetes/agregar_paquete.html'
@@ -113,7 +159,7 @@ class PaqueteCreateView(CreateView):
         return response
 
 
-class PaqueteUpdateView(UpdateView):
+class PaqueteUpdateView(StaffRequiredMixin, UpdateView):
     model = Paquete
     fields = [
         'imagen', 'nombre', 'descripcion', 'hora_encuentro',
@@ -134,7 +180,6 @@ class PaqueteUpdateView(UpdateView):
         return form
 
     def form_valid(self, form):
-        # Capturamos el estado original antes de guardar
         paquete_antiguo = self.get_object()
         valor_viejo = f"Nombre: {paquete_antiguo.nombre}, Categoría: {paquete_antiguo.categoria}, Estado: {'Activo' if paquete_antiguo.estado else 'Inactivo'}"
 
@@ -153,13 +198,19 @@ class PaqueteUpdateView(UpdateView):
         return response
 
 
-class PaqueteDeleteView(DeleteView):
+class PaqueteDeleteView(StaffRequiredMixin, DeleteView):
     model = Paquete
     template_name = 'admin/paquetes/eliminar_paquete.html'
     success_url = reverse_lazy('listar_paquetes')
 
     def delete(self, request, *args, **kwargs):
         self.object = self.get_object()
+        
+        # Validar integridad referencial: Prevenir borrado si el paquete tiene tarifas asociadas
+        if self.object.tarifas.exists():
+            messages.error(request, f"No se puede eliminar el paquete '{self.object.nombre}' porque tiene tarifas registradas.")
+            return render(request, self.template_name, {'object': self.object})
+
         nombre_paquete = self.object.nombre
         valor_viejo = f"ID: {self.object.id}, Nombre: {self.object.nombre}, Categoría: {self.object.categoria}"
         
@@ -180,14 +231,14 @@ class PaqueteDeleteView(DeleteView):
 # ACTIVIDADES
 # ==========================================
 
-class ActividadesListView(ListView):
+class ActividadesListView(StaffRequiredMixin, ListView):
     model = Actividades
     template_name = 'admin/actividades/actividades.html'
     context_object_name = 'actividades'
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        apto_menores_param = self.request.GET.get('apto_menores')
+        apto_menores_param = self.request.GET.get('apto_menores', '').strip().lower()
         if apto_menores_param == 'si':
             queryset = queryset.filter(apto_para_menores=True)
         elif apto_menores_param == 'no':
@@ -211,7 +262,7 @@ class ActividadesListView(ListView):
         return context
 
 
-class ActividadesCreateView(CreateView):
+class ActividadesCreateView(StaffRequiredMixin, CreateView):
     model = Actividades
     fields = ['nombre', 'descripcion', 'nivel_dificultad', 'equipo_requerimiento',
               'recomendacion_salud', 'apto_para_menores']
@@ -242,7 +293,7 @@ class ActividadesCreateView(CreateView):
         return response
 
 
-class ActividadesUpdateView(UpdateView):
+class ActividadesUpdateView(StaffRequiredMixin, UpdateView):
     model = Actividades
     fields = ['nombre', 'descripcion', 'nivel_dificultad', 'equipo_requerimiento',
               'recomendacion_salud', 'estado', 'apto_para_menores']
@@ -279,13 +330,19 @@ class ActividadesUpdateView(UpdateView):
         return response
 
 
-class ActividadesDeleteView(DeleteView):
+class ActividadesDeleteView(StaffRequiredMixin, DeleteView):
     model = Actividades
     template_name = 'admin/actividades/eliminar_actividad.html'
     success_url = reverse_lazy('listar_actividades')
 
     def delete(self, request, *args, **kwargs):
         self.object = self.get_object()
+        
+        # Validar integridad: Prevenir eliminación si pertenece a paquetes activos
+        if self.object.paquete_set.exists():
+            messages.error(request, f"No se puede eliminar la actividad '{self.object.nombre}' porque está vinculada a uno o más paquetes.")
+            return render(request, self.template_name, {'object': self.object})
+
         nombre_actividad = self.object.nombre
         valor_viejo = f"ID: {self.object.id}, Nombre: {self.object.nombre}, Dificultad: {self.object.nivel_dificultad}"
 
@@ -306,7 +363,7 @@ class ActividadesDeleteView(DeleteView):
 # CATEGORÍAS
 # ==========================================
 
-class CategoriaListView(ListView):
+class CategoriaListView(StaffRequiredMixin, ListView):
     model = Categoria
     template_name = 'admin/categorias/categorias.html'
     context_object_name = 'categorias'
@@ -329,7 +386,7 @@ class CategoriaListView(ListView):
         return context
 
 
-class CategoriaCreateView(CreateView):
+class CategoriaCreateView(StaffRequiredMixin, CreateView):
     model = Categoria
     fields = ['nombre', 'descripcion']
     template_name = 'admin/categorias/agregar_categoria.html'
@@ -359,7 +416,7 @@ class CategoriaCreateView(CreateView):
         return response
 
 
-class CategoriaUpdateView(UpdateView):
+class CategoriaUpdateView(StaffRequiredMixin, UpdateView):
     model = Categoria
     fields = ['nombre', 'descripcion', 'estado']
     template_name = 'admin/categorias/editar_categoria.html'
@@ -395,13 +452,19 @@ class CategoriaUpdateView(UpdateView):
         return response
 
 
-class CategoriaDeleteView(DeleteView):
+class CategoriaDeleteView(StaffRequiredMixin, DeleteView):
     model = Categoria
     template_name = 'admin/categorias/eliminar_categoria.html'
     success_url = reverse_lazy('listar_categorias')
 
     def delete(self, request, *args, **kwargs):
         self.object = self.get_object()
+
+        # Validar integridad: No eliminar categoría si está asignada a algún paquete
+        if self.object.paquete_set.exists():
+            messages.error(request, f"No se puede eliminar la categoría '{self.object.nombre}' porque contiene paquetes asociados.")
+            return render(request, self.template_name, {'object': self.object})
+
         nombre_categoria = self.object.nombre
         valor_viejo = f"ID: {self.object.id}, Nombre: {self.object.nombre}"
 
@@ -418,25 +481,25 @@ class CategoriaDeleteView(DeleteView):
         return response
 
 
-def reservas(request):
-    context = {'reservas': []}
-    return render(request, 'usuario/reservas.html', context)
-
-
 # ==========================================
 # TARIFAS
 # ==========================================
 
-class TarifaListView(ListView):
+class TarifaListView(StaffRequiredMixin, ListView):
     model = Tarifa
     template_name = 'admin/tarifas/tarifas.html'
     context_object_name = 'tarifas'
 
     def get_queryset(self):
         queryset = super().get_queryset().select_related('paquete', 'temporada')
-        paquete_id = self.request.GET.get('paquete')
+        paquete_id = self.request.GET.get('paquete', '').strip()
         if paquete_id:
-            queryset = queryset.filter(paquete_id=paquete_id)
+            try:
+                p_id = int(paquete_id)
+                if p_id > 0:
+                    queryset = queryset.filter(paquete_id=p_id)
+            except (ValueError, TypeError):
+                pass
         return queryset.order_by('-id')
 
     def get_context_data(self, **kwargs):
@@ -457,13 +520,21 @@ class TarifaListView(ListView):
         return context
 
 
-class TarifaCreateView(CreateView):
+class TarifaCreateView(StaffRequiredMixin, CreateView):
     model = Tarifa
     fields = ['paquete', 'temporada', 'precio_adulto', 'precio_menor']
     template_name = 'admin/tarifas/agregar_tarifa.html'
     success_url = reverse_lazy('listar_tarifas')
 
     def form_valid(self, form):
+        # Validar lógica de negocio: Precios no negativos
+        precio_adulto = form.cleaned_data.get('precio_adulto')
+        precio_menor = form.cleaned_data.get('precio_menor')
+
+        if (precio_adulto is not None and precio_adulto < 0) or (precio_menor is not None and precio_menor < 0):
+            form.add_error(None, "Los precios no pueden ser valores negativos.")
+            return self.form_invalid(form)
+
         response = super().form_valid(form)
         crear_notificacion_sistema(
             usuario=self.request.user,
@@ -476,13 +547,20 @@ class TarifaCreateView(CreateView):
         return response
 
 
-class TarifaUpdateView(UpdateView):
+class TarifaUpdateView(StaffRequiredMixin, UpdateView):
     model = Tarifa
     fields = ['paquete', 'temporada', 'precio_adulto', 'precio_menor', 'estado']
     template_name = 'admin/tarifas/editar_tarifa.html'
     success_url = reverse_lazy('listar_tarifas')
 
     def form_valid(self, form):
+        precio_adulto = form.cleaned_data.get('precio_adulto')
+        precio_menor = form.cleaned_data.get('precio_menor')
+
+        if (precio_adulto is not None and precio_adulto < 0) or (precio_menor is not None and precio_menor < 0):
+            form.add_error(None, "Los precios no pueden ser valores negativos.")
+            return self.form_invalid(form)
+
         tarifa_antigua = self.get_object()
         valor_viejo = f"Adulto: ${tarifa_antigua.precio_adulto}, Menor: ${tarifa_antigua.precio_menor}, Estado: {tarifa_antigua.estado}"
 
@@ -505,19 +583,31 @@ class TarifaUpdateView(UpdateView):
 # TEMPORADAS
 # ==========================================
 
-class TemporadaListView(ListView):
+class TemporadaListView(StaffRequiredMixin, ListView):
     model = Temporada
     template_name = 'admin/temporada/temporada.html'
     context_object_name = 'temporadas'
 
     def get_queryset(self):
         queryset = Temporada.objects.all()
-        fecha_inicio = self.request.GET.get("fecha_inicio")
-        fecha_fin = self.request.GET.get("fecha_fin")
+        fecha_inicio = self.request.GET.get("fecha_inicio", "").strip()
+        fecha_fin = self.request.GET.get("fecha_fin", "").strip()
+
+        # Validar formato de fechas recibidas por GET
         if fecha_inicio:
-            queryset = queryset.filter(fecha_inicio__gte=fecha_inicio)
+            try:
+                f_inicio = datetime.strptime(fecha_inicio, '%Y-%m-%d').date()
+                queryset = queryset.filter(fecha_inicio__gte=f_inicio)
+            except ValueError:
+                pass
+
         if fecha_fin:
-            queryset = queryset.filter(fecha_fin__lte=fecha_fin)
+            try:
+                f_fin = datetime.strptime(fecha_fin, '%Y-%m-%d').date()
+                queryset = queryset.filter(fecha_fin__lte=f_fin)
+            except ValueError:
+                pass
+
         return queryset.order_by('-id')
 
     def get_context_data(self, **kwargs):
@@ -538,13 +628,21 @@ class TemporadaListView(ListView):
         return context
 
 
-class TemporadaCreateView(CreateView):
+class TemporadaCreateView(StaffRequiredMixin, CreateView):
     model = Temporada
     fields = ['nombre', 'fecha_inicio', 'fecha_fin']
     template_name = 'admin/temporada/agregar_temporada.html'
     success_url = reverse_lazy('listar_temporadas')
 
     def form_valid(self, form):
+        # Validar que fecha_fin no sea anterior a fecha_inicio
+        fecha_inicio = form.cleaned_data.get('fecha_inicio')
+        fecha_fin = form.cleaned_data.get('fecha_fin')
+
+        if fecha_inicio and fecha_fin and fecha_fin < fecha_inicio:
+            form.add_error('fecha_fin', "La fecha de finalización no puede ser anterior a la fecha de inicio.")
+            return self.form_invalid(form)
+
         response = super().form_valid(form)
         crear_notificacion_sistema(
             usuario=self.request.user,
@@ -557,13 +655,20 @@ class TemporadaCreateView(CreateView):
         return response
 
 
-class TemporadaUpdateView(UpdateView):
+class TemporadaUpdateView(StaffRequiredMixin, UpdateView):
     model = Temporada
     fields = ['nombre', 'fecha_inicio', 'fecha_fin', 'estado']
     template_name = 'admin/temporada/editar_temporada.html'
     success_url = reverse_lazy('listar_temporadas')
 
     def form_valid(self, form):
+        fecha_inicio = form.cleaned_data.get('fecha_inicio')
+        fecha_fin = form.cleaned_data.get('fecha_fin')
+
+        if fecha_inicio and fecha_fin and fecha_fin < fecha_inicio:
+            form.add_error('fecha_fin', "La fecha de finalización no puede ser anterior a la fecha de inicio.")
+            return self.form_invalid(form)
+
         temp_antigua = self.get_object()
         valor_viejo = f"Nombre: {temp_antigua.nombre}, Inicio: {temp_antigua.fecha_inicio}, Fin: {temp_antigua.fecha_fin}, Estado: {temp_antigua.estado}"
 
@@ -580,4 +685,3 @@ class TemporadaUpdateView(UpdateView):
             nuevo_valor=valor_nuevo
         )
         return response
-    
