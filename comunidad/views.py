@@ -46,7 +46,6 @@ class PQRSListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        # Se realiza el conteo verificando si la PQRS tiene registros en la tabla de Historial
         stats = PQRS.objects.aggregate(
             total=Count('id'),
             respondidas=Count('id', filter=Q(historiales__isnull=False)),
@@ -60,41 +59,33 @@ class PQRSListView(ListView):
         ]
 
         return context
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
 
 def contestar_pqrs(request, pqrs_id):
-    pqr = get_object_or_404(PQRS, pk=pqrs_id)
-    
-    if request.method == 'POST':
-        texto_respuesta = request.POST.get('respuesta')
-        nuevo_estado = request.POST.get('estado', 'en_proceso')  # Recibe el estado o lo asigna en proceso/cerrado
+    pqr = get_object_or_404(PQRS, id=pqrs_id)
 
-        if texto_respuesta and texto_respuesta.strip():
-            # 1. Guarda la nueva respuesta en la tabla Historial (Evita la sobreescritura)
+    if pqr.estado == 'cerrado':
+        messages.warning(request, "Esta solicitud ya ha sido respondida y se encuentra cerrada.")
+        return redirect('listar_pqrs')
+
+    if request.method == 'POST':
+        respuesta_texto = request.POST.get('respuesta')
+        
+        if respuesta_texto:
             Historial.objects.create(
                 pqrs=pqr,
-                usuario=request.user if request.user.is_authenticated else None,
-                respuesta=texto_respuesta.strip()
+                usuario=request.user,
+                respuesta=respuesta_texto
             )
-
-            # 2. Actualiza el estado general de la PQRS
-            pqr.estado = nuevo_estado
+            
+            pqr.estado = 'cerrado'
             pqr.save()
+            
+            messages.success(request, "Respuesta enviada y solicitud cerrada con éxito.")
+            return redirect('admin_pqrs_list')
 
-            # 3. Registra el evento en Auditoría con el usuario que ejecuta la acción (request.user)
-            Auditoria.objects.create(
-                codigo_usuario=request.user if request.user.is_authenticated else None,
-                acciones_realizada="PQRS Respondida",
-                tabla_afectada="PQRS / Historial",
-                observacion=f"Se agregó respuesta a la PQRS #{pqr.id} ('{pqr.asunto}'). Estado: {pqr.get_estado_display()}."
-            )
-
-            messages.success(request, "La respuesta se ha guardado correctamente en el historial.")
-        else:
-            messages.error(request, "El texto de la respuesta no puede estar vacío.")
-
-    return redirect('listar_pqrs')
-
-
+    return render(request, 'admin/contestar_pqrs.html', {'pqr': pqr})
 def guardar_pqrs(request):
     if request.method == 'POST':
         form = PqrsForm(request.POST)
@@ -122,14 +113,29 @@ def guardar_pqrs(request):
 @requiere_autenticacion
 def mis_pqrs_view(request):
     from usuarios.models import Cliente
+    
     solicitudes_usuario = PQRS.objects.none()
     try:
         cliente_obj = Cliente.objects.get(usuario=request.user)
-        solicitudes_usuario = PQRS.objects.filter(cliente=cliente_obj)
+        # Traemos las solicitudes con prefetch de sus historiales para no recargar la BD
+        solicitudes_usuario = PQRS.objects.filter(cliente=cliente_obj).prefetch_related('historiales').order_by('-fecha')
     except Cliente.DoesNotExist:
         pass
 
-    form = PqrsForm()
+    if request.method == 'POST':
+        form = PqrsForm(request.POST)
+        if form.is_valid():
+            nueva_pqrs = form.save(commit=False)
+            try:
+                nueva_pqrs.cliente = Cliente.objects.get(usuario=request.user)
+            except Cliente.DoesNotExist:
+                pass
+            nueva_pqrs.save()
+            messages.success(request, "Tu solicitud ha sido enviada correctamente.")
+            return redirect('mis_pqrs')
+    else:
+        form = PqrsForm()
+
     context = {
         'solicitudes': solicitudes_usuario,
         'form': form,

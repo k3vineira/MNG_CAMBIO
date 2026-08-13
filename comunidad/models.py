@@ -85,26 +85,16 @@ class PQRS(models.Model):
 
 
 class Historial(models.Model):
-    """Guarda las respuestas o seguimiento histórico de una PQRS."""
-
-    pqrs = models.ForeignKey(
-        PQRS, on_delete=models.CASCADE, related_name='historiales'
-    )
-    usuario = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True
-    )
+    pqrs = models.ForeignKey(PQRS, on_delete=models.CASCADE, related_name='historiales')
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE) # Quién responde (Admin o Cliente)
+    respuesta = models.TextField() # El contenido del mensaje
     fecha_respuesta = models.DateTimeField(auto_now_add=True)
-    respuesta = models.TextField()
 
     class Meta:
-        verbose_name_plural = 'Historiales'
-        ordering = ['fecha_respuesta']  
+        ordering = ['fecha_respuesta'] 
 
     def __str__(self):
-        return f'Historial de PQRS #{self.pqrs.id}'
+        return f"Respuesta de {self.usuario.get_full_name()} en PQRS #{self.pqrs.id}"
 
 class Comentario(models.Model):
     """Comentarios y reseñas de experiencias de usuarios."""

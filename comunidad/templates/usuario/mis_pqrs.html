@@ -4,93 +4,162 @@
 {% block titulo %}Mis PQRS | Monagua{% endblock %}
 
 {% block private_content %}
-<div class="container-fluid p-0">
-    <div class="row g-0 min-vh-100">
-        <main class="col-md-9 col-lg-10 u-style-6e4a7603">
-            <div class="container mx-auto u-style-82f6cb33">
-                
-                <!-- Título Principal -->
-                <div class="d-flex align-items-center mb-5 p-4 bg-white shadow-sm rounded-4 border-start border-4 u-style-cb752fdb">
-                    <div class="icon-shape bg-light p-3 rounded-circle me-3">
-                        <i class="bi bi-chat-quote-fill fs-3 u-style-90ae0e7a"></i>
+<div class="container-fluid bg-body-tertiary min-vh-100 py-4">
+    <div class="container">
+
+        <!-- ENCABEZADO ESTILO "MIS RESERVAS" -->
+        <div class="bg-white p-4 rounded-4 border shadow-sm mb-4 d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
+                <div class="p-2 border rounded-3 text-dark bg-light d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                    <i class="bi bi-inbox fs-3"></i>
+                </div>
+                <div>
+                    <h3 class="fw-bold text-dark mb-0">Mis Solicitudes</h3>
+                    <p class="text-muted mb-0 small">Consulta y realiza seguimiento a tus solicitudes en Mongua</p>
+                </div>
+            </div>
+            {% if solicitudes %}
+                <a href="{% url 'pqrs' %}" class="btn text-white rounded-pill px-4 py-2 fw-bold shadow-sm" style="background-color: var(--verde-main, #2c6e3c);">
+                    <i class="bi bi-plus-lg me-1"></i> Nueva solicitud
+                </a>
+            {% endif %}
+        </div>
+
+        {% if solicitudes %}
+
+        <!-- SOLICITUDES CON BORDE IZQUIERDO MÁS OSCURO Y NOTORIO -->
+        {% for pqr in solicitudes %}
+        <div class="card border border-start-0 rounded-4 shadow-sm mb-4 bg-white overflow-hidden" style="border-left: 6px solid var(--verde-main, #2c6e3c) !important;">
+            <!-- CABECERA DE LA TARJETA -->
+            <div class="card-header bg-white border-0 p-4 pb-2">
+                <div class="row align-items-center g-3">
+                    <div class="col">
+                        <h4 class="fw-bold text-dark mb-2">
+                            <i class="me-2" style="color: var(--verde-main, #2c6e3c);"></i>{{ pqr.asunto }}
+                        </h4>
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="badge text-bg-light border"><i class="bi bi-tag-fill me-1" style="color: var(--verde-main, #2c6e3c);"></i>{{ pqr.tipo }}</span>
+                            <span class="badge text-bg-light border"><i class="bi bi-calendar3 me-1" style="color: var(--verde-main, #2c6e3c);"></i>{{ pqr.fecha|date:"d/m/Y" }}</span>
+                        </div>
                     </div>
-                    <div>
-                        <h2 class="fw-bold mb-0 u-style-4780f7fa">Mis Solicitudes</h2>
-                        <p class="text-muted mb-0">Seguimiento de tus PQRS y respuestas de Monagua</p>
+
+                    <!-- ESTADO BADGE -->
+                    <div class="col-auto">
+                        {% if pqr.estado == 'cerrado' %}
+                            <span class="badge rounded-pill px-3 py-2 border text-success bg-light">
+                                <i class="bi bi-check-circle-fill me-1"></i> {{ pqr.get_estado_display }}
+                            </span>
+                        {% else %}
+                            <span class="badge rounded-pill px-3 py-2 border text-dark bg-light">
+                                <i class="bi bi-clock-fill me-1" style="color: var(--verde-main, #2c6e3c);"></i> {{ pqr.get_estado_display }}
+                            </span>
+                        {% endif %}
                     </div>
                 </div>
-                
-                {% if solicitudes %}
-                    <div class="list-group">
-                        {% for pqrs in solicitudes %}
-                            <div class="card mb-3 shadow-sm border-0 rounded-4 overflow-hidden">
-                                <div class="card-body p-4">
-                                    <h5 class="card-title d-flex justify-content-between align-items-center mb-3">
-                                        <span class="fs-5"><strong>{{ pqrs.get_tipo_display }}</strong> - #{{ pqrs.id }}</span>
-                                        <span class="badge rounded-pill px-3 py-2 {% if pqrs.estado == 'cerrado' %}bg-success{% elif pqrs.estado == 'en_proceso' %}bg-info{% else %}bg-warning text-dark{% endif %}">
-                                            {{ pqrs.get_estado_display }}
-                                        </span>
-                                    </h5>
-                                    <h6 class="text-dark fw-bold mt-2 fs-5">{{ pqrs.asunto }}</h6>
-                                    <p class="card-text text-secondary mb-3">{{ pqrs.descripcion }}</p>
-                                    <small class="text-muted d-block mb-2"><i class="bi bi-calendar3 me-1"></i> Enviado el: {{ pqrs.fecha|date:"d/m/Y" }}</small>
-                                    
-                                    <!-- SECCIÓN HISTORIAL DE RESPUESTAS ADAPTADA -->
-                                    {% if pqrs.historiales.all or pqrs.respuesta %}
-                                        <div class="mt-3">
-                                            <h6 class="text-success mb-2 fw-bold">
-                                                <i class="bi bi-reply-all-fill me-1"></i> Respuestas y Seguimiento de Monagua:
-                                            </h6>
-                                            
-                                            {% if pqrs.historiales.all %}
-                                                <div class="d-flex flex-column gap-2">
-                                                    {% for item in pqrs.historiales.all %}
-                                                        <div class="p-3 bg-light border-start border-success border-3 rounded-3 shadow-sm">
-                                                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                                                <small class="fw-bold text-dark"><i class="bi bi-person-badge me-1"></i> Equipo Monagua</small>
-                                                                <small class="text-muted fs-7"><i class="bi bi-clock me-1"></i> {{ item.fecha_respuesta|date:"d/m/Y h:i A" }}</small>
-                                                            </div>
-                                                            <p class="mb-0 text-secondary small">{{ item.respuesta }}</p>
-                                                        </div>
-                                                    {% endfor %}
-                                                </div>
-                                            {% elif pqrs.respuesta %}
-                                                <div class="p-3 bg-light border-start border-success border-3 rounded-3">
-                                                    <p class="mb-0 text-secondary small">{{ pqrs.respuesta }}</p>
-                                                </div>
-                                            {% endif %}
-                                        </div>
-                                    {% else %}
-                                        <div class="mt-3 p-2 bg-light rounded-3 text-center border border-dashed">
-                                            <small class="text-muted"><i class="bi bi-hourglass-split me-1 text-warning"></i> Tu solicitud está siendo procesada de forma prioritaria.</small>
-                                        </div>
-                                    {% endif %}
+            </div>
+
+            <!-- CONTENIDO DE MENSAJE Y RESPUESTA -->
+            <div class="card-body p-4 pt-2">
+                <div class="row g-4">
+                    <!-- TU MENSAJE -->
+                    <div class="col-lg-6">
+                        <div class="card h-100 border rounded-4 bg-light shadow-none">
+                            <div class="card-header border-bottom bg-transparent p-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="text-white rounded-circle p-2 me-2 d-flex align-items-center justify-content-center" style="background-color: var(--verde-main, #2c6e3c); width:32px; height:32px;">
+                                        <i class="bi bi-person-fill"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold mb-0 text-dark">Tu mensaje</h6>
+                                        <small class="text-secondary">Solicitud enviada</small>
+                                    </div>
                                 </div>
                             </div>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <!-- Tarjeta de Estado Vacío Centrada -->
-                    <div class="card border-0 shadow-sm rounded-4 bg-white text-center py-5 px-4">
-                        <div class="mb-3 text-muted">
-                            <div class="bg-light d-inline-block p-3 rounded-circle mb-2">
-                                <i class="bi bi-chat-left-text fs-1 u-style-c2d86dac"></i>
+                            <div class="card-body p-3">
+                                <p class="text-dark mb-3" style="white-space: pre-line;">{{ pqr.descripcion }}</p>
+                                <small class="text-secondary"><i class="bi bi-calendar-event me-1"></i> {{ pqr.fecha|date:"d/m/Y - H:i" }}</small>
                             </div>
                         </div>
-                        <h3 class="fw-bold text-dark mb-2">No tienes solicitudes activas</h3>
-                        <p class="text-muted mx-auto mb-4 u-style-8a0dadd8">
-                            Si tienes alguna duda, reclamo, petición o sugerencia sobre nuestros paquetes turísticos, estamos listos para escucharte y ayudarte en tu experiencia en Mongua.
-                        </p>
-                        <div>
-                            <a href="{% url 'pqrs' %}" class="btn text-white px-4 py-2 fw-semibold shadow-sm rounded-pill transition-all u-style-95775cb0">
-                                <i class="bi bi-plus-circle me-2"></i> Crear Nueva Solicitud
-                            </a>
-                        </div>
                     </div>
-                {% endif %}
 
+                    <!-- RESPUESTA / ESTADO EN PROCESO -->
+                    <div class="col-lg-6">
+                        {% if pqr.historiales.all %}
+                        <div class="card h-100 border rounded-4 bg-light shadow-none">
+                            <div class="card-header border-bottom bg-transparent p-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="text-white rounded-circle p-2 me-2 d-flex align-items-center justify-content-center" style="background-color: var(--verde-oscuro, #005215); width:32px; height:32px;">
+                                        <i class="bi bi-headset"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold mb-0 text-dark">Respuesta de Monagua</h6>
+                                        <small class="text-secondary">Atención al cliente</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body p-3 d-flex flex-column justify-content-between">
+                                {% for h in pqr.historiales.all %}
+                                    <p class="text-dark fw-medium mb-3" style="white-space: pre-line;">{{ h.respuesta }}</p>
+                                    <div class="p-2 rounded bg-white border d-flex align-items-center mb-0">
+                                        <i class="bi bi-check-circle-fill me-2" style="color: var(--verde-main, #2c6e3c);"></i>
+                                        <small class="fw-bold text-dark">Atendido el {{ h.fecha_respuesta|date:"d/m/Y - H:i" }}</small>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% else %}
+                        <!-- SOLICITUD EN REVISIÓN -->
+                        <div class="card h-100 border rounded-4 bg-light shadow-none">
+                            <div class="card-header border-bottom bg-transparent p-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="text-white rounded-circle p-2 me-2 d-flex align-items-center justify-content-center" style="background-color: var(--verde-main, #2c6e3c); width:32px; height:32px;">
+                                        <i class="bi bi-hourglass-split"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold mb-0 text-dark">Solicitud en revisión</h6>
+                                        <small class="text-secondary">Estamos trabajando en tu solicitud</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body p-3 d-flex align-items-center">
+                                <div class="text-center w-100 py-3">
+                                    <i class="bi bi-clock-history fs-1 text-muted"></i>
+                                    <h6 class="fw-bold mt-2 text-dark">Estamos revisando tu solicitud</h6>
+                                    <p class="text-secondary small mb-0">Nuestro equipo analizará tu PQRS y te dará una respuesta próximamente.</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
-        </main>
+
+            <!-- PIE DE TARJETA -->
+            <div class="card-footer bg-white border-0 px-4 py-2">
+                <div class="d-flex justify-content-between align-items-center border-top pt-2">
+                    <small class="text-secondary"><i class="bi bi-shield-check me-1" style="color: var(--verde-main, #2c6e3c);"></i> Solicitud registrada en Monagua</small>
+                    <small class="fw-semibold text-muted">PQRS #{{ pqr.id }}</small>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        {% else %}
+        <!-- ESTADO VACÍO -->
+        <div class="card border rounded-4 shadow-sm text-center py-5 px-4 bg-white">
+            <div class="rounded-circle d-inline-flex p-3 mb-3 mx-auto bg-light text-dark">
+                <i class="bi bi-inbox fs-1"></i>
+            </div>
+            <h4 class="fw-bold mb-1 text-dark">Aún no tienes solicitudes</h4>
+            <p class="text-muted mx-auto mb-4" style="max-width: 450px;">¿Tienes alguna duda o sugerencia? Crea una nueva solicitud y te ayudaremos.</p>
+            <div>
+                <a href="{% url 'pqrs' %}" class="btn text-white rounded-pill px-4 py-2 fw-bold shadow-sm" style="background-color: var(--verde-main, #2c6e3c);">
+                    <i class="bi bi-plus-lg me-1"></i> Crear nueva solicitud
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
     </div>
 </div>
 {% endblock %}

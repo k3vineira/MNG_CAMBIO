@@ -48,6 +48,7 @@
     </div>
 
     <div class="card border-0 shadow-sm p-3 mb-4 rounded-4">
+        <!-- VISTA TABLA (DESKTOP) -->
         <div class="table-responsive d-none d-lg-block">
             <table id="tablaPQRS" class="table table-hover align-middle mb-0 u-style-6d567387">
                 <thead class="table-light text-muted">
@@ -79,15 +80,20 @@
                             {{ pqr.asunto|truncatechars:50 }}
                         </td>
                         <td class="text-center">
-                            <button type="button" 
-                                    class="btn btn-sm {% if pqr.respuesta and pqr.respuesta.strip %}btn-outline-success{% else %}btn-danger shadow-sm{% endif %} rounded-pill px-4 fw-bold" 
-                                    data-bs-toggle="modal" data-bs-target="#modalContestar{{ pqr.id }}">
-                                {% if pqr.respuesta and pqr.respuesta.strip %}
-                                    <i class="bi bi-check-all me-1"></i> Respondido
-                                {% else %}
+                            <!-- EVALUACIÓN POR ESTADO / HISTORIAL EN LUGAR DE pqr.respuesta -->
+                            {% if pqr.estado == 'cerrado' or pqr.historiales.all %}
+                                <button type="button" 
+                                        class="btn btn-sm btn-outline-success rounded-pill px-4 fw-bold" 
+                                        data-bs-toggle="modal" data-bs-target="#modalContestar{{ pqr.id }}">
+                                    <i class="bi bi-check-all me-1"></i> Respondida
+                                </button>
+                            {% else %}
+                                <button type="button" 
+                                        class="btn btn-sm btn-danger shadow-sm rounded-pill px-4 fw-bold" 
+                                        data-bs-toggle="modal" data-bs-target="#modalContestar{{ pqr.id }}">
                                     <i class="bi bi-reply-fill me-1"></i> Contestar
-                                {% endif %}
-                            </button>
+                                </button>
+                            {% endif %}
                         </td>
                     </tr>
                     {% empty %}
@@ -99,6 +105,7 @@
             </table>
         </div>
 
+        <!-- VISTA TARJETAS (MÓVIL) -->
         <div class="d-lg-none">
             <div class="row g-3">
                 {% for pqr in todas_las_pqrs %}
@@ -119,15 +126,20 @@
                         </div>
 
                         <div class="pt-2">
-                            <button type="button" 
-                                    class="btn btn-sm w-100 {% if pqr.respuesta and pqr.respuesta.strip %}btn-outline-success{% else %}btn-danger{% endif %} rounded-pill fw-bold" 
-                                    data-bs-toggle="modal" data-bs-target="#modalContestar{{ pqr.id }}">
-                                {% if pqr.respuesta and pqr.respuesta.strip %}
-                                    <i class="bi bi-check-all me-1"></i> Respondido
-                                {% else %}
+                            <!-- EVALUACIÓN EN MÓVIL TAMBIÉN -->
+                            {% if pqr.estado == 'cerrado' or pqr.historiales.all %}
+                                <button type="button" 
+                                        class="btn btn-sm w-100 btn-outline-success rounded-pill fw-bold" 
+                                        data-bs-toggle="modal" data-bs-target="#modalContestar{{ pqr.id }}">
+                                    <i class="bi bi-check-all me-1"></i> Respondida
+                                </button>
+                            {% else %}
+                                <button type="button" 
+                                        class="btn btn-sm w-100 btn-danger rounded-pill fw-bold" 
+                                        data-bs-toggle="modal" data-bs-target="#modalContestar{{ pqr.id }}">
                                     <i class="bi bi-reply-fill me-1"></i> Responder Solicitud
-                                {% endif %}
-                            </button>
+                                </button>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
