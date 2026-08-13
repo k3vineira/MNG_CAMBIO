@@ -8,8 +8,8 @@ from django.contrib import messages
 from core.decoradores import requiere_autenticacion, requiere_administrador
 from usuarios.models import Cliente
 from django.db.models import Count, Q
-from notificaciones.models import Auditoria
-from notificaciones.utils import crear_notificacion_sistema
+from auditoria.models import Auditoria
+from auditoria.utils import crear_notificacion_sistema
 from django.core.paginator import Paginator
 
 
