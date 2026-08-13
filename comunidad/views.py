@@ -83,7 +83,7 @@ def contestar_pqrs(request, pqrs_id):
             pqr.save()
             
             messages.success(request, "Respuesta enviada y solicitud cerrada con éxito.")
-            return redirect('admin_pqrs_list')
+            return redirect('listar_pqrs')
 
     return render(request, 'admin/contestar_pqrs.html', {'pqr': pqr})
 def guardar_pqrs(request):
