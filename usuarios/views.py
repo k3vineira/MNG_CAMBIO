@@ -238,19 +238,8 @@ def perfil_detalles(request):
         Cliente.objects.get_or_create(usuario=request.user)
 
     if request.method == 'POST':
-        if 'imagen_perfil' in request.FILES and not request.POST.get('editar_perfil'):
-            request.user.imagen_perfil = request.FILES['imagen_perfil']
-            request.user.save()
-            messages.success(
-                request, 'Foto de perfil actualizada correctamente.')
-            return redirect('perfil_detalles')
-
-        form = PerfilUsuarioForm(
-            request.POST, request.FILES, instance=request.user)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Perfil actualizado correctamente.')
-            return redirect('perfil_detalles')
+        messages.error(request, 'La modificación del perfil no está permitida.')
+        return redirect('perfil_detalles')
     else:
         form = PerfilUsuarioForm(instance=request.user)
 
@@ -311,45 +300,10 @@ def usuarios_guardar(request):
     rol = request.POST.get('rol', Usuario.Roles.CLIENTE)
 
     if user_id:
-        # --- MODO EDICIÓN ---
         user = get_object_or_404(Usuario, id=user_id)
-
-        # 1. No permitir modificar el propio rol de administrador
-        if user.id == request.user.id and rol != Usuario.Roles.ADMIN:
-            messages.error(request, 'No puedes modificar tu propio rol de administrador.')
+        if user.rol == Usuario.Roles.ADMIN and not request.user.is_superuser:
+            messages.error(request, 'No tienes permisos para modificar a un administrador.')
             return redirect('gestion_usuarios')
-
-        # 2. No permitir asignar el rol de administrador a otros usuarios si no lo eran ya
-        if user.id != request.user.id and rol == Usuario.Roles.ADMIN and user.rol != Usuario.Roles.ADMIN:
-            messages.error(request, 'No tienes permisos para asignar el rol de administrador a otros usuarios.')
-            return redirect('gestion_usuarios')
-
-        email = request.POST.get('email', '').strip()
-        if not email:
-            messages.error(request, 'El email es obligatorio.')
-            return redirect('gestion_usuarios')
-        if Usuario.objects.filter(email__iexact=email).exclude(id=user.id).exists():
-            messages.error(request, f'El correo electrónico «{email}» ya está registrado en otra cuenta.')
-            return redirect('gestion_usuarios')
-
-        user.first_name = request.POST.get('first_name', user.first_name)
-        user.last_name = request.POST.get('last_name', user.last_name)
-        user.email = email
-        user.tipo_documento = request.POST.get(
-            'tipo_documento', user.tipo_documento)
-        user.numero_documento = request.POST.get(
-            'numero_documento', user.numero_documento)
-        user.telefono = request.POST.get('telefono', user.telefono)
-        user.residencia = request.POST.get('residencia', user.residencia)
-        user.rol = rol
-        if rol == Usuario.Roles.ADMIN:
-            user.is_staff = True
-        if 'imagen_perfil' in request.FILES:
-            user.imagen_perfil = request.FILES['imagen_perfil']
-        password = request.POST.get('password', '').strip()
-        if password:
-            user.set_password(password)
-        user.save()
     else:
         # --- MODO CREACIÓN ---
         # 3. No permitir crear nuevos administradores
@@ -448,17 +402,18 @@ def asignar_rol_guia(request, user_id):
     """Acción de backend para alternar el rol de guía (Redirecciona)."""
     if request.method == 'POST':
         user = get_object_or_404(Usuario, id=user_id)
-        if user.rol != Usuario.Roles.GUIA:
+        if user.rol == Usuario.Roles.CLIENTE:
             user.rol = Usuario.Roles.GUIA
             user.save()
             GuiaTuristico.objects.get_or_create(usuario=user)
             messages.success(
-                request, f'Rol de guía asignado a {user.username}')
-        else:
+                request, f'Usuario {user.username} ha sido promovido a Guía Turístico.')
+        elif user.rol == Usuario.Roles.GUIA:
             user.rol = Usuario.Roles.CLIENTE
             user.save()
-            messages.info(request, f'Rol de guía removido de {user.username}')
-    return redirect('gestion_guias')
+            messages.success(
+                request, f'Al usuario {user.username} se le ha revocado el rol de Guía Turístico.')
+        return redirect('gestion_guias')
 
 
 @requiere_administrador
@@ -474,40 +429,7 @@ def guias_guardar(request):
     guia_id = request.POST.get('id')
 
     if guia_id:
-        # --- MODO EDICIÓN ---
         user = get_object_or_404(Usuario, id=guia_id, rol=Usuario.Roles.GUIA)
-        email = request.POST.get('email', '').strip()
-        if not email:
-            messages.error(request, 'El email es obligatorio.')
-            return redirect('gestion_guias')
-        if Usuario.objects.filter(email__iexact=email).exclude(id=user.id).exists():
-            messages.error(request, f'El correo electrónico «{email}» ya está registrado en otra cuenta.')
-            return redirect('gestion_guias')
-
-        user.first_name = request.POST.get('first_name', user.first_name)
-        user.last_name = request.POST.get('last_name', user.last_name)
-        user.email = email
-        user.tipo_documento = request.POST.get(
-            'tipo_documento', user.tipo_documento)
-        user.numero_documento = request.POST.get(
-            'numero_documento', user.numero_documento)
-        user.telefono = request.POST.get('telefono', user.telefono)
-        user.residencia = request.POST.get('residencia', user.residencia)
-        if 'imagen_perfil' in request.FILES:
-            user.imagen_perfil = request.FILES['imagen_perfil']
-        user.save()
-
-        perfil, _ = GuiaTuristico.objects.get_or_create(usuario=user)
-        perfil.licencia_turismo = request.POST.get(
-            'licencia_turismo', perfil.licencia_turismo)
-        experiencia = request.POST.get('experiencia_anos')
-        if experiencia and experiencia.isdigit():
-            perfil.experiencia_anos = int(experiencia)
-        perfil.biografia = request.POST.get('biografia', perfil.biografia)
-        perfil.save()
-        messages.success(
-            request, f'Guía «{user.get_full_name()}» actualizado correctamente.')
-
     else:
         # --- MODO CREACIÓN ---
         username = request.POST.get('username', '').strip()

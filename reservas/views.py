@@ -2,6 +2,8 @@ from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.shortcuts import render
 from .models import Reserva, Cancelacion
+from django.utils.decorators import method_decorator
+from core.decoradores import requiere_administrador, requiere_autenticacion
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect
 from catalogo.models import Paquete
@@ -31,6 +33,7 @@ from notificaciones.models import Auditoria
 # RESERVAS ADMIN 
 # =========================
 
+@method_decorator(requiere_administrador, name='dispatch')
 class ReservaListView(ListView):
     model = Reserva
     template_name = 'admin/reservas/reservas.html'
@@ -79,6 +82,7 @@ class ReservaListView(ListView):
         
         return context
     
+@method_decorator(requiere_administrador, name='dispatch')
 class ReservaCreateView(SuccessMessageMixin, CreateView):
     model = Reserva
     fields = ['usuario', 'paquete', 'fecha', 'numero_adultos', 'numero_menores']
@@ -99,6 +103,7 @@ class ReservaCreateView(SuccessMessageMixin, CreateView):
         return super().form_valid(form)
 
 
+@method_decorator(requiere_administrador, name='dispatch')
 class ReservaUpdateView(UpdateView):
     model = Reserva
     fields = ['usuario', 'paquete', 'fecha', 'numero_adultos', 'numero_menores', 'estado']
@@ -151,11 +156,11 @@ class ReservaUpdateView(UpdateView):
                 
         return response
 
+@method_decorator(requiere_administrador, name='dispatch')
 class ReservaDeleteView(DeleteView):
     model = Reserva
     template_name = 'admin/reservas/eliminar_reserva.html'
     success_url = reverse_lazy('listar_reservas')
-
 
 @login_required(login_url='login')
 def mis_reservas_usuario(request):
@@ -191,6 +196,7 @@ def enviar_correo_monagua(asunto, mensaje, destinatario):
 # =========================
 
 
+@method_decorator(requiere_administrador, name='dispatch')
 class CancelacionListView(ListView):
     model = Cancelacion
     template_name = 'admin/cancelaciones/cancelaciones_admin.html'
@@ -237,6 +243,7 @@ class CancelacionListView(ListView):
         return context
 
 
+@method_decorator(requiere_autenticacion, name='dispatch')
 class CancelacionCreateView(CreateView):
     model = Cancelacion
     fields = ['motivo']
@@ -314,18 +321,25 @@ class CancelacionCreateView(CreateView):
 
         return response
     
+@method_decorator(requiere_administrador, name='dispatch')
 class CancelacionUpdateView(UpdateView):
     model = Cancelacion
     fields = ['estado', 'penalidad']
     template_name = 'admin/cancelaciones/editar_cancelacion.html'
     success_url = reverse_lazy('administrar_cancelaciones')
-    
 
+    def post(self, request, *args, **kwargs):
+        cancelacion = self.get_object()
+        if cancelacion.estado in ('aceptada', 'rechazada'):
+            messages.error(request, 'Esta cancelación ya ha sido procesada y no puede modificarse.')
+            return redirect('administrar_cancelaciones')
+        return super().post(request, *args, **kwargs)
+
+@method_decorator(requiere_administrador, name='dispatch')
 class CancelacionDeleteView(DeleteView):
     model = Cancelacion
     template_name = 'admin/cancelaciones/eliminar_cancelacion.html'
     success_url = reverse_lazy('administrar_cancelaciones')
-
 
 @login_required(login_url='login')
 def mis_cancelaciones_usuario(request):
@@ -345,6 +359,7 @@ def mis_cancelaciones_usuario(request):
         'cancelaciones': mis_cancelaciones
     }
     return render(request, 'usuario/cancelaciones/mis_cancelaciones.html', context)
+@requiere_administrador
 def administrar_cancelaciones(request):
     """
     administrar_cancelaciones.
@@ -356,6 +371,10 @@ def administrar_cancelaciones(request):
     if request.method == 'POST':
         cancelacion_id = request.POST.get('cancelacion_id')
         cancelacion = get_object_or_404(Cancelacion, id=cancelacion_id)
+
+        if cancelacion.estado in ('aceptada', 'rechazada'):
+            messages.error(request, 'Esta cancelación ya ha sido procesada y no puede modificarse.')
+            return redirect('administrar_cancelaciones')
 
         cancelacion.estado = request.POST.get('estado')
 

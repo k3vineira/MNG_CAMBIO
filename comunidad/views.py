@@ -9,6 +9,8 @@ from core.decoradores import requiere_autenticacion, requiere_administrador
 from usuarios.models import Cliente
 from django.db.models import Count, Q
 from notificaciones.models import Auditoria
+from django.utils.decorators import method_decorator
+from core.decoradores import requiere_administrador
 from notificaciones.utils import crear_notificacion_sistema
 from django.core.paginator import Paginator
 
@@ -36,6 +38,7 @@ def pqrs(request):
 
 
 # PQRS
+@method_decorator(requiere_administrador, name='dispatch')
 class PQRSListView(ListView):
     model = PQRS
     template_name = 'admin/pqrs/pqrs.html'
@@ -65,6 +68,7 @@ class PQRSListView(ListView):
         return context
 
 
+@requiere_administrador
 def contestar_pqrs(request, pqrs_id):
     pqr = get_object_or_404(PQRS, pk=pqrs_id)
     
@@ -143,6 +147,7 @@ def mis_pqrs_view(request):
 # BLOG
 
 
+@method_decorator(requiere_administrador, name='dispatch')
 class BlogListView(ListView):
     model = Blog
     template_name = 'admin/blog/blog.html'
@@ -167,6 +172,7 @@ class BlogListView(ListView):
         return context
 
 
+@method_decorator(requiere_administrador, name='dispatch')
 class BlogCreateView(CreateView):
     model = Blog
     form_class = BlogForm
@@ -184,6 +190,7 @@ class BlogCreateView(CreateView):
         return response
 
 
+@method_decorator(requiere_administrador, name='dispatch')
 class BlogUpdateView(UpdateView):
     model = Blog
     form_class = BlogForm
@@ -201,6 +208,7 @@ class BlogUpdateView(UpdateView):
         return response
 
 
+@method_decorator(requiere_administrador, name='dispatch')
 class BlogDeleteView(DeleteView):
     model = Blog
     template_name = 'admin/blog/eliminar_blog.html'

@@ -6,6 +6,8 @@ from .models import Paquete, Actividades, Categoria, Tarifa, Temporada
 from django.db.models import Count, Q
 from django import forms
 from .forms import PaqueteForm
+from django.utils.decorators import method_decorator
+from core.decoradores import requiere_administrador
 from notificaciones.utils import crear_notificacion_sistema
 
 
@@ -58,6 +60,7 @@ def destinos(request):
     return render(request, 'usuario/destinos.html', context)
 
 # PAQUETES
+@method_decorator(requiere_administrador, name='dispatch')
 class PaqueteListView(ListView):
     model = Paquete
     template_name = 'admin/paquetes/paquetes.html'
@@ -105,6 +108,7 @@ class PaqueteListView(ListView):
         return context
 
 
+@method_decorator(requiere_administrador, name='dispatch')
 class PaqueteCreateView(CreateView):
     model = Paquete
     form_class = PaqueteForm
@@ -148,6 +152,7 @@ class PaqueteCreateView(CreateView):
         return response
       
 
+@method_decorator(requiere_administrador, name='dispatch')
 class PaqueteUpdateView(UpdateView):
     
     model = Paquete
@@ -187,6 +192,7 @@ class PaqueteUpdateView(UpdateView):
         return response
 
 
+@method_decorator(requiere_administrador, name='dispatch')
 class PaqueteDeleteView(DeleteView):
     model = Paquete
     template_name = 'admin/paquetes/eliminar_paquete.html'
@@ -219,6 +225,7 @@ class PaqueteDeleteView(DeleteView):
 
 # ACTIVIDADES
 
+@method_decorator(requiere_administrador, name='dispatch')
 class ActividadesListView(ListView):
     model = Actividades
     template_name = 'admin/actividades/actividades.html'
@@ -266,6 +273,7 @@ class ActividadesListView(ListView):
         return context
 
 
+@method_decorator(requiere_administrador, name='dispatch')
 class ActividadesCreateView(CreateView):
     model = Actividades
     fields = ['nombre', 'descripcion', 'nivel_dificultad', 'equipo_requerimiento',
@@ -309,6 +317,7 @@ class ActividadesCreateView(CreateView):
         return response
 
 
+@method_decorator(requiere_administrador, name='dispatch')
 class ActividadesUpdateView(UpdateView):
     model = Actividades
     fields = ['nombre', 'descripcion', 'nivel_dificultad', 'equipo_requerimiento',
@@ -351,6 +360,7 @@ class ActividadesUpdateView(UpdateView):
         return response
 
 
+@method_decorator(requiere_administrador, name='dispatch')
 class ActividadesDeleteView(DeleteView):
     model = Actividades
     template_name = 'admin/actividades/eliminar_actividad.html'
@@ -381,6 +391,7 @@ class ActividadesDeleteView(DeleteView):
         return response
 
 
+@method_decorator(requiere_administrador, name='dispatch')
 class CategoriaListView(ListView):
     model = Categoria
     template_name = 'admin/categorias/categorias.html'
@@ -416,6 +427,7 @@ class CategoriaListView(ListView):
         return context
 
 
+@method_decorator(requiere_administrador, name='dispatch')
 class CategoriaCreateView(CreateView):
     model = Categoria
     fields = ['nombre', 'descripcion']
@@ -459,6 +471,7 @@ class CategoriaCreateView(CreateView):
     
     
 
+@method_decorator(requiere_administrador, name='dispatch')
 class CategoriaUpdateView(UpdateView):
     model = Categoria
     fields = ['nombre', 'descripcion', 'estado']
@@ -500,6 +513,7 @@ class CategoriaUpdateView(UpdateView):
         return response
 
 
+@method_decorator(requiere_administrador, name='dispatch')
 class CategoriaDeleteView(DeleteView):
     model = Categoria
     template_name = 'admin/categorias/eliminar_categoria.html'
@@ -546,6 +560,7 @@ def reservas(request):
 
 # TARIFAS
 
+@method_decorator(requiere_administrador, name='dispatch')
 class TarifaListView(ListView):
     model = Tarifa
     template_name = 'admin/tarifas/tarifas.html'
@@ -593,6 +608,7 @@ class TarifaListView(ListView):
         return context
 
 
+@method_decorator(requiere_administrador, name='dispatch')
 class TarifaCreateView(CreateView):
     model = Tarifa
     fields = ['paquete', 'temporada', 'precio_adulto', 'precio_menor']
@@ -619,6 +635,7 @@ class TarifaCreateView(CreateView):
     
 
 
+@method_decorator(requiere_administrador, name='dispatch')
 class TarifaUpdateView(UpdateView):
     model = Tarifa
     fields = ['paquete', 'temporada', 'precio_adulto', 'precio_menor','estado']

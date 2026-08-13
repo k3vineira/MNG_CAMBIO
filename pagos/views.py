@@ -48,6 +48,10 @@ def enviar_comprobante(request):
                 request, 'La reserva seleccionada no es válida.')
             return redirect('enviar_comprobante')
 
+        if ComprobantePago.objects.filter(reserva=reserva, estado__in=['aprobado', 'pendiente']).exists():
+            messages.error(request, 'Esta reserva ya tiene un comprobante de pago procesado o en revisión.')
+            return redirect('enviar_comprobante')
+
         # Determinar el monto fijo de la reserva o multa
         if reserva.estado == 'cancelada':
             cancellation = Cancelacion.objects.filter(reserva=reserva, estado='aceptada').first()
@@ -146,6 +150,10 @@ def admin_revisar_comprobante(request, pk):
     comprobante = get_object_or_404(ComprobantePago, pk=pk)
 
     if request.method == 'POST':
+        if comprobante.estado in ('aprobado', 'rechazado'):
+            messages.error(request, 'Este comprobante ya ha sido procesado y no puede modificarse.')
+            return redirect('admin_comprobantes')
+
         nuevo_estado = request.POST.get('estado')
         nota_admin = request.POST.get('nota_admin', '').strip()
 
@@ -201,9 +209,9 @@ def admin_revisar_comprobante(request, pk):
 def admin_eliminar_comprobante(request, pk):
     """Admin elimina un comprobante."""
     if request.method == 'POST':
-        comprobante = get_object_or_404(ComprobantePago, pk=pk)
-        comprobante.delete()
-        messages.info(request, f'Comprobante #{pk} eliminado.')
+        comp = get_object_or_404(ComprobantePago, id=pk)
+        comp.delete()
+        messages.success(request, f'Comprobante #{pk} eliminado correctamente.')
     return redirect('admin_comprobantes')
 
     # PÁGINA DE PAGOS RECHAZADOS Y CANCELACIONES RECHAZADAS

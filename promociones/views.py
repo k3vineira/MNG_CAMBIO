@@ -1,6 +1,8 @@
 from django.shortcuts import render
 from .models import Promocion
+from core.decoradores import requiere_administrador
 
+@requiere_administrador
 def gestion_promociones(request):
     """
     gestion_promociones.

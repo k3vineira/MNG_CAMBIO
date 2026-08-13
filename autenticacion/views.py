@@ -153,6 +153,22 @@ def password_reset_otp_verify_view(request):
 def registro_view(request):
     """Renderiza y gestiona la plantilla de registro de usuarios."""
     if request.method == 'POST':
+        email_val = request.POST.get('email', '').strip()
+        doc_val = request.POST.get('numero_documento', '').strip()
+        usr_val = request.POST.get('username', '').strip()
+        
+        if email_val and Usuario.objects.filter(email__iexact=email_val).exists():
+            messages.error(request, 'El correo electrónico ya se encuentra registrado. No se puede sobrescribir o duplicar cuentas.')
+            return redirect('registro')
+            
+        if doc_val and Usuario.objects.filter(numero_documento=doc_val).exists():
+            messages.error(request, 'El número de documento ya se encuentra registrado. No se puede sobrescribir o duplicar cuentas.')
+            return redirect('registro')
+            
+        if usr_val and Usuario.objects.filter(username__iexact=usr_val).exists():
+            messages.error(request, 'El nombre de usuario ya se encuentra registrado. No se puede sobrescribir o duplicar cuentas.')
+            return redirect('registro')
+
         form = RegistroForm(request.POST)
         if form.is_valid():
             email = form.cleaned_data['email']
