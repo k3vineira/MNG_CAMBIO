@@ -35,25 +35,22 @@ def pqrs(request):
     return render(request, 'usuario/pqrs.html', context)
 
 
-# PQRS
 class PQRSListView(ListView):
     model = PQRS
     template_name = 'admin/pqrs/pqrs.html'
     context_object_name = 'todas_las_pqrs'
 
     def get_queryset(self):
-
-       return PQRS.objects.all().order_by('-fecha')
+        return PQRS.objects.all().order_by('-fecha')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        # Se realiza el conteo verificando si la PQRS tiene registros en la tabla de Historial
         stats = PQRS.objects.aggregate(
             total=Count('id'),
-            respondidas=Count('id', filter=Q(
-                respuesta__isnull=False) & ~Q(respuesta='')),
-            pendientes=Count('id', filter=Q(
-                respuesta__isnull=True) | Q(respuesta=''))
+            respondidas=Count('id', filter=Q(historiales__isnull=False)),
+            pendientes=Count('id', filter=Q(historiales__isnull=True))
         )
 
         context['stats_list'] = [
@@ -63,7 +60,6 @@ class PQRSListView(ListView):
         ]
 
         return context
-
 
 def contestar_pqrs(request, pqrs_id):
     pqr = get_object_or_404(PQRS, pk=pqrs_id)
