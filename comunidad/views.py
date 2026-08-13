@@ -9,8 +9,6 @@ from core.decoradores import requiere_autenticacion, requiere_administrador
 from usuarios.models import Cliente
 from django.db.models import Count, Q
 from notificaciones.models import Auditoria
-from django.utils.decorators import method_decorator
-from core.decoradores import requiere_administrador
 from notificaciones.utils import crear_notificacion_sistema
 from django.core.paginator import Paginator
 
@@ -37,26 +35,22 @@ def pqrs(request):
     return render(request, 'usuario/pqrs.html', context)
 
 
-# PQRS
-@method_decorator(requiere_administrador, name='dispatch')
 class PQRSListView(ListView):
     model = PQRS
     template_name = 'admin/pqrs/pqrs.html'
     context_object_name = 'todas_las_pqrs'
 
     def get_queryset(self):
-
-       return PQRS.objects.all().order_by('-fecha')
+        return PQRS.objects.all().order_by('-fecha')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        # Se realiza el conteo verificando si la PQRS tiene registros en la tabla de Historial
         stats = PQRS.objects.aggregate(
             total=Count('id'),
-            respondidas=Count('id', filter=Q(
-                respuesta__isnull=False) & ~Q(respuesta='')),
-            pendientes=Count('id', filter=Q(
-                respuesta__isnull=True) | Q(respuesta=''))
+            respondidas=Count('id', filter=Q(historiales__isnull=False)),
+            pendientes=Count('id', filter=Q(historiales__isnull=True))
         )
 
         context['stats_list'] = [
@@ -67,8 +61,6 @@ class PQRSListView(ListView):
 
         return context
 
-
-@requiere_administrador
 def contestar_pqrs(request, pqrs_id):
     pqr = get_object_or_404(PQRS, pk=pqrs_id)
     
@@ -147,7 +139,6 @@ def mis_pqrs_view(request):
 # BLOG
 
 
-@method_decorator(requiere_administrador, name='dispatch')
 class BlogListView(ListView):
     model = Blog
     template_name = 'admin/blog/blog.html'
@@ -172,7 +163,6 @@ class BlogListView(ListView):
         return context
 
 
-@method_decorator(requiere_administrador, name='dispatch')
 class BlogCreateView(CreateView):
     model = Blog
     form_class = BlogForm
@@ -190,7 +180,6 @@ class BlogCreateView(CreateView):
         return response
 
 
-@method_decorator(requiere_administrador, name='dispatch')
 class BlogUpdateView(UpdateView):
     model = Blog
     form_class = BlogForm
@@ -208,7 +197,6 @@ class BlogUpdateView(UpdateView):
         return response
 
 
-@method_decorator(requiere_administrador, name='dispatch')
 class BlogDeleteView(DeleteView):
     model = Blog
     template_name = 'admin/blog/eliminar_blog.html'
