@@ -12,8 +12,7 @@ urlpatterns = [
 
     # PQRS
     path('admin/pqrs/', views.PQRSListView.as_view(), name='listar_pqrs'),
-    path('admin/pqrs/contestar/<int:pqrs_id>/',
-         views.contestar_pqrs, name='contestar_pqrs'),
+    path('admin/pqrs/contestar/<int:pqrs_id>/', views.contestar_pqrs, name='contestar_pqrs'),
     path('mis_pqrs/', views.mis_pqrs_view, name='mis_pqrs'),
     path('pqrs/guardar/', views.guardar_pqrs, name='guardar_pqrs'),
 

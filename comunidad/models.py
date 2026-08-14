@@ -25,35 +25,36 @@ class Calificacion(models.Model):
 
 
 class Blog(models.Model):
-    """
-    Entrada de blog publicada por el equipo de Monagua.
-    """
+    """Entrada de blog publicada por un administrador o autor en Mongua Turismo."""
+
+
     usuario = models.ForeignKey(
-        'usuarios.Usuario',
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='blogs',
-        null=True,
-        blank=True,
-        verbose_name='Autor'
+        related_name="blogs_publicados",
+        verbose_name="Autor / Administrador",
     )
     titulo = models.CharField(max_length=200)
     contenido = models.TextField()
     informacion_adicional = models.TextField(blank=True)
-    imagen_destacada = models.ImageField(upload_to='blog/', blank=True, null=True)
+    imagen = models.ImageField(upload_to="blog/", blank=True, null=True)
     fecha_publicacion = models.DateTimeField(auto_now_add=True)
-    estado = models.BooleanField(
-        default=True, verbose_name='Estado')
+    publicado = models.BooleanField(
+        default=True, verbose_name="¿Está Publicado?"
+    )
 
     class Meta:
-        ordering = ['-fecha_publicacion']
+        ordering = ["-fecha_publicacion"]
+        verbose_name = "Blog"
+        verbose_name_plural = "Blogs"
 
     def get_absolute_url(self):
         """Retorna la URL de detalle de este post del blog."""
-        return reverse('detalle_blog', kwargs={'id': self.id})
+        return reverse("detalle_blog", kwargs={"id": self.id})
 
     def __str__(self):
-        """Retorna el título del blog como representación textual."""
-        return self.titulo
+        """Retorna el título y el autor del blog."""
+        return f"{self.titulo} - Por: {self.usuario.get_full_name() or self.usuario.username}"
 
 class PQRS(models.Model):
     """Solicitud de Petición, Queja, Reclamo o Sugerencia enviada por un usuario."""
@@ -93,26 +94,15 @@ class PQRS(models.Model):
 
 
 class Historial(models.Model):
-    """Guarda las respuestas o seguimiento histórico de una PQRS."""
-
-    pqrs = models.ForeignKey(
-        PQRS, on_delete=models.CASCADE, related_name='historiales'
-    )
-    usuario = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True
-    )
+    pqrs = models.ForeignKey(PQRS, on_delete=models.CASCADE, related_name='historiales')
+    respuesta = models.TextField() # El contenido del mensaje
     fecha_respuesta = models.DateTimeField(auto_now_add=True)
-    respuesta = models.TextField()
 
     class Meta:
-        verbose_name_plural = 'Historiales'
-        ordering = ['fecha_respuesta']  
+        ordering = ['fecha_respuesta'] 
 
     def __str__(self):
-        return f'Historial de PQRS #{self.pqrs.id}'
+        return f'Historial de {self.pqrs} - {self.fecha_respuesta.strftime("%Y-%m-%d %H:%M:%S")}'
 
 class Comentario(models.Model):
     """Comentarios y reseñas de experiencias de usuarios."""
