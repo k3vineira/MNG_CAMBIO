@@ -131,10 +131,10 @@ class BlogTest(TestCase):
         blog = Blog.objects.create(
             titulo='Guía de Monagua',
             contenido='Contenido del artículo de prueba',
-            publicado=True
+            estado=True
         )
         self.assertEqual(blog.titulo, 'Guía de Monagua')
-        self.assertTrue(blog.publicado)
+        self.assertTrue(blog.estado)
 
     def test_str_blog(self):
         """
@@ -148,14 +148,14 @@ class BlogTest(TestCase):
         )
         self.assertEqual(str(blog), 'Primer Post')
 
-    def test_publicado_default_true(self):
+    def test_estado_default_true(self):
         """
-        test_publicado_default_true.
+        test_estado_default_true.
         
         :return: Respuesta de la función.
         """
         blog = Blog.objects.create(titulo='Post', contenido='Texto')
-        self.assertTrue(blog.publicado)
+        self.assertTrue(blog.estado)
 
     def test_get_absolute_url(self):
         """
