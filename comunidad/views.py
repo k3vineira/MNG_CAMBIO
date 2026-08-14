@@ -14,7 +14,7 @@ from django.core.paginator import Paginator
 
 
 def blog(request):
-    blogs_list = Blog.objects.filter(publicado=True).order_by('-fecha_publicacion')
+    blogs_list = Blog.objects.filter(estado=True).order_by('-fecha_publicacion')
     paginator = Paginator(blogs_list, 6)  # Mostrar 6 blogs por página
     page_number = request.GET.get('page')
     blogs = paginator.get_page(page_number)
@@ -138,8 +138,8 @@ class BlogListView(ListView):
      
         stats = Blog.objects.aggregate(
             total=Count('id'),
-            publicados=Count('id', filter=Q(publicado=True)),
-            borradores=Count('id', filter=Q(publicado=False))
+            publicados=Count('id', filter=Q(estado=True)),
+            borradores=Count('id', filter=Q(estado=False))
         )
 
         context['stats_list'] = [
@@ -205,7 +205,7 @@ class BlogDeleteView(DeleteView):
 
 def blog_usuario(request):
     articulos = Blog.objects.filter(
-        publicado=True).order_by('-fecha_publicacion')
+        estado=True).order_by('-fecha_publicacion')
     context = {'blogs': articulos}
     return render(request, 'usuario/blog.html', context)
 

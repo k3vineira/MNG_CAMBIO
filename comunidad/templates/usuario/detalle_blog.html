@@ -17,9 +17,9 @@
             </a>
         </div>
 
-        {% if post.imagen %}
+        {% if post.imagen_destacada %}
         <div class="card border-0 shadow-lg overflow-hidden rounded-5 mb-5 position-relative text-white border-0 bg-dark u-style-6b8418c6">
-            <img src="{{ post.imagen.url }}"
+            <img src="{{ post.imagen_destacada.url }}"
                  class="card-img w-100 h-100 object-fit-cover opacity-50 position-absolute top-0 start-0 u-style-46a3a108"
                  alt="{{ post.titulo }}">
 
