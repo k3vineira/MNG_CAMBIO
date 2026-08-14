@@ -1,6 +1,9 @@
 /* ══════════════ VARIABLES GLOBALES DE COLOR ══════════════ */
 
 :root {
+    --bs-body-font-family: 'Poppins', sans-serif;
+    --bs-font-sans-serif: 'Poppins', sans-serif;
+    
     /* Paleta Monagua - Verde */
     --verde-oscuro: #005215;
     --verde-bosque: #1a261f;
@@ -98,6 +101,7 @@ html, body {
     overflow-x: clip;
     width: 100%;
     position: relative;
+    font-family: 'Poppins', sans-serif;
 }
 
 main.wrapper,
