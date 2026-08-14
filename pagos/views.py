@@ -9,6 +9,7 @@ from .models import ComprobantePago
 from reservas.models import Reserva, Cancelacion
 from django.db.models import Q, OuterRef, Subquery
 from core.decoradores import requiere_autenticacion, requiere_administrador
+from .forms import ComprobantePagoForm
 
 
 @requiere_autenticacion
@@ -27,58 +28,33 @@ def enviar_comprobante(request):
         multa=Subquery(penalidad_subquery)
     ).distinct()
 
+    # Excluir reservas que ya tengan comprobantes en proceso para evitar duplicidad real
+    reservas_usuario = reservas_usuario.exclude(comprobantes__estado__in=['aprobado', 'pendiente'])
+
     if request.method == 'POST':
-        imagen = request.FILES.get('imagen')
-        referencia = request.POST.get('referencia', '').strip()
-        banco = request.POST.get('banco_origen', '').strip()
-        descripcion = request.POST.get('descripcion', '').strip()
-        reserva_id = request.POST.get('reserva')
-
-        if not imagen or not referencia or not banco or not reserva_id:
-            messages.error(
-                request, 'Todos los campos obligatorios (*) deben ser completados.')
-            return redirect('enviar_comprobante')
-
-        reserva = None
-        try:
-            reserva = Reserva.objects.get(
-                id=reserva_id, usuario=request.user)
-        except Reserva.DoesNotExist:
-            messages.error(
-                request, 'La reserva seleccionada no es válida.')
-            return redirect('enviar_comprobante')
-
-        if ComprobantePago.objects.filter(reserva=reserva, estado__in=['aprobado', 'pendiente']).exists():
-            messages.error(request, 'Esta reserva ya tiene un comprobante de pago procesado o en revisión.')
-            return redirect('enviar_comprobante')
-
-        # Determinar el monto fijo de la reserva o multa
-        if reserva.estado == 'cancelada':
-            cancellation = Cancelacion.objects.filter(reserva=reserva, estado='aceptada').first()
-            monto = cancellation.penalidad if cancellation else 0
+        form = ComprobantePagoForm(request.POST, request.FILES, reservas=reservas_usuario)
+        if form.is_valid():
+            comprobante = form.save(commit=False)
+            comprobante.usuario = request.user
+            
+            # The form already validates that the reserva is within the queryset (reservas_usuario)
+            comprobante.save()
+            messages.success(request, '¡Comprobante enviado! Será revisado por el equipo en breve.')
+            return redirect('mis_comprobantes')
         else:
-            monto = reserva.monto_total
+            messages.error(request, 'Por favor, corrige los errores en el formulario y completa todos los campos obligatorios.')
 
-        ComprobantePago.objects.create(
-            usuario=request.user,
-            reserva=reserva,
-            imagen=imagen,
-            referencia=referencia,
-            banco_origen=banco,
-            monto=monto,
-            descripcion=descripcion,
-        )
-        messages.success(
-            request, '¡Comprobante enviado! Será revisado por el equipo en breve.')
-        return redirect('mis_comprobantes')
+    else:
+        form = ComprobantePagoForm(reservas=reservas_usuario)
+        # Select initial reservation if passed via GET parameter
+        selected_reserva_id = request.GET.get('reserva_id')
+        if selected_reserva_id:
+            form.initial['reserva'] = selected_reserva_id
 
-    # GET: mostrar formulario y reservas disponibles
-    selected_reserva_id = request.GET.get('reserva_id')
     comprobantes = ComprobantePago.objects.filter(usuario=request.user)
     context = {
+        'form':               form,
         'comprobantes':       comprobantes,
-        'reservas_usuario':   reservas_usuario,
-        'selected_reserva_id': selected_reserva_id,
         'total_pendientes':   comprobantes.filter(estado='pendiente').count(),
         'total_aprobados':    sum(p.monto or (p.reserva.monto_total if p.reserva else 0) for p in comprobantes.filter(estado='aprobado').select_related('reserva')),
         'total_rechazados':   comprobantes.filter(estado='rechazado').count(),

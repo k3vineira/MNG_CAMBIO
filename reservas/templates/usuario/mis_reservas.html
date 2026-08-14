@@ -83,7 +83,7 @@
                                                     <div class="d-flex align-items-center justify-content-between p-2 rounded-3 border bg-light flex-wrap gap-2">
                                                         <div class="d-flex align-items-center gap-2">
                                                             {% if comp.imagen %}
-                                                                <img src="{{ comp.imagen.url }}" alt="Comprobante" class="rounded border u-style-35afc132">
+                                                                <img src="{{ comp.imagen.url }}" alt="Comprobante" class="img-fluid rounded border u-style-35afc132" style="max-width: 100%; height: auto; object-fit: contain; max-height: 120px;">
                                                             {% endif %}
                                                             <div>
                                                                 <div class="small fw-semibold text-dark">Referencia: {{ comp.referencia|default:"—" }}</div>
