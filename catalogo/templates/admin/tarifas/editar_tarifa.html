@@ -3,13 +3,13 @@
 {% load crispy_forms_tags %}
 
 {% block content %}
-<div class="container py-4" style="--verde-oscuro: #005215;">
+<div class="container py-4">
     <div class="row justify-content-center">
         <div class="col-12 col-md-8 col-lg-6">
             
             <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
-                <!-- Encabezado con fondo verde oscuro #005215 -->
-                <div class="card-header p-4 border-0 text-white" style="background-color: var(--verde-oscuro);">
+                
+                <div class="card-header p-4 border-0 text-white" style="background-color: var(--verde-main);">
                     <div class="d-flex align-items-center">
                         <i class="bi bi-cash-coin fs-2 me-3"></i>
                         <div>
@@ -32,7 +32,7 @@
                             <a href="{% url 'listar_tarifas' %}" class="btn btn-outline-secondary px-4 rounded-pill">
                                 Cancelar
                             </a>
-                            <button type="submit" class="btn text-white px-4 rounded-pill shadow-sm fw-bold" style="background-color: var(--verde-oscuro); border-color: var(--verde-oscuro);">
+                            <button type="submit" class="btn text-white px-4 rounded-pill shadow-sm fw-bold" style="background-color: var(--verde-main); border-color: var(--verde-oscuro);">
                                 <i class="bi bi-check-circle me-1"></i> Guardar Cambios
                             </button>
                         </div>

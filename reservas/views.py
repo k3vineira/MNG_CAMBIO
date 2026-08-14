@@ -5,7 +5,7 @@ from .models import Reserva, Cancelacion
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect
 from catalogo.models import Paquete
-from .forms import CancelacionForm
+from .forms import CancelacionForm , ReservaForm
 from datetime import date, timedelta
 from decimal import Decimal, InvalidOperation
 from django.core.mail import send_mail
@@ -74,12 +74,12 @@ class ReservaListView(ListView):
     
 class ReservaCreateView(SuccessMessageMixin, CreateView):
     model = Reserva
-    fields = ['usuario', 'paquete', 'fecha', 'numero_adultos', 'numero_menores']
+    form_class = ReservaForm
     template_name = 'admin/reservas/agregar_reserva.html'
     success_url = reverse_lazy('listar_reservas')
     success_message = "¡La reserva ha sido creada con éxito!"
 
-    # --- VALIDACIÓN AGREGADA ---
+ 
     def form_valid(self, form):
         adultos = form.cleaned_data.get('numero_adultos', 0)
         menores = form.cleaned_data.get('numero_menores', 0)
@@ -113,7 +113,7 @@ class ReservaCreateView(SuccessMessageMixin, CreateView):
 
 class ReservaUpdateView(UpdateView):
     model = Reserva
-    fields = ['usuario', 'paquete', 'fecha', 'numero_adultos', 'numero_menores', 'estado']
+    form_class = ReservaForm
     template_name = 'admin/reservas/editar_reserva.html'
     success_url = reverse_lazy('listar_reservas')
 
@@ -264,7 +264,7 @@ class CancelacionListView(ListView):
 
 class CancelacionCreateView(CreateView):
     model = Cancelacion
-    fields = ['motivo']
+    form_class = CancelacionForm
     template_name = 'usuario/cancelaciones/crear_cancelacion.html'
     
     def get_success_url(self):
@@ -362,11 +362,11 @@ class CancelacionCreateView(CreateView):
 
 class CancelacionUpdateView(UpdateView):
     model = Cancelacion
-    fields = ['estado', 'penalidad']
+    form_class = CancelacionForm
     template_name = 'admin/cancelaciones/editar_cancelacion.html'
     success_url = reverse_lazy('administrar_cancelaciones')
 
-    # --- VALIDACIÓN AGREGADA ---
+    
     def form_valid(self, form):
         penalidad = form.cleaned_data.get('penalidad')
         if penalidad is not None and penalidad < Decimal('0.00'):
@@ -396,7 +396,6 @@ def mis_cancelaciones_usuario(request):
 
 @login_required(login_url='login')
 def administrar_cancelaciones(request):
-    # --- VALIDACIÓN DE ACCESO DE ADMIN ---
     if not request.user.is_staff:
         messages.error(request, "Acceso denegado. Se requieren permisos de administrador.")
         return redirect('mis_reservas_usuario')

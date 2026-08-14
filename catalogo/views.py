@@ -8,10 +8,10 @@ from django.core.exceptions import ValidationError
 from django.contrib import messages
 from django import forms
 from django.db.models import Count, Q
-
 from .models import Paquete, Actividades, Categoria, Tarifa, Temporada
-from .forms import PaqueteForm
+from .forms import PaqueteForm,CategoriaForm, ActividadesForm, TarifaForm, TemporadaForm
 from auditoria.utils import crear_notificacion_sistema
+
 
 
 # ==========================================
@@ -161,10 +161,7 @@ class PaqueteCreateView(StaffRequiredMixin, CreateView):
 
 class PaqueteUpdateView(StaffRequiredMixin, UpdateView):
     model = Paquete
-    fields = [
-        'imagen', 'nombre', 'descripcion', 'hora_encuentro',
-        'dias_duracion', 'noches_duracion', 'punto_encuentro', 'categoria', 'actividades', 'estado'
-    ]
+    form_class = PaqueteForm
     template_name = 'admin/paquetes/editar_paquete.html'
     success_url = reverse_lazy('listar_paquetes')
 
@@ -264,8 +261,7 @@ class ActividadesListView(StaffRequiredMixin, ListView):
 
 class ActividadesCreateView(StaffRequiredMixin, CreateView):
     model = Actividades
-    fields = ['nombre', 'descripcion', 'nivel_dificultad', 'equipo_requerimiento',
-              'recomendacion_salud', 'apto_para_menores']
+    form_class = ActividadesForm
     template_name = 'admin/actividades/agregar_actividad.html'
     success_url = reverse_lazy('listar_actividades')
 
@@ -295,8 +291,7 @@ class ActividadesCreateView(StaffRequiredMixin, CreateView):
 
 class ActividadesUpdateView(StaffRequiredMixin, UpdateView):
     model = Actividades
-    fields = ['nombre', 'descripcion', 'nivel_dificultad', 'equipo_requerimiento',
-              'recomendacion_salud', 'estado', 'apto_para_menores']
+    form_class = ActividadesForm
     template_name = 'admin/actividades/editar_actividad.html'
     success_url = reverse_lazy('listar_actividades')
 
@@ -388,7 +383,7 @@ class CategoriaListView(StaffRequiredMixin, ListView):
 
 class CategoriaCreateView(StaffRequiredMixin, CreateView):
     model = Categoria
-    fields = ['nombre', 'descripcion']
+    form_class = CategoriaForm
     template_name = 'admin/categorias/agregar_categoria.html'
     success_url = reverse_lazy('listar_categorias')
 
@@ -418,7 +413,7 @@ class CategoriaCreateView(StaffRequiredMixin, CreateView):
 
 class CategoriaUpdateView(StaffRequiredMixin, UpdateView):
     model = Categoria
-    fields = ['nombre', 'descripcion', 'estado']
+    form_class = CategoriaForm
     template_name = 'admin/categorias/editar_categoria.html'
     success_url = reverse_lazy('listar_categorias')
 
@@ -522,7 +517,7 @@ class TarifaListView(StaffRequiredMixin, ListView):
 
 class TarifaCreateView(StaffRequiredMixin, CreateView):
     model = Tarifa
-    fields = ['paquete', 'temporada', 'precio_adulto', 'precio_menor']
+    form_class = TarifaForm
     template_name = 'admin/tarifas/agregar_tarifa.html'
     success_url = reverse_lazy('listar_tarifas')
 
@@ -549,7 +544,7 @@ class TarifaCreateView(StaffRequiredMixin, CreateView):
 
 class TarifaUpdateView(StaffRequiredMixin, UpdateView):
     model = Tarifa
-    fields = ['paquete', 'temporada', 'precio_adulto', 'precio_menor', 'estado']
+    form_class = TarifaForm
     template_name = 'admin/tarifas/editar_tarifa.html'
     success_url = reverse_lazy('listar_tarifas')
 
@@ -593,7 +588,7 @@ class TemporadaListView(StaffRequiredMixin, ListView):
         fecha_inicio = self.request.GET.get("fecha_inicio", "").strip()
         fecha_fin = self.request.GET.get("fecha_fin", "").strip()
 
-        # Validar formato de fechas recibidas por GET
+      
         if fecha_inicio:
             try:
                 f_inicio = datetime.strptime(fecha_inicio, '%Y-%m-%d').date()
@@ -630,7 +625,7 @@ class TemporadaListView(StaffRequiredMixin, ListView):
 
 class TemporadaCreateView(StaffRequiredMixin, CreateView):
     model = Temporada
-    fields = ['nombre', 'fecha_inicio', 'fecha_fin']
+    form_class = TemporadaForm
     template_name = 'admin/temporada/agregar_temporada.html'
     success_url = reverse_lazy('listar_temporadas')
 
@@ -657,7 +652,7 @@ class TemporadaCreateView(StaffRequiredMixin, CreateView):
 
 class TemporadaUpdateView(StaffRequiredMixin, UpdateView):
     model = Temporada
-    fields = ['nombre', 'fecha_inicio', 'fecha_fin', 'estado']
+    form_class = TemporadaForm
     template_name = 'admin/temporada/editar_temporada.html'
     success_url = reverse_lazy('listar_temporadas')
 

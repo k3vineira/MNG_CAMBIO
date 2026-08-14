@@ -3,28 +3,28 @@
 {% load crispy_forms_tags %}
 
 {% block content %}
-<div class="container py-4" style="--verde-oscuro: #005215;">
+<div class="container py-4" >
     <div class="row justify-content-center">
-        <!-- Ancho centrado compacto -->
+      
         <div class="col-12 col-md-8 col-lg-6" style="max-width: 600px;">
             
             <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
-                <!-- Header con fondo verde oscuro #005215 e icono -->
-                <div class="card-header p-4 border-0 text-white" style="background-color: var(--verde-oscuro);">
+               
+                <div class="card-header p-4 border-0 text-white" style="background-color: var(--verde-main);">
                     <div class="d-flex align-items-center">
                         <i class="bi bi-activity fs-2 me-3"></i>
                         <div>
                             <h4 class="fw-bold mb-0 text-white">
-                                {% if object %}Editar Actividad{% else %}Registrar Nueva Actividad{% endif %}
+                                {% if object %}Editar Categoria{% else %}Registrar Nueva Categoria{% endif %}
                             </h4>
                             <p class="mb-0 text-white-50 small">
-                                {% if object %}Modifica los campos de la actividad en Mongua.{% else %}Completa los campos para habilitar una nueva actividad turística en Mongua.{% endif %}
+                                {% if object %}Modifica los campos de la categoria en Mongua.{% else %}Completa los campos para habilitar una nueva categoria en Mongua.{% endif %}
                             </p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Formulario interno con Crispy -->
+                
                 <div class="card-body p-4 bg-white">
                     <form method="POST" enctype="multipart/form-data" novalidate>
                         {% csrf_token %}
@@ -37,7 +37,7 @@
                             <a href="{% url 'listar_actividades' %}" class="btn btn-outline-secondary px-4 rounded-pill">
                                 Cancelar
                             </a>
-                            <button type="submit" class="btn text-white px-4 rounded-pill shadow-sm fw-bold" style="background-color: var(--verde-oscuro); border-color: var(--verde-oscuro);">
+                            <button type="submit" class="btn text-white px-4 rounded-pill shadow-sm fw-bold" style="background-color: var(--verde-main); border-color: var(--verde-main);">
                                 <i class="bi bi-plus-circle me-1"></i> 
                                 {% if object %}Guardar Cambios{% else %}Crear Actividad{% endif %}
                             </button>
