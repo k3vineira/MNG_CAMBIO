@@ -25,27 +25,36 @@ class Calificacion(models.Model):
 
 
 class Blog(models.Model):
-    """
-    Entrada de blog publicada por el equipo de Monagua.
-    """
+    """Entrada de blog publicada por un administrador o autor en Mongua Turismo."""
+
+
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="blogs_publicados",
+        verbose_name="Autor / Administrador",
+    )
     titulo = models.CharField(max_length=200)
     contenido = models.TextField()
     informacion_adicional = models.TextField(blank=True)
-    imagen = models.ImageField(upload_to='blog/', blank=True, null=True)
+    imagen = models.ImageField(upload_to="blog/", blank=True, null=True)
     fecha_publicacion = models.DateTimeField(auto_now_add=True)
     publicado = models.BooleanField(
-        default=True, verbose_name='¿Está Publicado?')
+        default=True, verbose_name="¿Está Publicado?"
+    )
 
     class Meta:
-        ordering = ['-fecha_publicacion']
+        ordering = ["-fecha_publicacion"]
+        verbose_name = "Blog"
+        verbose_name_plural = "Blogs"
 
     def get_absolute_url(self):
         """Retorna la URL de detalle de este post del blog."""
-        return reverse('detalle_blog', kwargs={'id': self.id})
+        return reverse("detalle_blog", kwargs={"id": self.id})
 
     def __str__(self):
-        """Retorna el título del blog como representación textual."""
-        return self.titulo
+        """Retorna el título y el autor del blog."""
+        return f"{self.titulo} - Por: {self.usuario.get_full_name() or self.usuario.username}"
 
 class PQRS(models.Model):
     """Solicitud de Petición, Queja, Reclamo o Sugerencia enviada por un usuario."""
@@ -86,7 +95,6 @@ class PQRS(models.Model):
 
 class Historial(models.Model):
     pqrs = models.ForeignKey(PQRS, on_delete=models.CASCADE, related_name='historiales')
-    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE) # Quién responde (Admin o Cliente)
     respuesta = models.TextField() # El contenido del mensaje
     fecha_respuesta = models.DateTimeField(auto_now_add=True)
 
@@ -94,7 +102,7 @@ class Historial(models.Model):
         ordering = ['fecha_respuesta'] 
 
     def __str__(self):
-        return f"Respuesta de {self.usuario.get_full_name()} en PQRS #{self.pqrs.id}"
+        return f'Historial de {self.pqrs} - {self.fecha_respuesta.strftime("%Y-%m-%d %H:%M:%S")}'
 
 class Comentario(models.Model):
     """Comentarios y reseñas de experiencias de usuarios."""

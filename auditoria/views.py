@@ -42,7 +42,7 @@ def marcar_notificacion_leida(request, noti_id):
     elif tipo == 'pago_rechazado':
         return redirect('admin_pagos_rechazados')
     elif tipo == 'cancelacion':
-        return redirect('admin_cancelaciones')
+        return redirect('listar_cancelaciones')
 
     elif tipo == 'usuario':
         return redirect('gestion_usuarios')

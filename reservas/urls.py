@@ -20,8 +20,7 @@ urlpatterns = [
     # Rutas para CRUD de cancelaciones
     path('cancelaciones/', views.CancelacionListView.as_view(),
          name='listar_cancelaciones'),
-    path('cancelaciones/nueva/', views.CancelacionCreateView.as_view(),
-         name='crear_cancelacion'),
+    path('cancelaciones/nueva/', views.CancelacionCreateView.as_view(), name='crear_cancelacion'),
     path('cancelaciones/editar/<int:pk>/',
          views.CancelacionUpdateView.as_view(), name='editar_cancelacion'),
     path('cancelaciones/eliminar/<int:pk>/',
