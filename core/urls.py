@@ -19,9 +19,8 @@ urlpatterns = [
     path('pagos/', include('pagos.urls')),
     path('promociones/', include('promociones.urls')),
     path('', inicio, name='inicio'),
-    path('notificaciones/', include('notificaciones.urls')),
-    path('seguros/', include('seguros.urls')),
-    path('auditoria/', include('auditoria.urls')),
+    path('seguros/', include('seguros.urls'), name='seguros'),
+    path('auditoria/', include('auditoria.urls'), name='auditoria'),
 ]
 
 if settings.DEBUG:
