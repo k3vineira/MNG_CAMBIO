@@ -2,7 +2,7 @@
 -- Script de Base de Datos generado para MySQL Workbench
 -- Proyecto: Monagua (MNG_WEB)
 -- Modo: BUSINESS (24 tablas)
--- Fecha de generación: 2026-08-16 11:06:21
+-- Fecha de generación: 2026-08-16 14:34:24
 -- =============================================================================
 
 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
@@ -14,6 +14,26 @@ SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,N
 -- -----------------------------------------------------
 CREATE SCHEMA IF NOT EXISTS `monagua_db` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE `monagua_db`;
+
+-- -----------------------------------------------------
+-- Tabla `monagua_db`.`auditoria_auditoria`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `auditoria_auditoria`;
+CREATE TABLE IF NOT EXISTS `auditoria_auditoria` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `acciones_realizada` VARCHAR(255) NOT NULL,
+  `tabla_afectada` VARCHAR(100) NOT NULL,
+  `fecha` DATE NOT NULL,
+  `hora` TIME NOT NULL,
+  `observacion` TEXT NULL,
+  `valor_anterior` TEXT NULL,
+  `nuevo_valor` TEXT NULL,
+  `codigo_usuario_id` BIGINT NOT NULL,
+  PRIMARY KEY (`id`),
+  CONSTRAINT `fk_auditoria_auditoria_codigo_usuario_id`
+    FOREIGN KEY (`codigo_usuario_id`)
+    REFERENCES `usuarios_usuario` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------
 -- Tabla `monagua_db`.`catalogo_actividades`
@@ -107,10 +127,10 @@ CREATE TABLE IF NOT EXISTS `comunidad_blog` (
   `titulo` VARCHAR(200) NOT NULL,
   `contenido` LONGTEXT NOT NULL,
   `informacion_adicional` TEXT NOT NULL,
-  `imagen_destacada` VARCHAR(100) NULL,
+  `imagen` VARCHAR(100) NULL,
   `fecha_publicacion` DATETIME NOT NULL,
-  `estado` TINYINT(1) NOT NULL,
-  `usuario_id` BIGINT NULL,
+  `publicado` TINYINT(1) NOT NULL,
+  `usuario_id` BIGINT NOT NULL,
   PRIMARY KEY (`id`),
   CONSTRAINT `fk_comunidad_blog_usuario_id`
     FOREIGN KEY (`usuario_id`)
@@ -168,17 +188,13 @@ CREATE TABLE IF NOT EXISTS `comunidad_comentario` (
 DROP TABLE IF EXISTS `comunidad_historial`;
 CREATE TABLE IF NOT EXISTS `comunidad_historial` (
   `id` INT NOT NULL AUTO_INCREMENT,
-  `fecha_respuesta` DATETIME NOT NULL,
   `respuesta` TEXT NOT NULL,
-  `usuario_id` BIGINT NULL,
+  `fecha_respuesta` DATETIME NOT NULL,
   `pqrs_id` BIGINT NOT NULL,
   PRIMARY KEY (`id`),
   CONSTRAINT `fk_comunidad_historial_pqrs_id`
     FOREIGN KEY (`pqrs_id`)
-    REFERENCES `comunidad_pqrs` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  CONSTRAINT `fk_comunidad_historial_usuario_id`
-    FOREIGN KEY (`usuario_id`)
-    REFERENCES `usuarios_usuario` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+    REFERENCES `comunidad_pqrs` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------
@@ -209,59 +225,40 @@ CREATE TABLE IF NOT EXISTS `factura` (
   `estado` VARCHAR(20) NOT NULL,
   `valor_subtotal` DECIMAL(12, 2) NOT NULL,
   `valor_total` DECIMAL(12, 2) NOT NULL,
-  `codigo_pago` BIGINT NULL,
   `codigo_reserva` BIGINT NOT NULL,
+  `codigo_pago` BIGINT NULL,
   PRIMARY KEY (`id`),
-  CONSTRAINT `fk_factura_codigo_reserva`
-    FOREIGN KEY (`codigo_reserva`)
-    REFERENCES `reservas_reserva` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `fk_factura_codigo_pago`
     FOREIGN KEY (`codigo_pago`)
-    REFERENCES `pagos_comprobantepago` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+    REFERENCES `pago` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  CONSTRAINT `fk_factura_codigo_reserva`
+    FOREIGN KEY (`codigo_reserva`)
+    REFERENCES `reservas_reserva` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------
--- Tabla `monagua_db`.`notificaciones_auditoria`
+-- Tabla `monagua_db`.`pago`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `notificaciones_auditoria`;
-CREATE TABLE IF NOT EXISTS `notificaciones_auditoria` (
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `acciones_realizada` VARCHAR(255) NOT NULL,
-  `tabla_afectada` VARCHAR(100) NOT NULL,
-  `fecha` DATE NOT NULL,
-  `hora` TIME NOT NULL,
-  `observacion` TEXT NULL,
-  `valor_anterior` TEXT NULL,
-  `nuevo_valor` TEXT NULL,
-  `codigo_usuario_id` BIGINT NOT NULL,
-  PRIMARY KEY (`id`),
-  CONSTRAINT `fk_notificaciones_auditoria_codigo_usuario_id`
-    FOREIGN KEY (`codigo_usuario_id`)
-    REFERENCES `usuarios_usuario` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- -----------------------------------------------------
--- Tabla `monagua_db`.`pagos_comprobantepago`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `pagos_comprobantepago`;
-CREATE TABLE IF NOT EXISTS `pagos_comprobantepago` (
+DROP TABLE IF EXISTS `pago`;
+CREATE TABLE IF NOT EXISTS `pago` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `referencia` VARCHAR(100) NOT NULL,
   `banco_origen` VARCHAR(100) NOT NULL,
-  `monto` DECIMAL(12, 2) NULL,
+  `monto` DECIMAL(12, 2) NOT NULL,
   `imagen` VARCHAR(100) NOT NULL,
   `descripcion` LONGTEXT NOT NULL,
   `estado` VARCHAR(20) NOT NULL,
   `nota_admin` TEXT NOT NULL,
+  `fecha_pago` DATETIME NOT NULL,
   `fecha_envio` DATETIME NOT NULL,
   `fecha_revision` DATETIME NULL,
   `reserva_id` BIGINT NULL,
   `usuario_id` BIGINT NOT NULL,
   PRIMARY KEY (`id`),
-  CONSTRAINT `fk_pagos_comprobantepago_usuario_id`
+  CONSTRAINT `fk_pago_usuario_id`
     FOREIGN KEY (`usuario_id`)
     REFERENCES `usuarios_usuario` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  CONSTRAINT `fk_pagos_comprobantepago_reserva_id`
+  CONSTRAINT `fk_pago_reserva_id`
     FOREIGN KEY (`reserva_id`)
     REFERENCES `reservas_reserva` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

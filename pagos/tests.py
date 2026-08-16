@@ -4,7 +4,7 @@ from django.utils import timezone
 from usuarios.models import Usuario
 from catalogo.models import Categoria, Paquete, Temporada, Tarifa
 from reservas.models import Reserva
-from pagos.models import ComprobantePago
+from pagos.models import Pago
 
 
 def crear_usuario(username='pago_user'):
@@ -60,10 +60,10 @@ def crear_reserva(usuario, paquete):
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# TESTS DE COMPROBANTE DE PAGO
+# TESTS DE PAGO
 # ──────────────────────────────────────────────────────────────────────────────
 
-class ComprobantePagoCreacionTest(TestCase):
+class PagoCreacionTest(TestCase):
 
     def setUp(self):
         """
@@ -81,7 +81,7 @@ class ComprobantePagoCreacionTest(TestCase):
         
         :return: Respuesta de la función.
         """
-        comp = ComprobantePago.objects.create(
+        comp = Pago.objects.create(
             usuario=self.usuario,
             reserva=self.reserva,
             referencia='REF-001',
@@ -99,7 +99,7 @@ class ComprobantePagoCreacionTest(TestCase):
         
         :return: Respuesta de la función.
         """
-        comp = ComprobantePago.objects.create(
+        comp = Pago.objects.create(
             usuario=self.usuario,
             imagen='comprobantes/test.jpg'
         )
@@ -113,13 +113,11 @@ class ComprobantePagoCreacionTest(TestCase):
         
         :return: Respuesta de la función.
         """
-        comp = ComprobantePago.objects.create(
+        comp = Pago.objects.create(
             usuario=self.usuario,
             imagen='comprobantes/test.jpg'
         )
         self.assertEqual(comp.estado, 'pendiente')
-
-
 
     def test_reserva_puede_ser_nula(self):
         """
@@ -127,7 +125,7 @@ class ComprobantePagoCreacionTest(TestCase):
         
         :return: Respuesta de la función.
         """
-        comp = ComprobantePago.objects.create(
+        comp = Pago.objects.create(
             usuario=self.usuario,
             imagen='comprobantes/test.jpg',
             reserva=None
@@ -135,7 +133,7 @@ class ComprobantePagoCreacionTest(TestCase):
         self.assertIsNone(comp.reserva)
 
 
-class ComprobantePagoEstadosTest(TestCase):
+class PagoEstadosTest(TestCase):
 
     def setUp(self):
         """
@@ -151,7 +149,7 @@ class ComprobantePagoEstadosTest(TestCase):
         
         :return: Respuesta de la función.
         """
-        estados = [e[0] for e in ComprobantePago.ESTADO_CHOICES]
+        estados = [e[0] for e in Pago.ESTADO_CHOICES]
         self.assertIn('pendiente', estados)
         self.assertIn('aprobado', estados)
         self.assertIn('rechazado', estados)
@@ -162,7 +160,7 @@ class ComprobantePagoEstadosTest(TestCase):
         
         :return: Respuesta de la función.
         """
-        comp = ComprobantePago.objects.create(
+        comp = Pago.objects.create(
             usuario=self.usuario,
             imagen='comprobantes/test.jpg'
         )
@@ -175,7 +173,7 @@ class ComprobantePagoEstadosTest(TestCase):
 
     def test_validacion_aprobar_sin_banco(self):
         from django.core.exceptions import ValidationError
-        comp = ComprobantePago.objects.create(
+        comp = Pago.objects.create(
             usuario=self.usuario,
             imagen='comprobantes/test.jpg'
         )
@@ -187,7 +185,7 @@ class ComprobantePagoEstadosTest(TestCase):
 
     def test_validacion_aprobar_sin_monto(self):
         from django.core.exceptions import ValidationError
-        comp = ComprobantePago.objects.create(
+        comp = Pago.objects.create(
             usuario=self.usuario,
             imagen='comprobantes/test.jpg'
         )
@@ -207,7 +205,7 @@ class ComprobantePagoEstadosTest(TestCase):
         Reserva.objects.filter(pk=reserva.pk).update(monto_total=1000000)
         reserva.refresh_from_db()
         
-        comp = ComprobantePago.objects.create(
+        comp = Pago.objects.create(
             usuario=self.usuario,
             reserva=reserva,
             imagen='comprobantes/test.jpg',
@@ -225,7 +223,7 @@ class ComprobantePagoEstadosTest(TestCase):
         
         :return: Respuesta de la función.
         """
-        comp = ComprobantePago.objects.create(
+        comp = Pago.objects.create(
             usuario=self.usuario,
             imagen='comprobantes/test.jpg'
         )
@@ -241,7 +239,7 @@ class ComprobantePagoEstadosTest(TestCase):
         
         :return: Respuesta de la función.
         """
-        comp = ComprobantePago.objects.create(
+        comp = Pago.objects.create(
             usuario=self.usuario,
             imagen='comprobantes/recibo.jpg'
         )
@@ -254,15 +252,15 @@ class ComprobantePagoEstadosTest(TestCase):
         
         :return: Respuesta de la función.
         """
-        comp1 = ComprobantePago.objects.create(
+        comp1 = Pago.objects.create(
             usuario=self.usuario,
             imagen='comprobantes/a.jpg'
         )
-        comp2 = ComprobantePago.objects.create(
+        comp2 = Pago.objects.create(
             usuario=self.usuario,
             imagen='comprobantes/b.jpg'
         )
-        comprobantes = list(ComprobantePago.objects.all())
+        comprobantes = list(Pago.objects.all())
         self.assertEqual(comprobantes[0].pk, comp2.pk)
 
     def test_relacion_usuario_comprobante(self):
@@ -271,7 +269,7 @@ class ComprobantePagoEstadosTest(TestCase):
         
         :return: Respuesta de la función.
         """
-        comp = ComprobantePago.objects.create(
+        comp = Pago.objects.create(
             usuario=self.usuario,
             imagen='comprobantes/test.jpg'
         )

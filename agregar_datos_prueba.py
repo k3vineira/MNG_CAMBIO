@@ -15,7 +15,7 @@ django.setup()
 
 from usuarios.models import Cliente
 from comunidad.models import PQRS, Comentario
-from pagos.models import ComprobantePago
+from pagos.models import Pago
 from catalogo.models import Paquete
 from reservas.models import Reserva
 from django.contrib.auth import get_user_model
@@ -98,7 +98,7 @@ def crear_datos_prueba():
     # 5. Crear comprobantes de pago
     reservas = Reserva.objects.filter(usuario=usuario, estado='confirmada')
     for reserva in reservas[:5]:
-        comprobante, creado = ComprobantePago.objects.get_or_create(
+        comprobante, creado = Pago.objects.get_or_create(
             usuario=usuario,
             reserva=reserva,
             defaults={

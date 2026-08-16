@@ -1,9 +1,9 @@
 from django import forms
-from .models import ComprobantePago
+from .models import Pago
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Submit, Row, Column, HTML
 
-class ComprobantePagoForm(forms.ModelForm):
+class PagoForm(forms.ModelForm):
     # Select banco with common options
     BANCOS_OPCIONES = [
         ('', '— Selecciona el banco o medio de pago —'),
@@ -32,7 +32,7 @@ class ComprobantePagoForm(forms.ModelForm):
     )
 
     class Meta:
-        model = ComprobantePago
+        model = Pago
         fields = ['reserva', 'referencia', 'banco_origen', 'monto', 'fecha_pago', 'imagen', 'descripcion']
         labels = {
             'reserva': 'Reserva o Penalidad a Vincular',

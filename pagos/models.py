@@ -9,9 +9,9 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 
 
-class ComprobantePago(models.Model):
+class Pago(models.Model):
     """
-    Comprobante de pago subido por un usuario para verificar el pago de una reserva o multa.
+    Pago subido por un usuario para verificar el pago de una reserva o multa.
     El administrador puede aprobarlo o rechazarlo.
     """
     ESTADO_CHOICES = [
@@ -79,13 +79,14 @@ class ComprobantePago(models.Model):
         null=True, blank=True, verbose_name='Fecha de revisión')
 
     class Meta:
-        verbose_name = 'Comprobante de Pago'
-        verbose_name_plural = 'Comprobantes de Pago'
+        db_table = 'pago'
+        verbose_name = 'Pago'
+        verbose_name_plural = 'Pagos'
         ordering = ['-fecha_envio']
 
     def __str__(self):
-        """Retorna el ID, usuario y estado del comprobante como representación textual."""
-        return f"Comprobante #{self.pk} — {self.usuario.username} — {self.get_estado_display()}"
+        """Retorna el ID, usuario y estado del pago como representación textual."""
+        return f"Pago #{self.pk} — {self.usuario.username} — {self.get_estado_display()}"
 
     def clean(self):
         super().clean()
@@ -122,7 +123,7 @@ class ComprobantePago(models.Model):
 class Factura(models.Model):
     """
     Modelo que representa la entidad 'factura' del MER.
-    Registra los datos de facturación formal vinculados a una reserva y a su respectivo comprobante de pago.
+    Registra los datos de facturación formal vinculados a una reserva y a su respectivo pago.
     """
     ESTADO_CHOICES = [
         ('emitida', 'Emitida'),
@@ -155,13 +156,13 @@ class Factura(models.Model):
         verbose_name='Reserva'
     )
     pago = models.ForeignKey(
-        ComprobantePago,
+        Pago,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name='facturas',
         db_column='codigo_pago',
-        verbose_name='Comprobante de Pago'
+        verbose_name='Pago'
     )
 
     class Meta:

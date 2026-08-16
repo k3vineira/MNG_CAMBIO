@@ -1,9 +1,9 @@
 from django.contrib import admin
-from .models import ComprobantePago
+from .models import Pago
 
 
-@admin.register(ComprobantePago)
-class ComprobantePagoAdmin(admin.ModelAdmin):
+@admin.register(Pago)
+class PagoAdmin(admin.ModelAdmin):
     list_display = ('id', 'usuario', 'reserva', 'referencia',
                     'banco_origen', 'monto', 'estado', 'fecha_envio', 'fecha_pago')
     list_filter = ('estado', 'banco_origen', 'fecha_envio')

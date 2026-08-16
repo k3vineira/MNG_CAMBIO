@@ -5,11 +5,11 @@ Vistas para la gestión de comprobantes de pago: envío, revisión y administrac
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.utils import timezone
-from .models import ComprobantePago
+from .models import Pago
 from reservas.models import Reserva, Cancelacion
 from django.db.models import Q, OuterRef, Subquery
 from core.decoradores import requiere_autenticacion, requiere_administrador
-from .forms import ComprobantePagoForm
+from .forms import PagoForm
 
 
 @requiere_autenticacion
@@ -32,7 +32,7 @@ def enviar_comprobante(request):
     reservas_usuario = reservas_usuario.exclude(comprobantes__estado__in=['aprobado', 'pendiente'])
 
     if request.method == 'POST':
-        form = ComprobantePagoForm(request.POST, request.FILES, reservas=reservas_usuario)
+        form = PagoForm(request.POST, request.FILES, reservas=reservas_usuario)
         if form.is_valid():
             comprobante = form.save(commit=False)
             comprobante.usuario = request.user
@@ -45,13 +45,13 @@ def enviar_comprobante(request):
             messages.error(request, 'Por favor, corrige los errores en el formulario y completa todos los campos obligatorios.')
 
     else:
-        form = ComprobantePagoForm(reservas=reservas_usuario)
+        form = PagoForm(reservas=reservas_usuario)
         # Select initial reservation if passed via GET parameter
         selected_reserva_id = request.GET.get('reserva_id')
         if selected_reserva_id:
             form.initial['reserva'] = selected_reserva_id
 
-    comprobantes = ComprobantePago.objects.filter(usuario=request.user)
+    comprobantes = Pago.objects.filter(usuario=request.user)
     context = {
         'form':               form,
         'comprobantes':       comprobantes,
@@ -68,7 +68,7 @@ def mis_comprobantes(request):
     from django.db.models import Sum, DecimalField
     from django.db.models.functions import Coalesce, Cast
 
-    comprobantes = ComprobantePago.objects.filter(usuario=request.user)\
+    comprobantes = Pago.objects.filter(usuario=request.user)\
         .select_related('reserva', 'reserva__paquete')\
         .order_by('-fecha_envio')
         
@@ -93,7 +93,7 @@ def mis_comprobantes(request):
 def admin_comprobantes(request):
     """Admin ve todos los comprobantes con filtros por estado."""
     estado_filtro = request.GET.get('estado', '')
-    comprobantes = ComprobantePago.objects.select_related(
+    comprobantes = Pago.objects.select_related(
         'usuario', 'reserva').all()
 
     if estado_filtro:
@@ -102,11 +102,11 @@ def admin_comprobantes(request):
         # Excluir rechazados de la vista general
         comprobantes = comprobantes.exclude(estado='rechazado')
 
-    total = ComprobantePago.objects.count()
-    total_pendientes = ComprobantePago.objects.filter(
+    total = Pago.objects.count()
+    total_pendientes = Pago.objects.filter(
         estado='pendiente').count()
-    total_aprobados = sum(p.monto or (p.reserva.monto_total if p.reserva else 0) for p in ComprobantePago.objects.filter(estado='aprobado').select_related('reserva'))
-    total_rechazados = ComprobantePago.objects.filter(
+    total_aprobados = sum(p.monto or (p.reserva.monto_total if p.reserva else 0) for p in Pago.objects.filter(estado='aprobado').select_related('reserva'))
+    total_rechazados = Pago.objects.filter(
         estado='rechazado').count()
 
     context = {
@@ -123,7 +123,7 @@ def admin_comprobantes(request):
 @requiere_administrador
 def admin_revisar_comprobante(request, pk):
     """Admin aprueba, rechaza o deja pendiente un comprobante."""
-    comprobante = get_object_or_404(ComprobantePago, pk=pk)
+    comprobante = get_object_or_404(Pago, pk=pk)
 
     if request.method == 'POST':
         if comprobante.estado in ('aprobado', 'rechazado'):
@@ -185,7 +185,7 @@ def admin_revisar_comprobante(request, pk):
 def admin_eliminar_comprobante(request, pk):
     """Admin elimina un comprobante."""
     if request.method == 'POST':
-        comp = get_object_or_404(ComprobantePago, id=pk)
+        comp = get_object_or_404(Pago, id=pk)
         comp.delete()
         messages.success(request, f'Comprobante #{pk} eliminado correctamente.')
     return redirect('admin_comprobantes')
@@ -208,8 +208,8 @@ def mis_rechazos(request):
         return redirect('dashboard')
 
     try:
-        from pagos.models import ComprobantePago
-        pagos_rechazados = ComprobantePago.objects.filter(
+        from pagos.models import Pago
+        pagos_rechazados = Pago.objects.filter(
             usuario=request.user,
             estado='rechazado'
         ).select_related('reserva__paquete').order_by('-fecha_revision')

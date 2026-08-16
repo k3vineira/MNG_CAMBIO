@@ -43,7 +43,7 @@ def dashboard_turista(request):
         return redirect('dashboard')
 
     from reservas.models import Reserva
-    from pagos.models import ComprobantePago
+    from pagos.models import Pago
     from comunidad.models import Comentario, PQRS
     from django.db.models import Sum, Count, Q, DecimalField
     from django.db.models.functions import Coalesce, Cast
@@ -60,7 +60,7 @@ def dashboard_turista(request):
     reservas_pendientes = res_stats['pendientes'] or 0
     reservas_canceladas = res_stats['canceladas'] or 0
 
-    total_invertido = ComprobantePago.objects.filter(usuario=request.user, estado='aprobado').aggregate(
+    total_invertido = Pago.objects.filter(usuario=request.user, estado='aprobado').aggregate(
         total=Sum(Coalesce(
             'monto',
             Cast('reserva__monto_total', DecimalField(max_digits=12, decimal_places=2)),
@@ -95,7 +95,7 @@ def dashboard_admin(request):
     from django.utils import timezone
     from django.db.models import Sum, Count, Avg
     from reservas.models import Reserva, Cancelacion
-    from pagos.models import ComprobantePago
+    from pagos.models import Pago
     from catalogo.models import Paquete
     from comunidad.models import Comentario
 
@@ -113,9 +113,9 @@ def dashboard_admin(request):
     reservas_pendientes = res_stats['pendientes']
     reservas_canceladas = res_stats['canceladas']
 
-    total_ventas = ComprobantePago.objects.filter(estado='aprobado').aggregate(Sum('monto'))['monto__sum'] or 0
+    total_ventas = Pago.objects.filter(estado='aprobado').aggregate(Sum('monto'))['monto__sum'] or 0
     total_tours = Paquete.objects.filter(estado=True).count()
-    total_pagos_rechazados = ComprobantePago.objects.filter(estado='rechazado').count()
+    total_pagos_rechazados = Pago.objects.filter(estado='rechazado').count()
     
     from promociones.models import Promocion, Banner
     total_promociones = Promocion.objects.count() + Banner.objects.count()
@@ -124,7 +124,7 @@ def dashboard_admin(request):
     from django.db.models.functions import ExtractMonth, ExtractWeekDay
 
     # Agregación directa de ingresos por mes en BD (evita iterar objetos)
-    ingresos_qs = ComprobantePago.objects.filter(
+    ingresos_qs = Pago.objects.filter(
         estado='aprobado',
         fecha_envio__year=current_year
     ).annotate(mes=ExtractMonth('fecha_envio')).values('mes').annotate(total=Sum('monto')).order_by('mes')
@@ -188,7 +188,7 @@ def dashboard_admin(request):
             'texto': f"Nueva reserva de {nombre_usr} para {r.paquete.nombre}",
             'tiempo_dt': r.fecha_registro,
         })
-    for p in ComprobantePago.objects.select_related('usuario', 'reserva').order_by('-fecha_envio')[:5]:
+    for p in Pago.objects.select_related('usuario', 'reserva').order_by('-fecha_envio')[:5]:
         nombre_usr = p.usuario.get_full_name() or p.usuario.username
         monto_valor = p.monto or (p.reserva.monto_total if p.reserva else 0)
         actividad_reciente.append({
@@ -499,18 +499,18 @@ def get_estadisticas_context(user, is_admin=False):
     from django.db.models import Sum, Count, Avg, Max
     from django.utils import timezone
     from reservas.models import Reserva
-    from pagos.models import ComprobantePago
+    from pagos.models import Pago
     from comunidad.models import Comentario, PQRS
 
     # Base querysets
     if is_admin:
         reservas = Reserva.objects.all()
-        pagos = ComprobantePago.objects.all()
+        pagos = Pago.objects.all()
         comentarios = Comentario.objects.all()
         pqrs_qs = PQRS.objects.all()
     else:
         reservas = Reserva.objects.filter(usuario=user)
-        pagos = ComprobantePago.objects.filter(usuario=user)
+        pagos = Pago.objects.filter(usuario=user)
         comentarios = Comentario.objects.filter(usuario=user)
         pqrs_qs = PQRS.objects.filter(cliente__usuario=user)
 

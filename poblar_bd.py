@@ -8,7 +8,7 @@ from comunidad.models import Calificacion, Blog, PQRS, Comentario
 from reservas.models import Reserva, Cancelacion
 from catalogo.models import Categoria, Actividades, Paquete, Temporada, Tarifa
 from usuarios.models import Usuario, Cliente, GuiaTuristico
-from pagos.models import ComprobantePago
+from pagos.models import Pago
 from promociones.models import Promocion
 from auditoria.models import Auditoria
 import random
@@ -43,7 +43,7 @@ def poblar_base_datos():
     print("0. Limpiando la base de datos...")
     
     Auditoria.objects.all().delete()
-    ComprobantePago.objects.all().delete()
+    Pago.objects.all().delete()
     Promocion.objects.all().delete()
     Comentario.objects.all().delete()
     PQRS.objects.all().delete()
@@ -397,7 +397,7 @@ def poblar_base_datos():
 
     for r in reservas_con_comprobante:
         estado_comprobante = random.choice(['pendiente', 'aprobado', 'rechazado'])
-        cp = ComprobantePago.objects.create(
+        cp = Pago.objects.create(
             usuario=r.usuario,
             reserva=r,
             referencia=f"REF-{random.randint(100000, 999999)}",
@@ -414,7 +414,7 @@ def poblar_base_datos():
             nota_admin="Revisado por administración." if estado_comprobante != 'pendiente' else "",
         )
         fake_envio = r.fecha_registro + timedelta(hours=random.randint(1, 48))
-        ComprobantePago.objects.filter(id=cp.id).update(fecha_envio=fake_envio)
+        Pago.objects.filter(id=cp.id).update(fecha_envio=fake_envio)
         comprobantes_creados += 1
 
     print(f"  -> {comprobantes_creados} comprobantes de pago creados.")
@@ -584,7 +584,7 @@ def poblar_base_datos():
     auditoria_data = [
         ("Inicio de sesión exitoso", "usuarios_usuario", "El cliente inició sesión desde la web."),
         ("Reserva realizada", "reservas_reserva", "Se registró una nueva reserva para paquete turístico."),
-        ("Comprobante de pago subido", "pagos_comprobantepago", "El usuario adjuntó comprobante de pago."),
+        ("Comprobante de pago subido", "pago", "El usuario adjuntó comprobante de pago."),
         ("PQRS enviada", "comunidad_pqrs", "Se generó una solicitud de PQRS en la plataforma."),
         ("Perfil actualizado", "usuarios_cliente", "El usuario actualizó sus datos de contacto."),
         ("Reserva cancelada", "reservas_cancelacion", "El cliente solicitó la cancelación de su reserva."),
