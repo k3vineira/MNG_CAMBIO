@@ -21,6 +21,7 @@ urlpatterns = [
     path('', inicio, name='inicio'),
     path('notificaciones/', include('notificaciones.urls')),
     path('seguros/', include('seguros.urls')),
+    path('auditoria/', include('auditoria.urls')),
 ]
 
 if settings.DEBUG:

@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
-from notificaciones.models import Notificacion
-from notificaciones.utils import crear_notificacion_sistema
+from auditoria.models import Notificacion
+from auditoria.utils import crear_notificacion_sistema
 
 Usuario = get_user_model()
 

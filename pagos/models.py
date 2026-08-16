@@ -4,7 +4,9 @@ Modelo de datos para los comprobantes de pago enviados por los usuarios.
 
 import os
 from django.db import models
+from django.utils import timezone
 from django.conf import settings
+from django.core.exceptions import ValidationError
 
 
 class ComprobantePago(models.Model):
@@ -37,20 +39,17 @@ class ComprobantePago(models.Model):
 
     referencia = models.CharField(
         max_length=100,
-        blank=True,
         verbose_name='Número de referencia / transacción',
         help_text='Número de comprobante, transacción o referencia bancaria'
     )
     banco_origen = models.CharField(
         max_length=100,
-        blank=True,
         verbose_name='Banco / medio de pago'
     )
     monto = models.DecimalField(
         max_digits=12,
         decimal_places=2,
-        null=True,
-        blank=True,
+        default=0.00,
         verbose_name='Monto pagado'
     )
     imagen = models.ImageField(
@@ -58,7 +57,6 @@ class ComprobantePago(models.Model):
         verbose_name='Imagen del comprobante'
     )
     descripcion = models.TextField(
-        blank=True,
         verbose_name='Descripción / nota adicional'
     )
     estado = models.CharField(
@@ -70,6 +68,10 @@ class ComprobantePago(models.Model):
     nota_admin = models.TextField(
         blank=True,
         verbose_name='Nota del administrador'
+    )
+    fecha_pago = models.DateTimeField(
+        default=timezone.now,
+        verbose_name='Fecha exacta del pago bancario'
     )
     fecha_envio = models.DateTimeField(
         auto_now_add=True, verbose_name='Fecha de envío')
@@ -84,6 +86,28 @@ class ComprobantePago(models.Model):
     def __str__(self):
         """Retorna el ID, usuario y estado del comprobante como representación textual."""
         return f"Comprobante #{self.pk} — {self.usuario.username} — {self.get_estado_display()}"
+
+    def clean(self):
+        super().clean()
+        if self.estado == 'aprobado':
+            if not self.banco_origen:
+                raise ValidationError({"banco_origen": "Debe especificar el banco de origen para aprobar el comprobante."})
+            if not self.monto:
+                raise ValidationError({"monto": "Debe especificar el monto pagado para aprobar el comprobante."})
+            if self.reserva and self.monto < self.reserva.monto_total:
+                raise ValidationError({"monto": "El monto pagado no puede ser menor al monto total de la reserva."})
+        elif self.estado == 'rechazado':
+            if not self.nota_admin:
+                raise ValidationError({"nota_admin": "Debe justificar el rechazo añadiendo una nota del administrador."})
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        if self.estado == 'aprobado' and self.reserva:
+            self.reserva.estado = 'confirmada'
+            self.reserva.save()
+        elif self.estado == 'rechazado' and self.reserva and self.reserva.estado == 'pendiente':
+            pass # Keep it pending, or maybe cancel? We'll leave as is.
+        super().save(*args, **kwargs)
 
     def nombre_archivo(self):
         """

@@ -52,7 +52,7 @@ INSTALLED_APPS = [
     "promociones",
     "reservas",
     "guias",
-    "notificaciones",
+    "auditoria",
     "autenticacion",
     "seguros",
 ]
@@ -89,7 +89,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                "notificaciones.context_processors.lista_notificaciones_global",
+                "auditoria.context_processors.lista_notificaciones_global",  # <-- CAMBIADO A AUDITORIA
             ],
         },
     },

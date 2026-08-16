@@ -119,18 +119,7 @@ class ComprobantePagoCreacionTest(TestCase):
         )
         self.assertEqual(comp.estado, 'pendiente')
 
-    def test_monto_puede_ser_nulo(self):
-        """
-        test_monto_puede_ser_nulo.
-        
-        :return: Respuesta de la función.
-        """
-        comp = ComprobantePago.objects.create(
-            usuario=self.usuario,
-            imagen='comprobantes/test.jpg',
-            monto=None
-        )
-        self.assertIsNone(comp.monto)
+
 
     def test_reserva_puede_ser_nula(self):
         """
@@ -177,10 +166,58 @@ class ComprobantePagoEstadosTest(TestCase):
             usuario=self.usuario,
             imagen='comprobantes/test.jpg'
         )
+        comp.banco_origen = 'Bancolombia'
+        comp.monto = 200000
         comp.estado = 'aprobado'
         comp.save()
         comp.refresh_from_db()
         self.assertEqual(comp.estado, 'aprobado')
+
+    def test_validacion_aprobar_sin_banco(self):
+        from django.core.exceptions import ValidationError
+        comp = ComprobantePago.objects.create(
+            usuario=self.usuario,
+            imagen='comprobantes/test.jpg'
+        )
+        comp.estado = 'aprobado'
+        comp.monto = 200000
+        with self.assertRaises(ValidationError) as context:
+            comp.save()
+        self.assertIn("Debe especificar el banco de origen", str(context.exception))
+
+    def test_validacion_aprobar_sin_monto(self):
+        from django.core.exceptions import ValidationError
+        comp = ComprobantePago.objects.create(
+            usuario=self.usuario,
+            imagen='comprobantes/test.jpg'
+        )
+        comp.estado = 'aprobado'
+        comp.banco_origen = 'Nequi'
+        with self.assertRaises(ValidationError) as context:
+            comp.save()
+        self.assertIn("Debe especificar el monto pagado", str(context.exception))
+
+    def test_validacion_aprobar_monto_insuficiente(self):
+        from django.core.exceptions import ValidationError
+        paquete = crear_paquete()
+        reserva = crear_reserva(self.usuario, paquete)
+        
+        # Override the recalculation behavior in the test by updating directly in DB
+        # since Reserva.save() zeroes it out without valid rates.
+        Reserva.objects.filter(pk=reserva.pk).update(monto_total=1000000)
+        reserva.refresh_from_db()
+        
+        comp = ComprobantePago.objects.create(
+            usuario=self.usuario,
+            reserva=reserva,
+            imagen='comprobantes/test.jpg',
+            banco_origen='Nequi',
+            monto=500000
+        )
+        comp.estado = 'aprobado'
+        with self.assertRaises(ValidationError) as context:
+            comp.save()
+        self.assertIn("menor al monto total", str(context.exception))
 
     def test_cambiar_estado_a_rechazado(self):
         """
@@ -193,6 +230,7 @@ class ComprobantePagoEstadosTest(TestCase):
             imagen='comprobantes/test.jpg'
         )
         comp.estado = 'rechazado'
+        comp.nota_admin = 'Rechazo de prueba'
         comp.save()
         comp.refresh_from_db()
         self.assertEqual(comp.estado, 'rechazado')

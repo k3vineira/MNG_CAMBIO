@@ -1400,4 +1400,50 @@ main.wrapper,
     }
 }
 
+/* Resalta y define bien el borde del cuadrito checkbox */
+    #div_id_actividades .form-check-input {
+        border: 2px solid #6c757d !important; /* Borde visible gris oscuro */
+        border-radius: 4px !important;
+        width: 1.1em;
+        height: 1.1em;
+        cursor: pointer;
+    }
 
+    /* Estado cuando está seleccionado */
+    #div_id_actividades .form-check-input:checked {
+        background-color: var(--verde-main, #2c6e3c) !important;
+        border-color: var(--verde-main, #2c6e3c) !important;
+    }
+
+    /* Estado al pasar el cursor o darle foco */
+    #div_id_actividades .form-check-input:focus {
+        border-color: var(--verde-main, #2c6e3c) !important;
+        box-shadow: 0 0 0 0.25rem rgba(44, 110, 60, 0.25) !important;
+    }
+/* Hace que los bordes de TODOS los campos de entrada se notan definidos */
+    .form-control, 
+    .form-select {
+        border: 1.5px solid #6c757d !important; /* Borde visible gris oscuro */
+        border-radius: 8px !important;           /* Bordes suavizados estilo moderno */
+        background-color: #fdfdfd !important;    /* Fondo muy claro para contrastar */
+        transition: all 0.2s ease-in-out;
+    }
+
+    /* Resaltado cuando el usuario hace clic o escribe dentro del cuadro (Focus) */
+    .form-control:focus, 
+    .form-select:focus {
+        border-color: var(--verde-main, #2c6e3c) !important; /* Borde con el verde de tu marca */
+        box-shadow: 0 0 0 0.2rem rgba(44, 110, 60, 0.2) !important; /* Brillo verde sutil */
+        background-color: #ffffff !important;
+    }
+
+    /* Mantiene los recuadros de checkbox también bien definidos */
+    .form-check-input {
+        border: 2px solid #6c757d !important;
+        border-radius: 4px !important;
+    }
+    
+    .form-check-input:checked {
+        background-color: var(--verde-main, #2c6e3c) !important;
+        border-color: var(--verde-main, #2c6e3c) !important;
+    }
