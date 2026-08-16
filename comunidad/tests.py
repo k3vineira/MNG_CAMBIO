@@ -122,59 +122,39 @@ class CalificacionTest(TestCase):
 
 class BlogTest(TestCase):
 
+    def setUp(self):
+        self.usuario = crear_usuario(username='autor_blog')
+
     def test_crear_blog(self):
-        """
-        test_crear_blog.
-        
-        :return: Respuesta de la función.
-        """
         blog = Blog.objects.create(
+            usuario=self.usuario,
             titulo='Guía de Monagua',
             contenido='Contenido del artículo de prueba',
-            estado=True
+            publicado=True
         )
         self.assertEqual(blog.titulo, 'Guía de Monagua')
-        self.assertTrue(blog.estado)
+        self.assertTrue(blog.publicado)
 
     def test_str_blog(self):
-        """
-        test_str_blog.
-        
-        :return: Respuesta de la función.
-        """
         blog = Blog.objects.create(
+            usuario=self.usuario,
             titulo='Primer Post',
             contenido='Texto de prueba'
         )
-        self.assertEqual(str(blog), 'Primer Post')
+        self.assertIn('Primer Post', str(blog))
 
-    def test_estado_default_true(self):
-        """
-        test_estado_default_true.
-        
-        :return: Respuesta de la función.
-        """
-        blog = Blog.objects.create(titulo='Post', contenido='Texto')
-        self.assertTrue(blog.estado)
+    def test_publicado_default_true(self):
+        blog = Blog.objects.create(usuario=self.usuario, titulo='Post', contenido='Texto')
+        self.assertTrue(blog.publicado)
 
     def test_get_absolute_url(self):
-        """
-        test_get_absolute_url.
-        
-        :return: Respuesta de la función.
-        """
-        blog = Blog.objects.create(titulo='URL Test', contenido='Texto')
+        blog = Blog.objects.create(usuario=self.usuario, titulo='URL Test', contenido='Texto')
         url = blog.get_absolute_url()
         self.assertIn(str(blog.pk), url)
 
     def test_ordenamiento_por_fecha_descendente(self):
-        """
-        test_ordenamiento_por_fecha_descendente.
-        
-        :return: Respuesta de la función.
-        """
-        b1 = Blog.objects.create(titulo='Primero', contenido='a')
-        b2 = Blog.objects.create(titulo='Segundo', contenido='b')
+        b1 = Blog.objects.create(usuario=self.usuario, titulo='Primero', contenido='a')
+        b2 = Blog.objects.create(usuario=self.usuario, titulo='Segundo', contenido='b')
         blogs = list(Blog.objects.all())
         # El más reciente (b2) debe aparecer primero
         self.assertEqual(blogs[0].pk, b2.pk)

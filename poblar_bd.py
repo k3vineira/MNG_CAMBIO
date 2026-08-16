@@ -4,7 +4,7 @@ import django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
 django.setup()
 
-from comunidad.models import Calificacion, Blog, PQRS, Comentario
+from comunidad.models import Calificacion, Blog, PQRS, Comentario, Seguimiento
 from reservas.models import Reserva, Cancelacion
 from catalogo.models import Categoria, Actividades, Paquete, Temporada, Tarifa
 from usuarios.models import Usuario, Cliente, GuiaTuristico
@@ -423,6 +423,7 @@ def poblar_base_datos():
     # 6. COMUNIDAD (CALIFICACIONES, BLOG, PQRS, COMENTARIOS)
     # ─────────────────────────────────────────────
     print("6. Creando Comunidad (Calificaciones, Blog, PQRS, Comentarios)...")
+    admin_user = Usuario.objects.filter(is_staff=True).first()
 
     # 6.1 Blogs
     blogs_reales = [
@@ -450,10 +451,11 @@ def poblar_base_datos():
 
     for data in blogs_reales:
         Blog.objects.create(
+            usuario=admin_user,
             titulo=data["titulo"],
             contenido=data["contenido"],
             informacion_adicional=data["informacion_adicional"],
-            estado=True
+            publicado=True
         )
 
     # 6.2 PQRS
@@ -481,14 +483,22 @@ def poblar_base_datos():
         "Necesito conocer las condiciones y porcentajes de penalidad por cancelación anticipada.",
         "Mi comprobante de pago fue rechazado sin explicación. Solicito una revisión detallada.",
     ]
+    admin_user = Usuario.objects.filter(is_staff=True).first()
     for i in range(10):
-        PQRS.objects.create(
+        est = random.choice(['abierto', 'en_proceso', 'cerrado'])
+        pqr_obj = PQRS.objects.create(
             cliente=random.choice(clientes_creados),
             tipo=random.choice(['peticion', 'queja', 'reclamo', 'sugerencia']),
             asunto=asuntos_pqrs[i],
             descripcion=descripciones_pqrs[i],
-            estado=random.choice(['abierto', 'en_proceso', 'cerrado'])
+            estado=est
         )
+        if est in ['en_proceso', 'cerrado']:
+            Seguimiento.objects.create(
+                pqrs=pqr_obj,
+                usuario=admin_user,
+                respuesta="Hemos recibido tu solicitud y se encuentra en revisión/atención por el equipo de Monagua."
+            )
 
     # 6.3 Calificaciones
     combinaciones_calificacion = set()

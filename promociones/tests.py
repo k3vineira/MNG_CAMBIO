@@ -12,7 +12,14 @@ class PromocionesTestCase(TestCase):
         
         :return: Respuesta de la función.
         """
-        # Crear categoría y paquete para la promoción
+        from usuarios.models import Usuario
+        self.admin = Usuario.objects.create_superuser(
+            username='admin_promo',
+            email='admin@promo.com',
+            password='password123',
+            rol='admin'
+        )
+        self.client.force_login(self.admin)
         self.categoria = Categoria.objects.create(
             nombre='Playas',
             descripcion='Tours de playa'

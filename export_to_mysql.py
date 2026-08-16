@@ -31,6 +31,7 @@ BUSINESS_TABLE_PREFIXES = (
     'reservas_',
     'pagos_',
     'pago',
+    'seguimiento',
     'comunidad_',
     'promociones_',
     'auditoria_',

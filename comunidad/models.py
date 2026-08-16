@@ -93,16 +93,28 @@ class PQRS(models.Model):
         return f'{self.get_tipo_display()} - {self.asunto}'
 
 
-class Historial(models.Model):
-    pqrs = models.ForeignKey(PQRS, on_delete=models.CASCADE, related_name='historiales')
-    respuesta = models.TextField() # El contenido del mensaje
-    fecha_respuesta = models.DateTimeField(auto_now_add=True)
+class Seguimiento(models.Model):
+    """Registro de seguimiento y respuestas a una solicitud PQRS por parte de un usuario o administrador."""
+    pqrs = models.ForeignKey(PQRS, on_delete=models.CASCADE, related_name='seguimientos')
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='seguimientos',
+        null=True,
+        blank=True,
+        verbose_name='Usuario / Administrador'
+    )
+    respuesta = models.TextField(verbose_name='Mensaje / Respuesta')
+    fecha_respuesta = models.DateTimeField(auto_now_add=True, verbose_name='Fecha de Respuesta')
 
     class Meta:
-        ordering = ['fecha_respuesta'] 
+        db_table = 'seguimiento'
+        ordering = ['fecha_respuesta']
+        verbose_name = 'Seguimiento'
+        verbose_name_plural = 'Seguimientos'
 
     def __str__(self):
-        return f'Historial de {self.pqrs} - {self.fecha_respuesta.strftime("%Y-%m-%d %H:%M:%S")}'
+        return f'Seguimiento de {self.pqrs} - {self.fecha_respuesta.strftime("%Y-%m-%d %H:%M:%S")}'
 
 class Comentario(models.Model):
     """Comentarios y reseñas de experiencias de usuarios."""

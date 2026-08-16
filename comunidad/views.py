@@ -1,7 +1,7 @@
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.shortcuts import render, redirect
-from .models import PQRS, Blog , Historial
+from .models import PQRS, Blog, Seguimiento
 from django.shortcuts import get_object_or_404
 from .forms import PqrsForm, BlogForm
 from django.contrib import messages
@@ -14,7 +14,7 @@ from django.core.paginator import Paginator
 
 
 def blog(request):
-    blogs_list = Blog.objects.filter(estado=True).order_by('-fecha_publicacion')
+    blogs_list = Blog.objects.filter(publicado=True).order_by('-fecha_publicacion')
     paginator = Paginator(blogs_list, 6)  # Mostrar 6 blogs por página
     page_number = request.GET.get('page')
     blogs = paginator.get_page(page_number)
@@ -48,8 +48,8 @@ class PQRSListView(ListView):
 
         stats = PQRS.objects.aggregate(
             total=Count('id'),
-            respondidas=Count('id', filter=Q(historiales__isnull=False)),
-            pendientes=Count('id', filter=Q(historiales__isnull=True))
+            respondidas=Count('id', filter=Q(seguimientos__isnull=False)),
+            pendientes=Count('id', filter=Q(seguimientos__isnull=True))
         )
 
         context['stats_list'] = [
@@ -73,7 +73,7 @@ def contestar_pqrs(request, pqrs_id):
         respuesta_texto = request.POST.get('respuesta')
         
         if respuesta_texto:
-            Historial.objects.create(
+            Seguimiento.objects.create(
                 pqrs=pqr,
                 usuario=request.user,
                 respuesta=respuesta_texto
@@ -117,8 +117,8 @@ def mis_pqrs_view(request):
     solicitudes_usuario = PQRS.objects.none()
     try:
         cliente_obj = Cliente.objects.get(usuario=request.user)
-        # Traemos las solicitudes con prefetch de sus historiales para no recargar la BD
-        solicitudes_usuario = PQRS.objects.filter(cliente=cliente_obj).prefetch_related('historiales').order_by('-fecha')
+        # Traemos las solicitudes con prefetch de sus seguimientos para no recargar la BD
+        solicitudes_usuario = PQRS.objects.filter(cliente=cliente_obj).prefetch_related('seguimientos').order_by('-fecha')
     except Cliente.DoesNotExist:
         pass
 

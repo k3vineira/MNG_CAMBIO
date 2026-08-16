@@ -81,7 +81,7 @@
                         </td>
                         <td class="text-center">
                             <!-- EVALUACIÓN POR ESTADO / HISTORIAL EN LUGAR DE pqr.respuesta -->
-                            {% if pqr.estado == 'cerrado' or pqr.historiales.all %}
+                            {% if pqr.estado == 'cerrado' or pqr.seguimientos.all %}
                                 <button type="button" 
                                         class="btn btn-sm btn-outline-success rounded-pill px-4 fw-bold" 
                                         data-bs-toggle="modal" data-bs-target="#modalContestar{{ pqr.id }}">
@@ -127,7 +127,7 @@
 
                         <div class="pt-2">
                             <!-- EVALUACIÓN EN MÓVIL TAMBIÉN -->
-                            {% if pqr.estado == 'cerrado' or pqr.historiales.all %}
+                            {% if pqr.estado == 'cerrado' or pqr.seguimientos.all %}
                                 <button type="button" 
                                         class="btn btn-sm w-100 btn-outline-success rounded-pill fw-bold" 
                                         data-bs-toggle="modal" data-bs-target="#modalContestar{{ pqr.id }}">

@@ -2,7 +2,7 @@
 -- Script de Base de Datos generado para MySQL Workbench
 -- Proyecto: Monagua (MNG_WEB)
 -- Modo: BUSINESS (24 tablas)
--- Fecha de generación: 2026-08-16 14:34:24
+-- Fecha de generación: 2026-08-16 15:17:46
 -- =============================================================================
 
 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
@@ -183,21 +183,6 @@ CREATE TABLE IF NOT EXISTS `comunidad_comentario` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------
--- Tabla `monagua_db`.`comunidad_historial`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `comunidad_historial`;
-CREATE TABLE IF NOT EXISTS `comunidad_historial` (
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `respuesta` TEXT NOT NULL,
-  `fecha_respuesta` DATETIME NOT NULL,
-  `pqrs_id` BIGINT NOT NULL,
-  PRIMARY KEY (`id`),
-  CONSTRAINT `fk_comunidad_historial_pqrs_id`
-    FOREIGN KEY (`pqrs_id`)
-    REFERENCES `comunidad_pqrs` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- -----------------------------------------------------
 -- Tabla `monagua_db`.`comunidad_pqrs`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `comunidad_pqrs`;
@@ -372,6 +357,25 @@ CREATE TABLE IF NOT EXISTS `reservas_reserva` (
   CONSTRAINT `fk_reservas_reserva_paquete_id`
     FOREIGN KEY (`paquete_id`)
     REFERENCES `catalogo_paquete` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -----------------------------------------------------
+-- Tabla `monagua_db`.`seguimiento`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `seguimiento`;
+CREATE TABLE IF NOT EXISTS `seguimiento` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `respuesta` TEXT NOT NULL,
+  `fecha_respuesta` DATETIME NOT NULL,
+  `pqrs_id` BIGINT NOT NULL,
+  `usuario_id` BIGINT NULL,
+  PRIMARY KEY (`id`),
+  CONSTRAINT `fk_seguimiento_usuario_id`
+    FOREIGN KEY (`usuario_id`)
+    REFERENCES `usuarios_usuario` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  CONSTRAINT `fk_seguimiento_pqrs_id`
+    FOREIGN KEY (`pqrs_id`)
+    REFERENCES `comunidad_pqrs` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------
