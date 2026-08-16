@@ -20,6 +20,7 @@ urlpatterns = [
     path('promociones/', include('promociones.urls')),
     path('', inicio, name='inicio'),
     path('notificaciones/', include('notificaciones.urls')),
+    path('seguros/', include('seguros.urls')),
 ]
 
 if settings.DEBUG:

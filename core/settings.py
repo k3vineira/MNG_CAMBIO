@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "guias",
     "notificaciones",
     "autenticacion",
+    "seguros",
 ]
 
 AUTH_USER_MODEL = "usuarios.Usuario"

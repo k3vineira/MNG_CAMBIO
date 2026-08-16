@@ -453,7 +453,7 @@ def poblar_base_datos():
             titulo=data["titulo"],
             contenido=data["contenido"],
             informacion_adicional=data["informacion_adicional"],
-            publicado=True
+            estado=True
         )
 
     # 6.2 PQRS
