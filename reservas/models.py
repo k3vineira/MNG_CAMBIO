@@ -33,6 +33,15 @@ class Reserva(models.Model):
         verbose_name='Paquete Reservado'
     )
     fecha = models.DateField(verbose_name='Fecha de Reserva')
+    fecha_inicio = models.DateField(null=True, blank=True, verbose_name='Fecha de inicio')
+    cliente = models.ForeignKey(
+        'usuarios.Cliente',
+        on_delete=models.CASCADE,
+        related_name='reservas_cliente',
+        verbose_name='Cliente',
+        null=True,
+        blank=True,
+    )
     numero_adultos = models.PositiveIntegerField(
         verbose_name='Número de Adultos', default=1)
     numero_menores = models.PositiveIntegerField(

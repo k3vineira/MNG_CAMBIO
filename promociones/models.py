@@ -12,6 +12,10 @@ class Promocion(models.Model):
     descripcion = models.TextField(verbose_name="Descripción")
     descuento = models.PositiveIntegerField(verbose_name="Porcentaje de descuento")
     fecha_fin = models.DateField(verbose_name="Fecha de fin")
+    fecha_inicio = models.DateField(verbose_name="Fecha de inicio")
+    codigo_promocion = models.CharField(max_length=20, unique=True, verbose_name="Código de promoción")
+    condiciones = models.TextField(blank=True, null=True, verbose_name="Condiciones")
+    codigo_cupon = models.CharField(max_length=30, blank=True, null=True, verbose_name="Código de cupón")
     activa = models.BooleanField(default=True, verbose_name="¿Activa?")
 
     class Meta:
