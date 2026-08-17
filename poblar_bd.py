@@ -180,9 +180,11 @@ def poblar_base_datos():
         )
         g = GuiaTuristico.objects.create(
             usuario=u,
-            licencia_turismo=f"LIC-BOY-{random.randint(10000, 99999)}",
+            numero_tarjeta_profesional=f"LIC-BOY-{random.randint(10000, 99999)}",
             experiencia_anos=random.randint(1, 15),
-            biografia=biografias_guia[i]
+            descripcion_experiencia=biografias_guia[i],
+            entidad_salud=random.choice(["SURA", "Sanitas", "Compensar", "Nueva EPS"]),
+            experiencia_fecha=date.today() - timedelta(days=random.randint(365, 365*5))
         )
         guias_creados.append(g)
 

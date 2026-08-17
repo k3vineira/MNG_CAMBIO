@@ -42,9 +42,11 @@ erDiagram
     GUIA_TURISTICO {
         int id PK "ej: 1"
         int usuario_id FK "ej: 2"
-        string licencia_turismo "ej: COL-12345"
+        string numero_tarjeta_profesional "ej: COL-12345"
         int experiencia_anos "ej: 5"
-        string biografia "ej: Experto en ecoturismo..."
+        date experiencia_fecha "ej: 2021-06-01"
+        string descripcion_experiencia "ej: Experto en ecoturismo..."
+        string entidad_salud "ej: SURA"
     }
 
     RESERVA {

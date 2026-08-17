@@ -297,7 +297,7 @@
                     <div class="d-flex justify-content-between align-items-center mb-3 border-bottom border-warning border-opacity-25 pb-2">
                         <div>
                             <small class="text-muted text-uppercase fw-bold d-block u-style-22c80133">Licencia de Turismo</small>
-                            <span class="fw-bold text-dark fs-5 font-monospace">{% if u.guia %}{{ u.guia.licencia_turismo|default:"—" }}{% else %}—{% endif %}</span>
+                            <span class="fw-bold text-dark fs-5 font-monospace">{% if u.guia %}{{ u.guia.numero_tarjeta_profesional|default:"—" }}{% else %}—{% endif %}</span>
                         </div>
                         <div class="text-end">
                             <small class="text-muted text-uppercase fw-bold d-block u-style-22c80133">Experiencia</small>
@@ -306,7 +306,7 @@
                     </div>
                     <small class="text-muted text-uppercase fw-bold d-block mb-2 u-style-22c80133">Biografía Profesional</small>
                     <div class="bg-white rounded-3 p-3 border">
-                        <p class="text-dark small mb-0 lh-lg">{% if u.guia and u.guia.biografia %}{{ u.guia.biografia }}{% else %}Sin biografía registrada.{% endif %}</p>
+                        <p class="text-dark small mb-0 lh-lg">{% if u.guia and u.guia.descripcion_experiencia %}{{ u.guia.descripcion_experiencia }}{% else %}Sin biografía registrada.{% endif %}</p>
                     </div>
                 </div>
                 {% elif u.rol == 'CLIENTE' %}
@@ -498,7 +498,7 @@
                                 <div class="row g-3">
                                     <div class="col-md-8">
                                         <div class="form-floating">
-                                            <input type="text" class="form-control form-control-sm text-uppercase" name="licencia_turismo" value="{% if u.rol == 'GUIA' and u.guia %}{{ u.guia.licencia_turismo }}{% endif %}">
+                                            <input type="text" class="form-control form-control-sm text-uppercase" name="licencia_turismo" value="{% if u.rol == 'GUIA' and u.guia %}{{ u.guia.numero_tarjeta_profesional }}{% endif %}">
                                             <label class="text-muted small">Licencia de Turismo</label>
                                         </div>
                                     </div>
@@ -510,7 +510,7 @@
                                     </div>
                                     <div class="col-12">
                                         <div class="form-floating">
-                                            <textarea class="form-control form-control-sm u-style-1a3a679d" name="biografia">{% if u.rol == 'GUIA' and u.guia %}{{ u.guia.biografia }}{% endif %}</textarea>
+                                            <textarea class="form-control form-control-sm u-style-1a3a679d" name="biografia">{% if u.rol == 'GUIA' and u.guia %}{{ u.guia.descripcion_experiencia }}{% endif %}</textarea>
                                             <label class="text-muted small">Biografía / Presentación</label>
                                         </div>
                                     </div>

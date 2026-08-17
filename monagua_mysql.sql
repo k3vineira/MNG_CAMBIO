@@ -2,7 +2,7 @@
 -- Script de Base de Datos generado para MySQL Workbench
 -- Proyecto: Monagua (MNG_WEB)
 -- Modo: BUSINESS (24 tablas)
--- Fecha de generación: 2026-08-17 13:01:55
+-- Fecha de generación: 2026-08-17 13:09:48
 -- =============================================================================
 
 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
@@ -443,10 +443,12 @@ CREATE TABLE IF NOT EXISTS `usuarios_cliente` (
 DROP TABLE IF EXISTS `usuarios_guiaturistico`;
 CREATE TABLE IF NOT EXISTS `usuarios_guiaturistico` (
   `id` INT NOT NULL AUTO_INCREMENT,
-  `licencia_turismo` VARCHAR(50) NOT NULL,
+  `numero_tarjeta_profesional` VARCHAR(50) NOT NULL,
   `experiencia_anos` INT UNSIGNED NOT NULL,
-  `biografia` LONGTEXT NOT NULL,
+  `descripcion_experiencia` LONGTEXT NOT NULL,
   `usuario_id` BIGINT NOT NULL,
+  `entidad_salud` VARCHAR(100) NULL,
+  `experiencia_fecha` DATE NULL,
   PRIMARY KEY (`id`),
   UNIQUE INDEX `uq_usuarios_guiaturistico_usuario_id` (`usuario_id` ASC),
   CONSTRAINT `fk_usuarios_guiaturistico_usuario_id`

@@ -352,12 +352,12 @@ def usuarios_guardar(request):
         perfil.save()
     elif rol == Usuario.Roles.GUIA:
         perfil, _ = GuiaTuristico.objects.get_or_create(usuario=user)
-        perfil.licencia_turismo = request.POST.get(
-            'licencia_turismo', perfil.licencia_turismo)
+        perfil.numero_tarjeta_profesional = request.POST.get(
+            'licencia_turismo', perfil.numero_tarjeta_profesional)
         experiencia = request.POST.get('experiencia_anos', '0')
         perfil.experiencia_anos = int(
             experiencia) if experiencia.isdigit() else 0
-        perfil.biografia = request.POST.get('biografia', perfil.biografia)
+        perfil.descripcion_experiencia = request.POST.get('biografia', perfil.descripcion_experiencia)
         perfil.save()
 
     accion = 'actualizado' if user_id else 'registrado'
@@ -473,9 +473,9 @@ def guias_guardar(request):
         experiencia = request.POST.get('experiencia_anos', '0')
         GuiaTuristico.objects.create(
             usuario=user,
-            licencia_turismo=request.POST.get('licencia_turismo', ''),
+            numero_tarjeta_profesional=request.POST.get('licencia_turismo', ''),
             experiencia_anos=int(experiencia) if experiencia.isdigit() else 0,
-            biografia=request.POST.get('biografia', ''),
+            descripcion_experiencia=request.POST.get('biografia', ''),
         )
         messages.success(
             request, f'Guía «{user.get_full_name()}» registrado exitosamente.')

@@ -400,7 +400,7 @@
             <i class="bi bi-compass me-2"></i>Perfil Profesional
           </h6>
           <div class="form-floating mb-3">
-              <input type="text" class="form-control form-control-sm text-uppercase" name="licencia_turismo" value="{% if user_guia.guia %}{{ user_guia.guia.licencia_turismo|default:'' }}{% endif %}" required>
+              <input type="text" class="form-control form-control-sm text-uppercase" name="licencia_turismo" value="{% if user_guia.guia %}{{ user_guia.guia.numero_tarjeta_profesional|default:'' }}{% endif %}" required>
               <label class="text-muted small">Licencia de Turismo *</label>
           </div>
           <div class="form-floating mb-3">
@@ -408,7 +408,7 @@
               <label class="text-muted small">Años de Experiencia *</label>
           </div>
           <div class="form-floating mb-4">
-              <textarea class="form-control form-control-sm u-style-1a3a679d" name="biografia">{% if user_guia.guia %}{{ user_guia.guia.biografia|default:'' }}{% endif %}</textarea>
+              <textarea class="form-control form-control-sm u-style-1a3a679d" name="biografia">{% if user_guia.guia %}{{ user_guia.guia.descripcion_experiencia|default:'' }}{% endif %}</textarea>
               <label class="text-muted small">Biografía / Presentación</label>
           </div>
 
@@ -459,7 +459,7 @@
             <div class="mb-4">
               <label class="text-muted small fw-bold text-uppercase u-style-135310c2">Licencia de Turismo</label>
               <div class="fs-4 font-monospace fw-bold text-dark border-bottom border-warning pb-2">
-                {% if user_guia.guia %}{{ user_guia.guia.licencia_turismo|default:"—" }}{% else %}—{% endif %}
+                {% if user_guia.guia %}{{ user_guia.guia.numero_tarjeta_profesional|default:"—" }}{% else %}—{% endif %}
               </div>
             </div>
 
@@ -467,8 +467,8 @@
               <label class="text-muted small fw-bold text-uppercase mb-2 u-style-135310c2">Biografía Oficial</label>
               <div class="bg-light p-3 rounded border">
                 <p class="text-dark small mb-0 lh-lg u-style-5288d5e7">
-                  {% if user_guia.guia and user_guia.guia.biografia %}
-                      {{ user_guia.guia.biografia }}
+                  {% if user_guia.guia and user_guia.guia.descripcion_experiencia %}
+                      {{ user_guia.guia.descripcion_experiencia }}
                   {% else %}
                       Sin información biográfica registrada en el sistema.
                   {% endif %}

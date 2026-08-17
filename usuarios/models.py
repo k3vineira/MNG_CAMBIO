@@ -174,7 +174,7 @@ class GuiaTuristico(models.Model):
         related_name='guia',
         verbose_name='Cuenta de Usuario'
     )
-    licencia_turismo = models.CharField(
+    numero_tarjeta_profesional = models.CharField(
         max_length=50,
         blank=True,
         verbose_name='Licencia de Turismo'
@@ -183,9 +183,20 @@ class GuiaTuristico(models.Model):
         default=0,
         verbose_name='Años de Experiencia'
     )
-    biografia = models.TextField(
+    experiencia_fecha = models.DateField(
+        null=True,
         blank=True,
-        verbose_name='Biografía'
+        verbose_name='Fecha de Inicio de Experiencia'
+    )
+    descripcion_experiencia = models.TextField(
+        blank=True,
+        verbose_name='Descripción de la Experiencia'
+    )
+    entidad_salud = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name='Entidad de Salud'
     )
 
     class Meta:
