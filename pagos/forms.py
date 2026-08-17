@@ -33,16 +33,16 @@ class PagoForm(forms.ModelForm):
 
     class Meta:
         model = Pago
-        fields = ['reserva', 'referencia', 'banco_origen', 'monto', 'fecha_pago', 'imagen', 'descripcion']
+        fields = ['reserva', 'referencia', 'banco_origen', 'monto', 'fecha_pago', 'imagen_comprobante', 'descripcion']
         labels = {
             'reserva': 'Reserva o Penalidad a Vincular',
             'referencia': 'Nº de Referencia / Transacción',
             'monto': 'Monto Exacto Pagado',
-            'imagen': 'Imagen o Captura del Comprobante',
+            'imagen_comprobante': 'Imagen o Captura del Comprobante',
             'descripcion': 'Notas o Detalles Adicionales',
         }
         help_texts = {
-            'imagen': 'Sube un archivo legible (PNG, JPG, JPEG, WebP).',
+            'imagen_comprobante': 'Sube un archivo legible (PNG, JPG, JPEG, WebP).',
             'descripcion': 'Si seleccionaste "Otro" en banco, especifícalo aquí.',
         }
 
@@ -76,7 +76,7 @@ class PagoForm(forms.ModelForm):
             Row(
                 Column('monto', css_class='form-group col-md-4 mb-3'),
                 Column('fecha_pago', css_class='form-group col-md-4 mb-3'),
-                Column('imagen', css_class='form-group col-md-4 mb-3'),
+                Column('imagen_comprobante', css_class='form-group col-md-4 mb-3'),
                 css_class='row'
             ),
             Row(

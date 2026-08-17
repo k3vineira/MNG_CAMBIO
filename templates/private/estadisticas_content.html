@@ -598,14 +598,14 @@
                                     </span>
                                 </td>
                                 <td class="text-center py-3">
-                                    {% if pago.estado == "aprobado" %}
+                                    {% if pago.estado_transaccion == "aprobado" %}
                                     <span class="badge bg-success bg-opacity-10 text-success">Aprobado</span>
-                                    {% elif pago.estado == "pendiente" %}
+                                    {% elif pago.estado_transaccion == "pendiente" %}
                                     <span class="badge bg-warning bg-opacity-10 text-warning">Pendiente</span>
-                                    {% elif pago.estado == "rechazado" %}
+                                    {% elif pago.estado_transaccion == "rechazado" %}
                                     <span class="badge bg-danger bg-opacity-10 text-danger">Rechazado</span>
                                     {% else %}
-                                    <span class="badge bg-esta-blue bg-opacity-10 text-esta-blue">{{ pago.estado|default:"—" }}</span>
+                                    <span class="badge bg-esta-blue bg-opacity-10 text-esta-blue">{{ pago.estado_transaccion|default:"—" }}</span>
                                     {% endif %}
                                 </td>
                                 <td class="text-center py-3 opacity-75 small">{{ pago.fecha|date:"d M Y"|default:"—" }}</td>

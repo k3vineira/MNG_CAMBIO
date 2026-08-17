@@ -419,14 +419,14 @@ def poblar_base_datos():
             referencia=f"REF-{random.randint(100000, 999999)}",
             banco_origen=random.choice(bancos),
             monto=Decimal(str(r.monto_total)) if r.monto_total else Decimal('150000'),
-            imagen='comprobantes/placeholder.jpg',
+            imagen_comprobante='comprobantes/placeholder.jpg',
             descripcion=random.choice([
                 "Transferencia bancaria realizada exitosamente.",
                 "Pago mediante aplicación móvil.",
                 "Consignación en efectivo en sucursal bancaria.",
                 "Pago con tarjeta de débito.",
             ]),
-            estado=estado_comprobante,
+            estado_transaccion=estado_comprobante,
             nota_admin="Revisado por administración." if estado_comprobante != 'pendiente' else "",
         )
         fake_envio = r.fecha_registro + timedelta(hours=random.randint(1, 48))

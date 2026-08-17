@@ -104,7 +104,7 @@ def crear_datos_prueba():
             defaults={
                 'monto': 150000.0,
                 'banco_origen': 'Bancolombia',
-                'estado': 'aprobado',
+                'estado_transaccion': 'aprobado',
                 'fecha_envio': reserva.fecha_registro + timedelta(days=1),
             }
         )

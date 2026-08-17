@@ -113,9 +113,9 @@ def dashboard_admin(request):
     reservas_pendientes = res_stats['pendientes']
     reservas_canceladas = res_stats['canceladas']
 
-    total_ventas = Pago.objects.filter(estado='aprobado').aggregate(Sum('monto'))['monto__sum'] or 0
+    total_ventas = Pago.objects.filter(estado_transaccion='aprobado').aggregate(Sum('monto'))['monto__sum'] or 0
     total_tours = Paquete.objects.filter(estado=True).count()
-    total_pagos_rechazados = Pago.objects.filter(estado='rechazado').count()
+    total_pagos_rechazados = Pago.objects.filter(estado_transaccion='rechazado').count()
     
     from promociones.models import Promocion, Banner
     total_promociones = Promocion.objects.count() + Banner.objects.count()
@@ -519,7 +519,7 @@ def get_estadisticas_context(user, is_admin=False):
 
     # Basic KPI metrics (optimizado con agregación en BD)
     today = datetime.date.today()
-    total_invertido = pagos.filter(estado='aprobado').aggregate(
+    total_invertido = pagos.filter(estado_transaccion='aprobado').aggregate(
         total=Sum(Coalesce(
             'monto',
             Cast('reserva__monto_total', DecimalField(max_digits=12, decimal_places=2)),
@@ -615,7 +615,7 @@ def get_estadisticas_context(user, is_admin=False):
         m = r.fecha.month - 1
         meses_datos[m] += 1
         
-    for p in pagos.filter(estado='aprobado', fecha_envio__year=current_year).select_related('reserva'):
+    for p in pagos.filter(estado_transaccion='aprobado', fecha_envio__year=current_year).select_related('reserva'):
         m = p.fecha_envio.month - 1
         monto_valor = p.monto or (p.reserva.monto_total if p.reserva else 0)
         meses_inversion[m] += float(monto_valor)
@@ -651,7 +651,7 @@ def get_estadisticas_context(user, is_admin=False):
     start_year = current_year - 4
     for y in range(start_year, current_year + 1):
         y_reservas = reservas.filter(fecha__year=y)
-        y_pagos = pagos.filter(estado='aprobado', fecha_envio__year=y)
+        y_pagos = pagos.filter(estado_transaccion='aprobado', fecha_envio__year=y)
         
         y_total_res = y_reservas.count()
         y_total_conf = y_reservas.filter(estado='confirmada').count()

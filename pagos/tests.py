@@ -87,10 +87,10 @@ class PagoCreacionTest(TestCase):
             referencia='REF-001',
             banco_origen='Bancolombia',
             monto=200000,
-            imagen='comprobantes/test.jpg',
+            imagen_comprobante='comprobantes/test.jpg',
             descripcion='Pago de prueba'
         )
-        self.assertEqual(comp.estado, 'pendiente')
+        self.assertEqual(comp.estado_transaccion, 'pendiente')
         self.assertTrue(comp.pk)
 
     def test_str_comprobante(self):
@@ -101,7 +101,7 @@ class PagoCreacionTest(TestCase):
         """
         comp = Pago.objects.create(
             usuario=self.usuario,
-            imagen='comprobantes/test.jpg'
+            imagen_comprobante='comprobantes/test.jpg'
         )
         resultado = str(comp)
         self.assertIn(self.usuario.username, resultado)
@@ -115,9 +115,9 @@ class PagoCreacionTest(TestCase):
         """
         comp = Pago.objects.create(
             usuario=self.usuario,
-            imagen='comprobantes/test.jpg'
+            imagen_comprobante='comprobantes/test.jpg'
         )
-        self.assertEqual(comp.estado, 'pendiente')
+        self.assertEqual(comp.estado_transaccion, 'pendiente')
 
     def test_reserva_puede_ser_nula(self):
         """
@@ -127,7 +127,7 @@ class PagoCreacionTest(TestCase):
         """
         comp = Pago.objects.create(
             usuario=self.usuario,
-            imagen='comprobantes/test.jpg',
+            imagen_comprobante='comprobantes/test.jpg',
             reserva=None
         )
         self.assertIsNone(comp.reserva)
@@ -162,22 +162,22 @@ class PagoEstadosTest(TestCase):
         """
         comp = Pago.objects.create(
             usuario=self.usuario,
-            imagen='comprobantes/test.jpg'
+            imagen_comprobante='comprobantes/test.jpg'
         )
         comp.banco_origen = 'Bancolombia'
         comp.monto = 200000
-        comp.estado = 'aprobado'
+        comp.estado_transaccion = 'aprobado'
         comp.save()
         comp.refresh_from_db()
-        self.assertEqual(comp.estado, 'aprobado')
+        self.assertEqual(comp.estado_transaccion, 'aprobado')
 
     def test_validacion_aprobar_sin_banco(self):
         from django.core.exceptions import ValidationError
         comp = Pago.objects.create(
             usuario=self.usuario,
-            imagen='comprobantes/test.jpg'
+            imagen_comprobante='comprobantes/test.jpg'
         )
-        comp.estado = 'aprobado'
+        comp.estado_transaccion = 'aprobado'
         comp.monto = 200000
         with self.assertRaises(ValidationError) as context:
             comp.save()
@@ -187,9 +187,9 @@ class PagoEstadosTest(TestCase):
         from django.core.exceptions import ValidationError
         comp = Pago.objects.create(
             usuario=self.usuario,
-            imagen='comprobantes/test.jpg'
+            imagen_comprobante='comprobantes/test.jpg'
         )
-        comp.estado = 'aprobado'
+        comp.estado_transaccion = 'aprobado'
         comp.banco_origen = 'Nequi'
         with self.assertRaises(ValidationError) as context:
             comp.save()
@@ -208,11 +208,11 @@ class PagoEstadosTest(TestCase):
         comp = Pago.objects.create(
             usuario=self.usuario,
             reserva=reserva,
-            imagen='comprobantes/test.jpg',
+            imagen_comprobante='comprobantes/test.jpg',
             banco_origen='Nequi',
             monto=500000
         )
-        comp.estado = 'aprobado'
+        comp.estado_transaccion = 'aprobado'
         with self.assertRaises(ValidationError) as context:
             comp.save()
         self.assertIn("menor al monto total", str(context.exception))
@@ -225,13 +225,13 @@ class PagoEstadosTest(TestCase):
         """
         comp = Pago.objects.create(
             usuario=self.usuario,
-            imagen='comprobantes/test.jpg'
+            imagen_comprobante='comprobantes/test.jpg'
         )
-        comp.estado = 'rechazado'
+        comp.estado_transaccion = 'rechazado'
         comp.nota_admin = 'Rechazo de prueba'
         comp.save()
         comp.refresh_from_db()
-        self.assertEqual(comp.estado, 'rechazado')
+        self.assertEqual(comp.estado_transaccion, 'rechazado')
 
     def test_nombre_archivo_sin_imagen(self):
         """
@@ -241,7 +241,7 @@ class PagoEstadosTest(TestCase):
         """
         comp = Pago.objects.create(
             usuario=self.usuario,
-            imagen='comprobantes/recibo.jpg'
+            imagen_comprobante='comprobantes/recibo.jpg'
         )
         # El método nombre_archivo debe retornar el basename
         self.assertEqual(comp.nombre_archivo(), 'recibo.jpg')
@@ -254,11 +254,11 @@ class PagoEstadosTest(TestCase):
         """
         comp1 = Pago.objects.create(
             usuario=self.usuario,
-            imagen='comprobantes/a.jpg'
+            imagen_comprobante='comprobantes/a.jpg'
         )
         comp2 = Pago.objects.create(
             usuario=self.usuario,
-            imagen='comprobantes/b.jpg'
+            imagen_comprobante='comprobantes/b.jpg'
         )
         comprobantes = list(Pago.objects.all())
         self.assertEqual(comprobantes[0].pk, comp2.pk)
@@ -271,6 +271,6 @@ class PagoEstadosTest(TestCase):
         """
         comp = Pago.objects.create(
             usuario=self.usuario,
-            imagen='comprobantes/test.jpg'
+            imagen_comprobante='comprobantes/test.jpg'
         )
         self.assertIn(comp, self.usuario.comprobantes.all())

@@ -52,14 +52,14 @@ class Pago(models.Model):
         default=0.00,
         verbose_name='Monto pagado'
     )
-    imagen = models.ImageField(
+    imagen_comprobante = models.ImageField(
         upload_to='comprobantes/%Y/%m/',
         verbose_name='Imagen del comprobante'
     )
     descripcion = models.TextField(
         verbose_name='Descripción / nota adicional'
     )
-    estado = models.CharField(
+    estado_transaccion = models.CharField(
         max_length=20,
         choices=ESTADO_CHOICES,
         default='pendiente',
@@ -86,27 +86,27 @@ class Pago(models.Model):
 
     def __str__(self):
         """Retorna el ID, usuario y estado del pago como representación textual."""
-        return f"Pago #{self.pk} — {self.usuario.username} — {self.get_estado_display()}"
+        return f"Pago #{self.pk} — {self.usuario.username} — {self.get_estado_transaccion_display()}"
 
     def clean(self):
         super().clean()
-        if self.estado == 'aprobado':
+        if self.estado_transaccion == 'aprobado':
             if not self.banco_origen:
                 raise ValidationError({"banco_origen": "Debe especificar el banco de origen para aprobar el comprobante."})
             if not self.monto:
                 raise ValidationError({"monto": "Debe especificar el monto pagado para aprobar el comprobante."})
             if self.reserva and self.monto < self.reserva.monto_total:
                 raise ValidationError({"monto": "El monto pagado no puede ser menor al monto total de la reserva."})
-        elif self.estado == 'rechazado':
+        elif self.estado_transaccion == 'rechazado':
             if not self.nota_admin:
                 raise ValidationError({"nota_admin": "Debe justificar el rechazo añadiendo una nota del administrador."})
 
     def save(self, *args, **kwargs):
         self.clean()
-        if self.estado == 'aprobado' and self.reserva:
+        if self.estado_transaccion == 'aprobado' and self.reserva:
             self.reserva.estado = 'confirmada'
             self.reserva.save()
-        elif self.estado == 'rechazado' and self.reserva and self.reserva.estado == 'pendiente':
+        elif self.estado_transaccion == 'rechazado' and self.reserva and self.reserva.estado == 'pendiente':
             pass # Keep it pending, or maybe cancel? We'll leave as is.
         super().save(*args, **kwargs)
 
@@ -115,9 +115,9 @@ class Pago(models.Model):
         Retorna el nombre del archivo de imagen del comprobante.
 
         Returns:
-            str: El nombre base del archivo, o '—' si no hay imagen.
+             str: El nombre base del archivo, o '—' si no hay imagen.
         """
-        return os.path.basename(self.imagen.name) if self.imagen else '—'
+        return os.path.basename(self.imagen_comprobante.name) if self.imagen_comprobante else '—'
 
 
 class Factura(models.Model):

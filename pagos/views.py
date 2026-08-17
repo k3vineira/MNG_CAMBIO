@@ -29,7 +29,7 @@ def enviar_comprobante(request):
     ).distinct()
 
     # Excluir reservas que ya tengan comprobantes en proceso para evitar duplicidad real
-    reservas_usuario = reservas_usuario.exclude(comprobantes__estado__in=['aprobado', 'pendiente'])
+    reservas_usuario = reservas_usuario.exclude(comprobantes__estado_transaccion__in=['aprobado', 'pendiente'])
 
     if request.method == 'POST':
         form = PagoForm(request.POST, request.FILES, reservas=reservas_usuario)
@@ -55,9 +55,9 @@ def enviar_comprobante(request):
     context = {
         'form':               form,
         'comprobantes':       comprobantes,
-        'total_pendientes':   comprobantes.filter(estado='pendiente').count(),
-        'total_aprobados':    sum(p.monto or (p.reserva.monto_total if p.reserva else 0) for p in comprobantes.filter(estado='aprobado').select_related('reserva')),
-        'total_rechazados':   comprobantes.filter(estado='rechazado').count(),
+        'total_pendientes':   comprobantes.filter(estado_transaccion='pendiente').count(),
+        'total_aprobados':    sum(p.monto or (p.reserva.monto_total if p.reserva else 0) for p in comprobantes.filter(estado_transaccion='aprobado').select_related('reserva')),
+        'total_rechazados':   comprobantes.filter(estado_transaccion='rechazado').count(),
     }
     return render(request, 'pagos/enviar_comprobante.html', context)
 
@@ -72,7 +72,7 @@ def mis_comprobantes(request):
         .select_related('reserva', 'reserva__paquete')\
         .order_by('-fecha_envio')
         
-    monto_aprobado = comprobantes.filter(estado='aprobado').aggregate(
+    monto_aprobado = comprobantes.filter(estado_transaccion='aprobado').aggregate(
         total=Sum(Coalesce(
             'monto',
             Cast('reserva__monto_total', DecimalField(max_digits=12, decimal_places=2)),
@@ -82,9 +82,9 @@ def mis_comprobantes(request):
 
     context = {
         'comprobantes':     comprobantes,
-        'total_pendientes': comprobantes.filter(estado='pendiente').count(),
+        'total_pendientes': comprobantes.filter(estado_transaccion='pendiente').count(),
         'total_aprobados':  monto_aprobado,
-        'total_rechazados': comprobantes.filter(estado='rechazado').count(),
+        'total_rechazados': comprobantes.filter(estado_transaccion='rechazado').count(),
     }
     return render(request, 'pagos/mis_comprobantes.html', context)
 
@@ -97,17 +97,17 @@ def admin_comprobantes(request):
         'usuario', 'reserva').all()
 
     if estado_filtro:
-        comprobantes = comprobantes.filter(estado=estado_filtro)
+        comprobantes = comprobantes.filter(estado_transaccion=estado_filtro)
     else:
         # Excluir rechazados de la vista general
-        comprobantes = comprobantes.exclude(estado='rechazado')
+        comprobantes = comprobantes.exclude(estado_transaccion='rechazado')
 
     total = Pago.objects.count()
     total_pendientes = Pago.objects.filter(
-        estado='pendiente').count()
-    total_aprobados = sum(p.monto or (p.reserva.monto_total if p.reserva else 0) for p in Pago.objects.filter(estado='aprobado').select_related('reserva'))
+        estado_transaccion='pendiente').count()
+    total_aprobados = sum(p.monto or (p.reserva.monto_total if p.reserva else 0) for p in Pago.objects.filter(estado_transaccion='aprobado').select_related('reserva'))
     total_rechazados = Pago.objects.filter(
-        estado='rechazado').count()
+        estado_transaccion='rechazado').count()
 
     context = {
         'comprobantes':     comprobantes,
@@ -126,7 +126,7 @@ def admin_revisar_comprobante(request, pk):
     comprobante = get_object_or_404(Pago, pk=pk)
 
     if request.method == 'POST':
-        if comprobante.estado in ('aprobado', 'rechazado'):
+        if comprobante.estado_transaccion in ('aprobado', 'rechazado'):
             messages.error(request, 'Este comprobante ya ha sido procesado y no puede modificarse.')
             return redirect('admin_comprobantes')
 
@@ -134,7 +134,7 @@ def admin_revisar_comprobante(request, pk):
         nota_admin = request.POST.get('nota_admin', '').strip()
 
         if nuevo_estado in ('aprobado', 'rechazado', 'pendiente'):
-            comprobante.estado = nuevo_estado
+            comprobante.estado_transaccion = nuevo_estado
             comprobante.nota_admin = nota_admin
             comprobante.fecha_revision = timezone.now()
             comprobante.save()
@@ -170,7 +170,7 @@ def admin_revisar_comprobante(request, pk):
             else:
                 messages.success(
                     request,
-                    f'Comprobante #{pk} marcado como {comprobante.get_estado_display()}.'
+                    f'Comprobante #{pk} marcado como {comprobante.get_estado_transaccion_display()}.'
                 )
         else:
             messages.error(request, 'Estado no válido.')
@@ -211,7 +211,7 @@ def mis_rechazos(request):
         from pagos.models import Pago
         pagos_rechazados = Pago.objects.filter(
             usuario=request.user,
-            estado='rechazado'
+            estado_transaccion='rechazado'
         ).select_related('reserva__paquete').order_by('-fecha_revision')
     except ImportError:
         pagos_rechazados = []

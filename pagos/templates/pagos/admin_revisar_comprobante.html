@@ -27,9 +27,9 @@
                 <span class="fw-bold text-secondary text-uppercase small mb-3 d-block text-start u-style-e2eb0d8e">
                     <i class="bi bi-image text-primary me-2"></i>Imagen del Comprobante
                 </span>
-                {% if comprobante.imagen %}
-                    <a href="{{ comprobante.imagen.url }}" target="_blank" title="Ver imagen completa" class="d-block rounded-4 overflow-hidden shadow-sm">
-                        <img src="{{ comprobante.imagen.url }}" alt="Comprobante de Pago" class="img-fluid rounded-4 transition-all u-style-d0c65112">
+                {% if comprobante.imagen_comprobante %}
+                    <a href="{{ comprobante.imagen_comprobante.url }}" target="_blank" title="Ver imagen completa" class="d-block rounded-4 overflow-hidden shadow-sm">
+                        <img src="{{ comprobante.imagen_comprobante.url }}" alt="Comprobante de Pago" class="img-fluid rounded-4 transition-all u-style-d0c65112">
                     </a>
                     <div class="form-text text-muted mt-3">
                         <i class="bi bi-zoom-in me-1"></i> Haz clic en la imagen para abrirla en tamaño completo en otra pestaña
@@ -119,9 +119,9 @@
                     <!-- Estado de Pago con Floating Labels -->
                     <div class="form-floating mb-3">
                         <select name="estado" id="id_estado" class="form-select rounded-4 shadow-sm" required>
-                            <option value="pendiente" {% if comprobante.estado == 'pendiente' %}selected{% endif %}>Pendiente de revisión</option>
-                            <option value="aprobado" {% if comprobante.estado == 'aprobado' %}selected{% endif %}>Aprobado (Confirma automáticamente la reserva)</option>
-                            <option value="rechazado" {% if comprobante.estado == 'rechazado' %}selected{% endif %}>Rechazado</option>
+                            <option value="pendiente" {% if comprobante.estado_transaccion == 'pendiente' %}selected{% endif %}>Pendiente de revisión</option>
+                            <option value="aprobado" {% if comprobante.estado_transaccion == 'aprobado' %}selected{% endif %}>Aprobado (Confirma automáticamente la reserva)</option>
+                            <option value="rechazado" {% if comprobante.estado_transaccion == 'rechazado' %}selected{% endif %}>Rechazado</option>
                         </select>
                         <label for="id_estado">Estado del Pago *</label>
                     </div>

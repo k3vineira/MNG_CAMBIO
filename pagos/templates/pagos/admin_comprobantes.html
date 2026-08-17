@@ -134,8 +134,8 @@
 
                     <!-- Thumbnail -->
                     <div class="col-auto">
-                        {% if c.imagen %}
-                            <img src="{{ c.imagen.url }}"
+                        {% if c.imagen_comprobante %}
+                            <img src="{{ c.imagen_comprobante.url }}"
                                  alt="Comprobante"
                                  class="rounded-3 border object-fit-cover"
                                  style="width:72px;height:72px;cursor:zoom-in"
@@ -163,11 +163,11 @@
                                 {% endif %}
                             </div>
                             <!-- Estado -->
-                            {% if c.estado == 'pendiente' %}
+                            {% if c.estado_transaccion == 'pendiente' %}
                                 <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill px-3 py-2 fw-semibold">
                                     <i class="bi bi-hourglass-split me-1"></i>Pendiente
                                 </span>
-                            {% elif c.estado == 'aprobado' %}
+                            {% elif c.estado_transaccion == 'aprobado' %}
                                 <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-3 py-2 fw-semibold">
                                     <i class="bi bi-check-circle-fill me-1"></i>Aprobado
                                 </span>
@@ -205,7 +205,7 @@
 
                     <!-- Acciones -->
                     <div class="col-auto d-flex flex-column flex-md-row gap-2">
-                        {% if c.estado == 'aprobado' and c.reserva %}
+                        {% if c.estado_transaccion == 'aprobado' and c.reserva %}
                             <a href="{% url 'ver_factura' c.reserva.id %}"
                                class="btn btn-sm btn-outline-success rounded-pill px-3"
                                target="_blank">
@@ -232,7 +232,7 @@
         </div>
 
         <!-- Modal imagen ampliada -->
-        {% if c.imagen %}
+        {% if c.imagen_comprobante %}
         <div class="modal fade" id="modalComp{{ c.id }}" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-lg">
                 <div class="modal-content border-0 rounded-4 shadow">
@@ -246,7 +246,7 @@
                     <div class="modal-body px-4 pb-4">
                         <div class="row g-4">
                             <div class="col-md-7 text-center">
-                                <img src="{{ c.imagen.url }}"
+                                <img src="{{ c.imagen_comprobante.url }}"
                                      class="img-fluid rounded-3 border"
                                      style="max-height:420px;object-fit:contain"
                                      alt="Comprobante">
@@ -283,9 +283,9 @@
 
                                         <dt class="col-5 text-muted">Estado</dt>
                                         <dd class="col-7">
-                                            {% if c.estado == 'pendiente' %}
+                                            {% if c.estado_transaccion == 'pendiente' %}
                                                 <span class="badge bg-warning text-dark">Pendiente</span>
-                                            {% elif c.estado == 'aprobado' %}
+                                            {% elif c.estado_transaccion == 'aprobado' %}
                                                 <span class="badge bg-success">Aprobado</span>
                                             {% else %}
                                                 <span class="badge bg-danger">Rechazado</span>
@@ -297,7 +297,7 @@
                                            class="btn btn-primary btn-sm w-100 rounded-pill fw-semibold">
                                             <i class="bi bi-pencil-square me-1"></i>Revisar / Gestionar
                                         </a>
-                                        {% if c.estado == 'aprobado' and c.reserva %}
+                                        {% if c.estado_transaccion == 'aprobado' and c.reserva %}
                                             <a href="{% url 'ver_factura' c.reserva.id %}"
                                                target="_blank"
                                                class="btn btn-outline-success btn-sm w-100 rounded-pill fw-semibold">

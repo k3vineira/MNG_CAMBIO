@@ -121,6 +121,7 @@ erDiagram
         int id PK "ej: 1"
         int paquete_id FK "ej: 1"
         int actividad_id FK "ej: 1"
+        string dificultad_nivel "opciones: Alta, Media, Baja"
     }
 
     CALIFICACION {

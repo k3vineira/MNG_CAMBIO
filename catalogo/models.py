@@ -170,6 +170,17 @@ class PaqueteActividad(models.Model):
     """
     paquete = models.ForeignKey(Paquete, on_delete=models.CASCADE)
     actividad = models.ForeignKey(Actividades, on_delete=models.CASCADE)
+    DIFICULTAD_CHOICES = [
+        ('Alta', 'Alta'),
+        ('Media', 'Media'),
+        ('Baja', 'Baja'),
+    ]
+    dificultad_nivel = models.CharField(
+        max_length=10,
+        choices=DIFICULTAD_CHOICES,
+        default='Media',
+        verbose_name='Nivel de Dificultad'
+    )
 
     class Meta:
         db_table = 'paquete_actividades'
