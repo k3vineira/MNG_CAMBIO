@@ -59,9 +59,9 @@ def destinos(request):
     # Validar parámetro estricto de apto_menores
     apto_menores = request.GET.get('apto_menores', '').strip().lower()
     if apto_menores == 'si':
-        destinos_list = destinos_list.exclude(actividades__apto_para_menores=False).distinct()
+        destinos_list = destinos_list.exclude(actividades__apto_menores=False).distinct()
     elif apto_menores == 'no':
-        destinos_list = destinos_list.exclude(actividades__apto_para_menores=True).distinct()
+        destinos_list = destinos_list.exclude(actividades__apto_menores=True).distinct()
 
     # Validar que categoria_id sea un entero válido
     categoria_id = request.GET.get('categoria', '').strip()

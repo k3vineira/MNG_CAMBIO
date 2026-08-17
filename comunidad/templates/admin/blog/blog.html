@@ -67,7 +67,7 @@
                             <h6 class="fw-bold text-dark mb-0">{{ entrada.titulo }}</h6>
                         </td>
                         <td class="text-center">
-                            {% if entrada.publicado %}
+                            {% if entrada.estado %}
                                 <span class="badge bg-success bg-opacity-75 px-3 py-2 rounded-pill shadow-sm">
                                     <i class="bi bi-check-circle-fill me-1"></i> Publicado
                                 </span>
@@ -107,7 +107,7 @@
                                 <h5 class="fw-bold text-dark mb-0">{{ entrada.titulo }}</h5>
                             </div>
                             <div>
-                                {% if entrada.publicado %}
+                                {% if entrada.estado %}
                                     <span class="badge bg-success bg-opacity-75 rounded-pill shadow-sm">Publicado</span>
                                 {% else %}
                                     <span class="badge bg-danger bg-opacity-75 rounded-pill shadow-sm">Borrador</span>

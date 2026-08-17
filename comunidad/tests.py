@@ -130,10 +130,10 @@ class BlogTest(TestCase):
             usuario=self.usuario,
             titulo='Guía de Monagua',
             contenido='Contenido del artículo de prueba',
-            publicado=True
+            estado=True
         )
         self.assertEqual(blog.titulo, 'Guía de Monagua')
-        self.assertTrue(blog.publicado)
+        self.assertTrue(blog.estado)
 
     def test_str_blog(self):
         blog = Blog.objects.create(
@@ -145,7 +145,7 @@ class BlogTest(TestCase):
 
     def test_publicado_default_true(self):
         blog = Blog.objects.create(usuario=self.usuario, titulo='Post', contenido='Texto')
-        self.assertTrue(blog.publicado)
+        self.assertTrue(blog.estado)
 
     def test_get_absolute_url(self):
         blog = Blog.objects.create(usuario=self.usuario, titulo='URL Test', contenido='Texto')

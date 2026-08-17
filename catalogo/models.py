@@ -64,9 +64,9 @@ class Actividades(models.Model):
     descripcion = models.TextField(verbose_name='Descripción')
     nivel_dificultad = models.CharField(max_length=10, choices=NIVEL_CHOICES, verbose_name='Nivel de Dificultad')
     equipo_requerimiento = models.TextField(verbose_name='Equipo Requerido')
-    recomendacion_salud = models.TextField(verbose_name='Recomendaciones de Salud')
+    recomendaciones = models.TextField(verbose_name='Recomendaciones')
     estado = models.BooleanField(default=True, blank=True, verbose_name='¿Está Activa?')
-    apto_para_menores = models.BooleanField(default=True, verbose_name='¿Apto para menores?')
+    apto_menores = models.BooleanField(default=True, verbose_name='¿Apto para menores?')
 
     class Meta:
         verbose_name = 'Actividad'
@@ -136,7 +136,7 @@ class Paquete(models.Model):
     def apto_para_menores(self):
         all_actividades = list(self.actividades.all())
         if all_actividades:
-            return not any(not getattr(a, 'apto_para_menores', True) for a in all_actividades)
+            return not any(not getattr(a, 'apto_menores', True) for a in all_actividades)
         return True
 
 

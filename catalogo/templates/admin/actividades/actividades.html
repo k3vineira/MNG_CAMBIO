@@ -114,7 +114,7 @@
                             {% endif %}
                         </td>
                         <td class="text-center">
-                            {% if actividad.apto_para_menores %}
+                            {% if actividad.apto_menores %}
                                 <span class="badge bg-success bg-opacity-75 px-3 py-2 rounded-pill shadow-sm"><i class="bi bi-emoji-smile me-1"></i> Sí</span>
                             {% else %}
                                 <span class="badge bg-secondary bg-opacity-75 px-3 py-2 rounded-pill shadow-sm"><i class="bi bi-slash-circle me-1"></i> No</span>
@@ -180,7 +180,7 @@
                             </div>
                             <div class="col-6">
                                 <small class="text-muted d-block">Apto Menores</small>
-                                {% if actividad.apto_para_menores %}
+                                {% if actividad.apto_menores %}
                                     <span class="badge bg-success bg-opacity-75 w-100 py-2 rounded-pill"><i class="bi bi-emoji-smile me-1"></i> Sí</span>
                                 {% else %}
                                     <span class="badge bg-secondary bg-opacity-75 w-100 py-2 rounded-pill"><i class="bi bi-slash-circle me-1"></i> No</span>

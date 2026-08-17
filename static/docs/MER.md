@@ -79,9 +79,9 @@ erDiagram
         string descripcion "ej: Caminata de 5km..."
         string nivel_dificultad "opciones: Alta, Media, Baja"
         string equipo_requerimiento "ej: Botas, hidratación..."
-        string recomendacion_salud "ej: Buen estado físico"
+        string recomendaciones "ej: Buen estado físico"
         bool estado "ej: true"
-        bool apto_para_menores "ej: true"
+        bool apto_menores "ej: true"
     }
 
     PAQUETE {
@@ -128,11 +128,12 @@ erDiagram
 
     BLOG {
         int id PK "ej: 1"
+        int usuario_id FK "ej: 1"
         string titulo "ej: Top 5 destinos"
         string contenido "ej: Los mejores lugares para visitar..."
-        string imagen "ej: blog/destinos.jpg"
+        string imagen_destacada "ej: blog/destinos.jpg"
         datetime fecha_publicacion "ej: 2026-05-15 10:00:00"
-        bool publicado "ej: true"
+        bool estado "ej: true"
     }
 
     PQRS {

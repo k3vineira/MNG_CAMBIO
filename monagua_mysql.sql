@@ -2,7 +2,7 @@
 -- Script de Base de Datos generado para MySQL Workbench
 -- Proyecto: Monagua (MNG_WEB)
 -- Modo: BUSINESS (24 tablas)
--- Fecha de generación: 2026-08-16 15:17:46
+-- Fecha de generación: 2026-08-17 12:32:29
 -- =============================================================================
 
 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
@@ -45,9 +45,9 @@ CREATE TABLE IF NOT EXISTS `catalogo_actividades` (
   `descripcion` LONGTEXT NOT NULL,
   `nivel_dificultad` VARCHAR(10) NOT NULL,
   `equipo_requerimiento` TEXT NOT NULL,
-  `recomendacion_salud` TEXT NOT NULL,
+  `recomendaciones` TEXT NOT NULL,
   `estado` TINYINT(1) NOT NULL,
-  `apto_para_menores` TINYINT(1) NOT NULL,
+  `apto_menores` TINYINT(1) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -127,9 +127,9 @@ CREATE TABLE IF NOT EXISTS `comunidad_blog` (
   `titulo` VARCHAR(200) NOT NULL,
   `contenido` LONGTEXT NOT NULL,
   `informacion_adicional` TEXT NOT NULL,
-  `imagen` VARCHAR(100) NULL,
+  `imagen_destacada` VARCHAR(100) NULL,
   `fecha_publicacion` DATETIME NOT NULL,
-  `publicado` TINYINT(1) NOT NULL,
+  `estado` TINYINT(1) NOT NULL,
   `usuario_id` BIGINT NOT NULL,
   PRIMARY KEY (`id`),
   CONSTRAINT `fk_comunidad_blog_usuario_id`

@@ -65,9 +65,9 @@ class ActividadesForm(ModelForm):
             'nombre': forms.TextInput(attrs={'class': 'form-control'}),
             'descripcion': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
             'nivel_dificultad': forms.Select(attrs={'class': 'form-select'}),
-            'apto_para_menores': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'apto_menores': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'equipo_requerimiento': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
-            'recomendacion_salud': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'recomendaciones': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
         }
 
     def clean_nombre(self):

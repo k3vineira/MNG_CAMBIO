@@ -37,9 +37,9 @@ class Blog(models.Model):
     titulo = models.CharField(max_length=200)
     contenido = models.TextField()
     informacion_adicional = models.TextField(blank=True)
-    imagen = models.ImageField(upload_to="blog/", blank=True, null=True)
+    imagen_destacada = models.ImageField(upload_to="blog/", blank=True, null=True)
     fecha_publicacion = models.DateTimeField(auto_now_add=True)
-    publicado = models.BooleanField(
+    estado = models.BooleanField(
         default=True, verbose_name="¿Está Publicado?"
     )
 

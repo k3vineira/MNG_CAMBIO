@@ -109,6 +109,20 @@ def poblar_base_datos():
     # ─────────────────────────────────────────────
     print("1. Creando Usuarios, Clientes y Guías...")
 
+    # Crear Admin
+    admin_user = Usuario.objects.create_superuser(
+        username='admin',
+        password='adminpassword',
+        email='admin@monagua.com',
+        first_name='Admin',
+        last_name='Monagua',
+        rol=Usuario.Roles.ADMIN,
+        tipo_documento=Usuario.TipoDocumento.CC,
+        numero_documento='12345678',
+        telefono='+573000000000',
+        residencia='Mongua, Boyacá'
+    )
+
     clientes_creados = []
     guias_creados = []
 
@@ -230,8 +244,8 @@ def poblar_base_datos():
             descripcion=descripciones_actividades[i],
             nivel_dificultad=random.choice(niveles),
             equipo_requerimiento=equipos[i],
-            recomendacion_salud="Buena condición física general. Consultar con médico en caso de condiciones especiales.",
-            apto_para_menores=random.choice([True, False])
+            recomendaciones="Buena condición física general. Consultar con médico en caso de condiciones especiales.",
+            apto_menores=random.choice([True, False])
         )
         actividades_creadas.append(act)
 
@@ -455,7 +469,7 @@ def poblar_base_datos():
             titulo=data["titulo"],
             contenido=data["contenido"],
             informacion_adicional=data["informacion_adicional"],
-            publicado=True
+            estado=True
         )
 
     # 6.2 PQRS

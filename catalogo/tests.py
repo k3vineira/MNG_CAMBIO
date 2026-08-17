@@ -23,16 +23,16 @@ class CatalogoTestCase(TestCase):
             descripcion='Paseo por las calles históricas',
             nivel_dificultad='Baja',
             equipo_requerimiento='Zapatos cómodos',
-            recomendacion_salud='Ninguna',
-            apto_para_menores=True
+            recomendaciones='Ninguna',
+            apto_menores=True
         )
         self.actividad_no_apta = Actividades.objects.create(
             nombre='Escalada extrema',
             descripcion='Escalada vertical en roca',
             nivel_dificultad='Alta',
             equipo_requerimiento='Arnés, casco',
-            recomendacion_salud='No apto para problemas cardíacos',
-            apto_para_menores=False
+            recomendaciones='No apto para problemas cardíacos',
+            apto_menores=False
         )
 
     def test_paquete_apto_para_menores(self):
