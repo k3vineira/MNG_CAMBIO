@@ -144,7 +144,10 @@ class Cancelacion(models.Model):
     motivo = models.TextField()
     penalidad = models.IntegerField(default=0, verbose_name='Penalidad Aplicada')
     estado = models.CharField( max_length=20, choices=ESTADOS_CANCELACION, default='pendiente', verbose_name='Estado')
-    fecha_solicitud = models.DateTimeField(auto_now_add=True, verbose_name='Fecha de Solicitud')
+    fecha = models.DateTimeField(auto_now_add=True, verbose_name='Fecha de Solicitud')
+    fecha_reembolso = models.DateField(null=True, blank=True, verbose_name='Fecha de Reembolso')
+    valor_reembolsado = models.IntegerField(null=True, blank=True, default=0, verbose_name='Valor Reembolsado')
+    imagen_comprobante = models.ImageField(upload_to='cancelaciones/', null=True, blank=True, verbose_name='Imagen del Comprobante')
 
     class Meta:
         verbose_name = 'Cancelación'

@@ -64,6 +64,10 @@ erDiagram
         int reserva_id FK "ej: 100"
         string motivo "ej: Problemas de salud"
         float penalidad "ej: 25000.00"
+        datetime fecha "ej: 2026-08-17 12:00:00"
+        date fecha_reembolso "ej: 2026-08-18"
+        int valor_reembolsado "ej: 225000"
+        string imagen_comprobante "ej: cancelaciones/comp.jpg"
     }
 
     CATEGORIA {
@@ -121,9 +125,9 @@ erDiagram
         int id PK "ej: 1"
         int cliente_id FK "ej: 1"
         int paquete_id FK "ej: 1"
-        int puntaje "ej: 5"
+        int puntaje_estrellas "ej: 5"
         string comentario "ej: Excelente experiencia!"
-        datetime fecha "ej: 2026-05-15 10:00:00"
+        datetime fecha_calificacion "ej: 2026-05-15 10:00:00"
     }
 
     BLOG {

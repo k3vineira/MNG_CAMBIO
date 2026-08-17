@@ -77,10 +77,10 @@ class CalificacionTest(TestCase):
         cal = Calificacion.objects.create(
             cliente=self.cliente,
             paquete=self.paquete,
-            puntaje=5,
+            puntaje_estrellas=5,
             comentario='Excelente tour'
         )
-        self.assertEqual(cal.puntaje, 5)
+        self.assertEqual(cal.puntaje_estrellas, 5)
         self.assertEqual(cal.comentario, 'Excelente tour')
 
     def test_unique_together_cliente_paquete(self):
@@ -92,13 +92,13 @@ class CalificacionTest(TestCase):
         Calificacion.objects.create(
             cliente=self.cliente,
             paquete=self.paquete,
-            puntaje=4
+            puntaje_estrellas=4
         )
         with self.assertRaises(Exception):
             Calificacion.objects.create(
                 cliente=self.cliente,
                 paquete=self.paquete,
-                puntaje=3
+                puntaje_estrellas=3
             )
 
     def test_comentario_puede_estar_vacio(self):
@@ -110,7 +110,7 @@ class CalificacionTest(TestCase):
         cal = Calificacion.objects.create(
             cliente=self.cliente,
             paquete=self.paquete,
-            puntaje=3,
+            puntaje_estrellas=3,
             comentario=''
         )
         self.assertEqual(cal.comentario, '')

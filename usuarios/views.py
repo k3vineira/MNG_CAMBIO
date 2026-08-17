@@ -156,7 +156,7 @@ def dashboard_admin(request):
     ingreso_por_reserva = total_ventas / total_reservas if total_reservas > 0 else 0
 
     canc_stats = Cancelacion.objects.aggregate(
-        hoy=Count('id', filter=Q(fecha_solicitud__date=hoy)),
+        hoy=Count('id', filter=Q(fecha__date=hoy)),
         rechazadas=Count('id', filter=Q(estado='rechazada')),
         pendientes=Count('id', filter=Q(estado__in=['pendiente', 'revision']))
     )

@@ -2,7 +2,7 @@
 -- Script de Base de Datos generado para MySQL Workbench
 -- Proyecto: Monagua (MNG_WEB)
 -- Modo: BUSINESS (24 tablas)
--- Fecha de generación: 2026-08-17 12:32:29
+-- Fecha de generación: 2026-08-17 13:01:55
 -- =============================================================================
 
 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
@@ -143,9 +143,9 @@ CREATE TABLE IF NOT EXISTS `comunidad_blog` (
 DROP TABLE IF EXISTS `comunidad_calificacion`;
 CREATE TABLE IF NOT EXISTS `comunidad_calificacion` (
   `id` INT NOT NULL AUTO_INCREMENT,
-  `puntaje` SMALLINT UNSIGNED NOT NULL,
+  `puntaje_estrellas` SMALLINT UNSIGNED NOT NULL,
   `comentario` TEXT NOT NULL,
-  `fecha` DATETIME NOT NULL,
+  `fecha_calificacion` DATETIME NOT NULL,
   `cliente_id` BIGINT NOT NULL,
   `paquete_id` BIGINT NOT NULL,
   PRIMARY KEY (`id`),
@@ -327,8 +327,11 @@ CREATE TABLE IF NOT EXISTS `reservas_cancelacion` (
   `motivo` TEXT NOT NULL,
   `penalidad` INT NOT NULL,
   `estado` VARCHAR(20) NOT NULL,
-  `fecha_solicitud` DATETIME NOT NULL,
   `reserva_id` BIGINT NOT NULL,
+  `fecha` DATETIME NOT NULL,
+  `fecha_reembolso` DATE NULL,
+  `imagen_comprobante` VARCHAR(100) NULL,
+  `valor_reembolsado` INT NULL,
   PRIMARY KEY (`id`),
   CONSTRAINT `fk_reservas_cancelacion_reserva_id`
     FOREIGN KEY (`reserva_id`)

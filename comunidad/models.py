@@ -16,9 +16,9 @@ class Calificacion(models.Model):
     """
     cliente = models.ForeignKey('usuarios.Cliente', on_delete=models.CASCADE)
     paquete = models.ForeignKey('catalogo.Paquete', on_delete=models.CASCADE)
-    puntaje = models.PositiveSmallIntegerField()
+    puntaje_estrellas = models.PositiveSmallIntegerField()
     comentario = models.TextField(blank=True)
-    fecha = models.DateTimeField(auto_now_add=True)
+    fecha_calificacion = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         unique_together = ('cliente', 'paquete')

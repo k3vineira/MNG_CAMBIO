@@ -393,7 +393,7 @@ def poblar_base_datos():
                 fake_solicitud = fake_registro + timedelta(days=random.randint(1, dias_diff - 1))
             else:
                 fake_solicitud = fake_registro + timedelta(hours=5)
-            Cancelacion.objects.filter(id=c.id).update(fecha_solicitud=fake_solicitud)
+            Cancelacion.objects.filter(id=c.id).update(fecha=fake_solicitud)
 
     print(f"  -> {len(reservas_creadas)} reservas creadas.")
 
@@ -536,7 +536,7 @@ def poblar_base_datos():
             Calificacion.objects.create(
                 cliente=c,
                 paquete=p,
-                puntaje=random.randint(3, 5),
+                puntaje_estrellas=random.randint(3, 5),
                 comentario=comentarios_calificacion[len(combinaciones_calificacion) - 1]
             )
 
