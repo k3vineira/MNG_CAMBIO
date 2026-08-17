@@ -13,6 +13,9 @@ erDiagram
     CLIENTE ||--o{ CALIFICACION : "deja"
     PAQUETE ||--o{ CALIFICACION : "recibe"
     CLIENTE ||--o{ PQRS : "crea"
+    USUARIO ||--o{ SEGURO_VIAJE : "adquiere"
+    RESERVA ||--o| SEGURO_VIAJE : "tiene"
+    POLIZA ||--o{ SEGURO_VIAJE : "pertenece"
 
     %% Entidades y Atributos
 
@@ -152,4 +155,22 @@ erDiagram
         string estado "opciones: abierto, en_proceso, cerrado"
         string respuesta "ej: Estimado cliente..."
         datetime fecha "ej: 2026-05-15 10:00:00"
+    }
+
+    POLIZA {
+        int id PK "ej: 1"
+        string nombre_aseguradora "ej: Plan Básico"
+        string descripcion "ej: Cobertura médica..."
+        float precio_diario "ej: 5000.00"
+        bool estado "ej: true"
+    }
+
+    SEGURO_VIAJE {
+        int id PK "ej: 1"
+        int usuario_id FK "ej: 1"
+        int reserva_id FK "ej: 100"
+        int poliza_id FK "ej: 2"
+        string numero_poliza "ej: POL-123456"
+        datetime fecha_emision "ej: 2026-05-15 10:00:00"
+        float costo_seguro "ej: 15000.00"
     }

@@ -1,15 +1,15 @@
 from django import forms
 from .models import Poliza, SeguroViaje
 
-class PolizaForm(forms.ModelForm):
+class SeguroViajeForm(forms.ModelForm):
     class Meta:
-        model = Poliza
-        fields = ['seguro']
+        model = SeguroViaje
+        fields = ['poliza']
         widgets = {
-            'seguro': forms.Select(attrs={'class': 'form-select'}),
+            'poliza': forms.Select(attrs={'class': 'form-select'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Mostrar únicamente seguros activos en el formulario
-        self.fields['seguro'].queryset = SeguroViaje.objects.filter(activo=True)
+        # Mostrar únicamente seguros/pólizas activas en el formulario
+        self.fields['poliza'].queryset = Poliza.objects.filter(estado=True)

@@ -1,11 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .models import SeguroViaje, Poliza
-from .forms import PolizaForm
+from .forms import SeguroViajeForm
 
 def lista_seguros(request):
     """Muestra los planes de seguro disponibles."""
-    seguros = SeguroViaje.objects.filter(activo=True)
+    seguros = Poliza.objects.filter(estado=True)
     return render(request, 'seguros/lista_seguros.html', {'seguros': seguros})
 
 @login_required
@@ -16,17 +16,17 @@ def adquirir_seguro(request, reserva_id):
     reserva = get_object_or_404(Reserva, id=reserva_id, usuario=request.user)
 
     if request.method == 'POST':
-        form = PolizaForm(request.POST)
+        form = SeguroViajeForm(request.POST)
         if form.is_valid():
-            poliza = form.save(commit=False)
-            poliza.usuario = request.user
-            poliza.reserva = reserva
-            # Generar código único de póliza
+            seguro_viaje = form.save(commit=False)
+            seguro_viaje.usuario = request.user
+            seguro_viaje.reserva = reserva
+            # Generar número único de póliza
             import uuid
-            poliza.codigo_poliza = f"POL-{uuid.uuid4().hex[:8].upper()}"
-            poliza.save()
+            seguro_viaje.numero_poliza = f"POL-{uuid.uuid4().hex[:8].upper()}"
+            seguro_viaje.save()
             return redirect('mis_reservas_usuario')
     else:
-        form = PolizaForm()
+        form = SeguroViajeForm()
 
     return render(request, 'seguros/comprar_seguro.html', {'form': form, 'reserva': reserva})

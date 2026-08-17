@@ -2,7 +2,7 @@
 -- Script de Base de Datos generado para MySQL Workbench
 -- Proyecto: Monagua (MNG_WEB)
 -- Modo: BUSINESS (24 tablas)
--- Fecha de generación: 2026-08-17 13:22:28
+-- Fecha de generación: 2026-08-17 13:42:22
 -- =============================================================================
 
 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
@@ -388,24 +388,11 @@ CREATE TABLE IF NOT EXISTS `seguimiento` (
 DROP TABLE IF EXISTS `seguros_poliza`;
 CREATE TABLE IF NOT EXISTS `seguros_poliza` (
   `id` INT NOT NULL AUTO_INCREMENT,
-  `codigo_poliza` VARCHAR(50) NOT NULL,
-  `fecha_emision` DATETIME NOT NULL,
-  `costo_total` DECIMAL(12, 2) NOT NULL,
-  `reserva_id` BIGINT NULL,
-  `usuario_id` BIGINT NOT NULL,
-  `seguro_id` BIGINT NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE INDEX `uq_seguros_poliza_reserva_id` (`reserva_id` ASC),
-  UNIQUE INDEX `uq_seguros_poliza_codigo_poliza` (`codigo_poliza` ASC),
-  CONSTRAINT `fk_seguros_poliza_seguro_id`
-    FOREIGN KEY (`seguro_id`)
-    REFERENCES `seguros_seguroviaje` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  CONSTRAINT `fk_seguros_poliza_usuario_id`
-    FOREIGN KEY (`usuario_id`)
-    REFERENCES `usuarios_usuario` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  CONSTRAINT `fk_seguros_poliza_reserva_id`
-    FOREIGN KEY (`reserva_id`)
-    REFERENCES `reservas_reserva` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+  `descripcion` LONGTEXT NOT NULL,
+  `estado` TINYINT(1) NOT NULL,
+  `nombre_aseguradora` VARCHAR(100) NOT NULL,
+  `precio_diario` DECIMAL(12, 2) NOT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------
@@ -414,11 +401,24 @@ CREATE TABLE IF NOT EXISTS `seguros_poliza` (
 DROP TABLE IF EXISTS `seguros_seguroviaje`;
 CREATE TABLE IF NOT EXISTS `seguros_seguroviaje` (
   `id` INT NOT NULL AUTO_INCREMENT,
-  `nombre` VARCHAR(100) NOT NULL,
-  `descripcion` LONGTEXT NOT NULL,
-  `precio_diario` DECIMAL(12, 2) NOT NULL,
-  `activo` TINYINT(1) NOT NULL,
-  PRIMARY KEY (`id`)
+  `costo_seguro` DECIMAL(12, 2) NOT NULL,
+  `fecha_emision` DATETIME NOT NULL,
+  `numero_poliza` VARCHAR(50) NOT NULL,
+  `poliza_id` BIGINT NOT NULL,
+  `reserva_id` BIGINT NULL,
+  `usuario_id` BIGINT NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `uq_seguros_seguroviaje_reserva_id` (`reserva_id` ASC),
+  UNIQUE INDEX `uq_seguros_seguroviaje_numero_poliza` (`numero_poliza` ASC),
+  CONSTRAINT `fk_seguros_seguroviaje_usuario_id`
+    FOREIGN KEY (`usuario_id`)
+    REFERENCES `usuarios_usuario` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  CONSTRAINT `fk_seguros_seguroviaje_reserva_id`
+    FOREIGN KEY (`reserva_id`)
+    REFERENCES `reservas_reserva` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  CONSTRAINT `fk_seguros_seguroviaje_poliza_id`
+    FOREIGN KEY (`poliza_id`)
+    REFERENCES `seguros_poliza` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------
