@@ -21,6 +21,7 @@ class Temporada(models.Model):
     ]
 
     nombre = models.CharField(max_length=50, verbose_name='Nombre de la Temporada')
+    descripcion = models.TextField(verbose_name='Descripción de la Temporada')
     fecha_inicio = models.DateField(verbose_name='Fecha de Inicio')
     fecha_fin = models.DateField(verbose_name='Fecha de Fin')
     estado = models.CharField(max_length=20, choices=ESTADOS, default='programada', verbose_name='Estado')
