@@ -258,7 +258,7 @@ def generar_factura_pdf_bytes(reserva, request=None, password=None):
     from django.urls import reverse
     from pypdf import PdfReader, PdfWriter
     
-    comprobante = reserva.comprobantes.filter(estado='aprobado').first()
+    comprobante = reserva.pago if (hasattr(reserva, 'pago') and reserva.pago.estado_transaccion == 'aprobado') else None
     metodo_pago = comprobante.banco_origen if comprobante else "Transferencia Bancaria"
     
     documento_tipo = reserva.usuario.tipo_documento or "Documento"

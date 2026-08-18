@@ -206,8 +206,8 @@ class ReservaDeleteView(DeleteView):
 @login_required(login_url='login')
 def mis_reservas_usuario(request):
     mis_reservas = Reserva.objects.filter(usuario=request.user)\
-        .select_related('paquete')\
-        .prefetch_related('comprobantes', 'cancelaciones')\
+        .select_related('paquete', 'pago')\
+        .prefetch_related('cancelaciones')\
         .order_by('-id')
 
     context = {
@@ -295,7 +295,7 @@ class CancelacionCreateView(CreateView):
 
         nombre_cliente = self.request.user.first_name or self.request.user.username
 
-        if reserva.estado.lower() == 'pendiente' and not reserva.comprobantes.exists():
+        if reserva.estado.lower() == 'pendiente' and not hasattr(reserva, 'pago'):
             reserva.estado = 'cancelada'
             reserva.save()
 
@@ -395,8 +395,7 @@ class CancelacionDeleteView(DeleteView):
 @login_required(login_url='login')
 def mis_cancelaciones_usuario(request):
     mis_cancelaciones = Cancelacion.objects.filter(reserva__usuario=request.user)\
-        .select_related('reserva__paquete')\
-        .prefetch_related('reserva__comprobantes')\
+        .select_related('reserva__paquete', 'reserva__pago')\
         .order_by('-id')
 
     context = {
@@ -717,7 +716,7 @@ def ver_factura(request, reserva_id):
         messages.error(request, "La factura solo está disponible para reservas confirmadas y pagadas.")
         return redirect('mis_reservas_usuario')
         
-    comprobante = reserva.comprobantes.filter(estado='aprobado').first()
+    comprobante = reserva.pago if (hasattr(reserva, 'pago') and reserva.pago.estado_transaccion == 'aprobado') else None
     metodo_pago = comprobante.banco_origen if comprobante else "Transferencia Bancaria"
     
     abs_url = request.build_absolute_uri(reverse('ver_factura', args=[reserva.id]))

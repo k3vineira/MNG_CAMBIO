@@ -28,12 +28,12 @@ class Pago(models.Model):
     )
 
     # Vincular con una reserva específica
-    reserva = models.ForeignKey(
+    reserva = models.OneToOneField(
         'reservas.Reserva',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='comprobantes',
+        related_name='pago',
         verbose_name='Reserva'
     )
 

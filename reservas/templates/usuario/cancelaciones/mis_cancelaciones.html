@@ -98,35 +98,33 @@
                                     </div>
 
                                     <!-- Relación de Comprobantes de Pago para la Multa -->
-                                    {% if cancelacion.reserva.comprobantes.all %}
+                                    {% if cancelacion.reserva.pago %}
                                         <div class="mb-4 border-top pt-3">
                                             <h6 class="fw-bold text-secondary mb-2 u-style-1952029f">
-                                                <i class="bi bi-credit-card me-1"></i> Comprobantes de pago enviados
+                                                <i class="bi bi-credit-card me-1"></i> Comprobante de pago enviado
                                             </h6>
                                             <div class="d-flex flex-column gap-2">
-                                                {% for comp in cancelacion.reserva.comprobantes.all %}
-                                                    <div class="d-flex align-items-center justify-content-between p-2 rounded-3 border bg-light flex-wrap gap-2">
-                                                        <div class="d-flex align-items-center gap-2">
-                                                            {% if comp.imagen %}
-                                                                <img src="{{ comp.imagen.url }}" alt="Comprobante" class="img-fluid rounded border u-style-35afc132" style="max-width: 100%; height: auto; object-fit: contain; max-height: 120px;">
-                                                            {% endif %}
-                                                            <div>
-                                                                <div class="small fw-semibold text-dark">Referencia: {{ comp.referencia|default:"—" }}</div>
-                                                                <div class="text-muted u-style-e58064fd">{{ comp.banco_origen|default:"Medio desconocido" }} · {{ comp.fecha_envio|date:"d M Y" }}</div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="d-flex align-items-center gap-2">
-                                                            {% if comp.monto %}
-                                                                <span class="small fw-bold text-success">COP ${{ comp.monto|floatformat:0|intcomma }}</span>
-                                                            {% elif comp.reserva %}
-                                                                <span class="small fw-bold text-success">COP ${{ comp.reserva.monto_total|floatformat:0|intcomma }}</span>
-                                                            {% endif %}
-                                                            <span class="badge {% if comp.estado == 'aprobado' %}bg-success{% elif comp.estado == 'pendiente' %}bg-warning text-dark{% else %}bg-danger{% endif %} u-style-dd8eb2f6">
-                                                                {{ comp.get_estado_display }}
-                                                            </span>
+                                                <div class="d-flex align-items-center justify-content-between p-2 rounded-3 border bg-light flex-wrap gap-2">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        {% if cancelacion.reserva.pago.imagen_comprobante %}
+                                                            <img src="{{ cancelacion.reserva.pago.imagen_comprobante.url }}" alt="Comprobante" class="img-fluid rounded border u-style-35afc132" style="max-width: 100%; height: auto; object-fit: contain; max-height: 120px;">
+                                                        {% endif %}
+                                                        <div>
+                                                            <div class="small fw-semibold text-dark">Referencia: {{ cancelacion.reserva.pago.referencia|default:"—" }}</div>
+                                                            <div class="text-muted u-style-e58064fd">{{ cancelacion.reserva.pago.banco_origen|default:"Medio desconocido" }} · {{ cancelacion.reserva.pago.fecha_envio|date:"d M Y" }}</div>
                                                         </div>
                                                     </div>
-                                                {% endfor %}
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        {% if cancelacion.reserva.pago.monto %}
+                                                            <span class="small fw-bold text-success">COP ${{ cancelacion.reserva.pago.monto|floatformat:0|intcomma }}</span>
+                                                        {% else %}
+                                                            <span class="small fw-bold text-success">COP ${{ cancelacion.reserva.monto_total|floatformat:0|intcomma }}</span>
+                                                        {% endif %}
+                                                        <span class="badge {% if cancelacion.reserva.pago.estado_transaccion == 'aprobado' %}bg-success{% elif cancelacion.reserva.pago.estado_transaccion == 'pendiente' %}bg-warning text-dark{% else %}bg-danger{% endif %} u-style-dd8eb2f6">
+                                                            {{ cancelacion.reserva.pago.get_estado_transaccion_display }}
+                                                        </span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     {% endif %}

@@ -29,7 +29,7 @@ def enviar_comprobante(request):
     ).distinct()
 
     # Excluir reservas que ya tengan comprobantes en proceso para evitar duplicidad real
-    reservas_usuario = reservas_usuario.exclude(comprobantes__estado_transaccion__in=['aprobado', 'pendiente'])
+    reservas_usuario = reservas_usuario.exclude(pago__estado_transaccion__in=['aprobado', 'pendiente'])
 
     if request.method == 'POST':
         form = PagoForm(request.POST, request.FILES, reservas=reservas_usuario)
