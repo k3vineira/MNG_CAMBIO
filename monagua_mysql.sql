@@ -1,8 +1,8 @@
 -- =============================================================================
 -- Script de Base de Datos generado para MySQL Workbench
 -- Proyecto: Monagua (MNG_WEB)
--- Modo: BUSINESS (24 tablas)
--- Fecha de generación: 2026-08-17 19:32:04
+-- Modo: BUSINESS (25 tablas)
+-- Fecha de generación: 2026-08-17 19:43:48
 -- =============================================================================
 
 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
@@ -265,6 +265,27 @@ CREATE TABLE IF NOT EXISTS `paquete_actividades` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------
+-- Tabla `monagua_db`.`paquete_promociones`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `paquete_promociones`;
+CREATE TABLE IF NOT EXISTS `paquete_promociones` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `paquete_id` BIGINT NOT NULL,
+  `promocion_id` BIGINT NOT NULL,
+  `tarifa_id` BIGINT NOT NULL,
+  PRIMARY KEY (`id`),
+  CONSTRAINT `fk_paquete_promociones_tarifa_id`
+    FOREIGN KEY (`tarifa_id`)
+    REFERENCES `catalogo_tarifa` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  CONSTRAINT `fk_paquete_promociones_promocion_id`
+    FOREIGN KEY (`promocion_id`)
+    REFERENCES `promociones_promocion` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  CONSTRAINT `fk_paquete_promociones_paquete_id`
+    FOREIGN KEY (`paquete_id`)
+    REFERENCES `catalogo_paquete` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -----------------------------------------------------
 -- Tabla `monagua_db`.`plan_guia`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `plan_guia`;
@@ -314,12 +335,8 @@ CREATE TABLE IF NOT EXISTS `promociones_promocion` (
   `condiciones` TEXT NULL,
   `codigo_cupon` VARCHAR(30) NULL,
   `activa` TINYINT(1) NOT NULL,
-  `paquete_id` BIGINT NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE INDEX `uq_promociones_promocion_codigo_promocion` (`codigo_promocion` ASC),
-  CONSTRAINT `fk_promociones_promocion_paquete_id`
-    FOREIGN KEY (`paquete_id`)
-    REFERENCES `catalogo_paquete` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+  UNIQUE INDEX `uq_promociones_promocion_codigo_promocion` (`codigo_promocion` ASC)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------
@@ -358,8 +375,13 @@ CREATE TABLE IF NOT EXISTS `reservas_reserva` (
   `cliente_id` BIGINT NULL,
   `paquete_id` BIGINT NOT NULL,
   `usuario_id` BIGINT NOT NULL,
+  `paquete_promocion_id` BIGINT NULL,
   PRIMARY KEY (`id`),
   UNIQUE INDEX `unique_usuario_paquete_fecha_UNIQUE` (`usuario_id`, `paquete_id`, `fecha` ASC),
+  UNIQUE INDEX `uq_reservas_reserva_paquete_promocion_id` (`paquete_promocion_id` ASC),
+  CONSTRAINT `fk_reservas_reserva_paquete_promocion_id`
+    FOREIGN KEY (`paquete_promocion_id`)
+    REFERENCES `paquete_promociones` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `fk_reservas_reserva_usuario_id`
     FOREIGN KEY (`usuario_id`)
     REFERENCES `usuarios_usuario` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,

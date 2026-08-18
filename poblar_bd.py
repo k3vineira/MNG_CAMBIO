@@ -9,7 +9,7 @@ from reservas.models import Reserva, Cancelacion
 from catalogo.models import Categoria, Actividades, Paquete, Temporada, Tarifa
 from usuarios.models import Usuario, Cliente, GuiaTuristico
 from pagos.models import Pago
-from promociones.models import Promocion
+from promociones.models import Promocion, PaquetePromocion
 from auditoria.models import Auditoria
 import random
 from datetime import timedelta, date, datetime
@@ -44,6 +44,7 @@ def poblar_base_datos():
     
     Auditoria.objects.all().delete()
     Pago.objects.all().delete()
+    PaquetePromocion.objects.all().delete()
     Promocion.objects.all().delete()
     Comentario.objects.all().delete()
     PQRS.objects.all().delete()
@@ -592,19 +593,40 @@ def poblar_base_datos():
         "Descuento especial en paquetes de ecoturismo sostenible.",
         "¿Aún no has reservado? Esta oferta de última hora te conviene.",
     ]
+    promociones_creadas = []
     for i in range(10):
         f_fin = date(2026, 12, 31) - timedelta(days=random.randint(0, 180))
         f_inicio = f_fin - timedelta(days=random.randint(15, 60))
-        Promocion.objects.create(
-            paquete=paquetes_creados[i],
+        promo = Promocion.objects.create(
             nombre=nombres_promociones[i],
             descripcion=descripciones_promociones[i],
             descuento=random.choice([10, 15, 20, 25, 30]),
             fecha_inicio=f_inicio,
             fecha_fin=f_fin,
             codigo_promocion=f"PROM-{random.randint(1000, 9999)}-{i}",
-            activa=random.choice([True, True, True, False])
+            activa=True
         )
+        promociones_creadas.append(promo)
+
+    print("7.1 Creando PaquetePromociones...")
+    paquete_promociones_creados = []
+    for i in range(10):
+        paquete = paquetes_creados[i]
+        tarifa = Tarifa.objects.filter(paquete=paquete).first()
+        if tarifa:
+            pp = PaquetePromocion.objects.create(
+                paquete=paquete,
+                promocion=promociones_creadas[i],
+                tarifa=tarifa
+            )
+            paquete_promociones_creados.append(pp)
+
+    # Asociar paquete_promocion a algunas reservas para probar la relación 1:1 y el descuento
+    for idx, pp in enumerate(paquete_promociones_creados[:5]):
+        if idx < len(reservas_creadas):
+            r = reservas_creadas[idx]
+            r.paquete_promocion = pp
+            r.save()
 
 # ─────────────────────────────────────────────
     # 8. AUDITORÍA (Acciones del sistema)

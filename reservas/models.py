@@ -32,6 +32,14 @@ class Reserva(models.Model):
         related_name='reserva',
         verbose_name='Paquete Reservado'
     )
+    paquete_promocion = models.OneToOneField(
+        'promociones.PaquetePromocion',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='reserva',
+        verbose_name='Promoción del Paquete'
+    )
     fecha = models.DateField(verbose_name='Fecha de Reserva')
     fecha_inicio = models.DateField(null=True, blank=True, verbose_name='Fecha de inicio')
     cliente = models.ForeignKey(
@@ -97,7 +105,13 @@ class Reserva(models.Model):
             **kwargs: Argumentos de clave-valor adicionales.
         """
        
-        if self.paquete and self.fecha:
+        if self.paquete_promocion and self.paquete_promocion.promocion.activa:
+            self.paquete = self.paquete_promocion.paquete
+            tarifa = self.paquete_promocion.tarifa
+            descuento = self.paquete_promocion.promocion.descuento
+            base_monto = (tarifa.precio_adulto * self.numero_adultos) + (tarifa.precio_menor * self.numero_menores)
+            self.monto_total = int(base_monto * (100 - descuento) / 100)
+        elif self.paquete and self.fecha:
             try:
                 from catalogo.models import Temporada, Tarifa
                 temporada = Temporada.objects.filter(

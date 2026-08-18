@@ -1,11 +1,17 @@
 from django.contrib import admin
-from .models import Promocion, Banner
+from .models import Promocion, PaquetePromocion, Banner
 
 @admin.register(Promocion)
 class PromocionAdmin(admin.ModelAdmin):
-    list_display = ('nombre', 'paquete', 'descuento', 'fecha_fin', 'activa')
+    list_display = ('nombre', 'descuento', 'fecha_fin', 'activa')
     list_filter = ('activa', 'fecha_fin')
-    search_fields = ('nombre', 'paquete__nombre')
+    search_fields = ('nombre',)
+
+@admin.register(PaquetePromocion)
+class PaquetePromocionAdmin(admin.ModelAdmin):
+    list_display = ('paquete', 'promocion', 'tarifa')
+    list_filter = ('paquete', 'promocion')
+    search_fields = ('paquete__nombre', 'promocion__nombre')
 
 @admin.register(Banner)
 class BannerAdmin(admin.ModelAdmin):

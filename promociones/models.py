@@ -3,11 +3,10 @@ Modelos de datos para las promociones y banners publicitarios del sitio.
 """
 
 from django.db import models
-from catalogo.models import Paquete
+from catalogo.models import Paquete, Tarifa
 
 class Promocion(models.Model):
     """Promoción o descuento aplicado a un paquete turístico durante un período determinado."""
-    paquete = models.ForeignKey(Paquete, on_delete=models.CASCADE, related_name='promociones')
     nombre = models.CharField(max_length=150, verbose_name="Nombre de la promoción")
     descripcion = models.TextField(verbose_name="Descripción")
     descuento = models.PositiveIntegerField(verbose_name="Porcentaje de descuento")
@@ -25,6 +24,38 @@ class Promocion(models.Model):
     def __str__(self):
         """Retorna el nombre y porcentaje de descuento de la promoción."""
         return f"{self.nombre} ({self.descuento}%)"
+
+class PaquetePromocion(models.Model):
+    """
+    Entidad intermedia que asocia un Paquete, una Promocion y una Tarifa.
+    Equivale a la tabla intermedia 'paquete_promociones' del MER.
+    """
+    paquete = models.ForeignKey(
+        Paquete,
+        on_delete=models.CASCADE,
+        related_name='paquete_promociones',
+        verbose_name='Paquete'
+    )
+    promocion = models.ForeignKey(
+        Promocion,
+        on_delete=models.CASCADE,
+        related_name='paquete_promociones',
+        verbose_name='Promoción'
+    )
+    tarifa = models.ForeignKey(
+        Tarifa,
+        on_delete=models.CASCADE,
+        related_name='paquete_promociones',
+        verbose_name='Tarifa'
+    )
+
+    class Meta:
+        db_table = 'paquete_promociones'
+        verbose_name = 'Paquete Promoción'
+        verbose_name_plural = 'Paquetes Promociones'
+
+    def __str__(self):
+        return f"{self.paquete.nombre} - Promo: {self.promocion.nombre} (Tarifa: {self.tarifa.id})"
 
 class Banner(models.Model):
     """Banner publicitario que se muestra en el sitio web con imagen y enlace opcional."""
