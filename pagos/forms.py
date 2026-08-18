@@ -91,3 +91,31 @@ class PagoForm(forms.ModelForm):
                 )
             )
         )
+
+class RevisarComprobanteForm(forms.ModelForm):
+    """
+    Formulario para que el Administrador/Tesorero revise y tome decisiones sobre un pago.
+    """
+    class Meta:
+        model = Pago
+        fields = ['banco_origen', 'monto', 'estado_transaccion', 'nota_admin']
+        labels = {
+            'banco_origen': 'Banco / Medio de Pago',
+            'monto': 'Monto Verificado (COP)',
+            'estado_transaccion': 'Estado del Pago',
+            'nota_admin': 'Nota del Administrador',
+        }
+        widgets = {
+            'banco_origen': forms.TextInput(attrs={'class': 'form-control rounded-4 shadow-sm', 'placeholder': 'Banco o Medio de Pago'}),
+            'monto': forms.NumberInput(attrs={'class': 'form-control rounded-4 shadow-sm', 'placeholder': 'Monto Verificado', 'step': '0.01'}),
+            'estado_transaccion': forms.Select(attrs={'class': 'form-select rounded-4 shadow-sm'}),
+            'nota_admin': forms.Textarea(attrs={'class': 'form-control rounded-4 shadow-sm', 'rows': 3, 'placeholder': 'Motivo de rechazo o nota aclaratoria...'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Hacemos que estos campos no sean estrictamente requeridos a nivel de HTML
+        # para que la lógica de validación interna (Pago.clean) sea la que decida según el estado.
+        self.fields['banco_origen'].required = False
+        self.fields['monto'].required = False
+        self.fields['nota_admin'].required = False

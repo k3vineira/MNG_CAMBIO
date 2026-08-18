@@ -9,7 +9,7 @@ from .models import Pago
 from reservas.models import Reserva, Cancelacion
 from django.db.models import Q, OuterRef, Subquery
 from core.decoradores import requiere_autenticacion, requiere_administrador
-from .forms import PagoForm
+from .forms import PagoForm, RevisarComprobanteForm
 
 
 @requiere_autenticacion
@@ -123,6 +123,7 @@ def admin_comprobantes(request):
 @requiere_administrador
 def admin_revisar_comprobante(request, pk):
     """Admin aprueba, rechaza o deja pendiente un comprobante."""
+    from django.core.exceptions import ValidationError
     comprobante = get_object_or_404(Pago, pk=pk)
 
     if request.method == 'POST':
@@ -130,28 +131,31 @@ def admin_revisar_comprobante(request, pk):
             messages.error(request, 'Este comprobante ya ha sido procesado y no puede modificarse.')
             return redirect('admin_comprobantes')
 
-        nuevo_estado = request.POST.get('estado')
-        nota_admin = request.POST.get('nota_admin', '').strip()
-
-        if nuevo_estado in ('aprobado', 'rechazado', 'pendiente'):
-            comprobante.estado_transaccion = nuevo_estado
-            comprobante.nota_admin = nota_admin
+        form = RevisarComprobanteForm(request.POST, instance=comprobante)
+        if form.is_valid():
+            # Actualizamos el objeto comprobante con los datos limpios del formulario
+            nuevo_estado = form.cleaned_data.get('estado_transaccion')
             comprobante.fecha_revision = timezone.now()
             
-            from django.core.exceptions import ValidationError
             try:
+                # El método save() del modelo Pago ejecuta self.clean(), el cual valida el estado
                 comprobante.save()
             except ValidationError as e:
+                # Si falla la validación del modelo, inyectamos los errores en el formulario
                 if hasattr(e, 'message_dict'):
                     for field, errors in e.message_dict.items():
                         for err in errors:
-                            messages.error(request, f"Error en {field}: {err}")
+                            # Map model fields to form fields if they match
+                            form.add_error(field if field in form.fields else None, err)
                 else:
                     for err in e.messages:
-                        messages.error(request, err)
-                return redirect('admin_revisar_comprobante', pk=pk)
+                        form.add_error(None, err)
+                
+                # Volvemos a renderizar la plantilla con el formulario que contiene los errores y los datos introducidos
+                context = {'comprobante': comprobante, 'form': form}
+                return render(request, 'pagos/admin_revisar_comprobante.html', context)
 
-            # Si se aprueba, marcar la reserva como confirmada (solo si no estaba cancelada por multa)
+            # --- SI SE APRUEBA LA TRANSACCIÓN (Y SE GUARDÓ CON ÉXITO) ---
             if nuevo_estado == 'aprobado' and comprobante.reserva:
                 if comprobante.reserva.estado != 'cancelada':
                     comprobante.reserva.estado = 'confirmada'
@@ -166,7 +170,7 @@ def admin_revisar_comprobante(request, pk):
 
                     messages.success(
                         request,
-                        f'Comprobante #{pk} APROBADO. La Reserva #{comprobante.reserva.id} ha sido confirmada y se ha notificado al cliente por correo.'
+                        f'Comprobante #{pk} APROBADO. La Reserva #{comprobante.reserva.id} ha sido confirmada y se ha notificado al cliente.'
                     )
                     return redirect('admin_comprobantes')
                 else:
@@ -184,12 +188,13 @@ def admin_revisar_comprobante(request, pk):
                     request,
                     f'Comprobante #{pk} marcado como {comprobante.get_estado_transaccion_display()}.'
                 )
-        else:
-            messages.error(request, 'Estado no válido.')
+            return redirect('admin_comprobantes')
 
-        return redirect('admin_comprobantes')
+    else:
+        # En solicitudes GET, instanciamos el formulario con los datos actuales
+        form = RevisarComprobanteForm(instance=comprobante)
 
-    context = {'comprobante': comprobante}
+    context = {'comprobante': comprobante, 'form': form}
     return render(request, 'pagos/admin_revisar_comprobante.html', context)
 
 
