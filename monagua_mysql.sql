@@ -2,7 +2,7 @@
 -- Script de Base de Datos generado para MySQL Workbench
 -- Proyecto: Monagua (MNG_WEB)
 -- Modo: BUSINESS (24 tablas)
--- Fecha de generación: 2026-08-17 19:12:26
+-- Fecha de generación: 2026-08-17 19:26:13
 -- =============================================================================
 
 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
@@ -206,15 +206,16 @@ CREATE TABLE IF NOT EXISTS `factura` (
   `estado` VARCHAR(20) NOT NULL,
   `valor_subtotal` DECIMAL(12, 2) NOT NULL,
   `valor_total` DECIMAL(12, 2) NOT NULL,
-  `codigo_reserva` BIGINT NOT NULL,
   `codigo_pago` BIGINT NULL,
+  `codigo_reserva` BIGINT NOT NULL,
   PRIMARY KEY (`id`),
-  CONSTRAINT `fk_factura_codigo_pago`
-    FOREIGN KEY (`codigo_pago`)
-    REFERENCES `pago` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  UNIQUE INDEX `uq_factura_codigo_reserva` (`codigo_reserva` ASC),
   CONSTRAINT `fk_factura_codigo_reserva`
     FOREIGN KEY (`codigo_reserva`)
-    REFERENCES `reservas_reserva` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+    REFERENCES `reservas_reserva` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  CONSTRAINT `fk_factura_codigo_pago`
+    FOREIGN KEY (`codigo_pago`)
+    REFERENCES `pago` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------

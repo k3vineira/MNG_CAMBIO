@@ -148,10 +148,10 @@ class Factura(models.Model):
         decimal_places=2,
         verbose_name='Valor Total'
     )
-    reserva = models.ForeignKey(
+    reserva = models.OneToOneField(
         'reservas.Reserva',
         on_delete=models.CASCADE,
-        related_name='facturas',
+        related_name='factura',
         db_column='codigo_reserva',
         verbose_name='Reserva'
     )
