@@ -60,7 +60,7 @@ def dashboard_turista(request):
     reservas_pendientes = res_stats['pendientes'] or 0
     reservas_canceladas = res_stats['canceladas'] or 0
 
-    total_invertido = Pago.objects.filter(usuario=request.user, estado='aprobado').aggregate(
+    total_invertido = Pago.objects.filter(usuario=request.user, estado_transaccion='aprobado').aggregate(
         total=Sum(Coalesce(
             'monto',
             Cast('reserva__monto_total', DecimalField(max_digits=12, decimal_places=2)),
@@ -125,7 +125,7 @@ def dashboard_admin(request):
 
     # Agregación directa de ingresos por mes en BD (evita iterar objetos)
     ingresos_qs = Pago.objects.filter(
-        estado='aprobado',
+        estado_transaccion='aprobado',
         fecha_envio__year=current_year
     ).annotate(mes=ExtractMonth('fecha_envio')).values('mes').annotate(total=Sum('monto')).order_by('mes')
 
@@ -165,7 +165,7 @@ def dashboard_admin(request):
     cancelaciones_pendientes = canc_stats['pendientes']
 
     packages = Paquete.objects.filter(estado=True).prefetch_related('tarifas__temporada').annotate(
-        numero_reservas=Count('reserva')
+        numero_reservas=Count('reservas')
     ).order_by('-numero_reservas')[:5]
     
     max_reservas = max([p.numero_reservas for p in packages], default=1)
@@ -192,7 +192,7 @@ def dashboard_admin(request):
         nombre_usr = p.usuario.get_full_name() or p.usuario.username
         monto_valor = p.monto or (p.reserva.monto_total if p.reserva else 0)
         actividad_reciente.append({
-            'texto': f"Pago de COP ${monto_valor:,.0f} enviado por {nombre_usr} ({p.get_estado_display()})",
+            'texto': f"Pago de COP ${monto_valor:,.0f} enviado por {nombre_usr} ({p.get_estado_transaccion_display()})",
             'tiempo_dt': p.fecha_envio,
         })
     actividad_reciente.sort(key=lambda x: x['tiempo_dt'], reverse=True)
@@ -578,9 +578,9 @@ def get_estadisticas_context(user, is_admin=False):
         monto_valor = p.monto or (p.reserva.monto_total if p.reserva else 0)
         monto_formatted = f"COP ${monto_valor:,.0f}"
         if is_admin:
-            desc = f"Pago de {monto_formatted} enviado por {nombre_usr} ({p.get_estado_display()})"
+            desc = f"Pago de {monto_formatted} enviado por {nombre_usr} ({p.get_estado_transaccion_display()})"
         else:
-            desc = f"Pago de {monto_formatted} enviado ({p.get_estado_display()})"
+            desc = f"Pago de {monto_formatted} enviado ({p.get_estado_transaccion_display()})"
         actividad_reciente.append({
             'descripcion': desc,
             'fecha': p.fecha_envio,
@@ -711,7 +711,7 @@ def get_estadisticas_context(user, is_admin=False):
             'codigo': f"#{p.pk}" if p.pk else "#—",
             'reserva_nombre': p.reserva.paquete.nombre if (p.reserva and p.reserva.paquete) else "Reserva Múltiple",
             'metodo': p.banco_origen,
-            'estado': p.estado,
+            'estado_transaccion': p.estado_transaccion,
             'fecha': p.fecha_envio,
             'monto': p.monto or (p.reserva.monto_total if p.reserva else 0)
         })

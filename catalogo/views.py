@@ -237,9 +237,9 @@ class ActividadesListView(StaffRequiredMixin, ListView):
         queryset = super().get_queryset()
         apto_menores_param = self.request.GET.get('apto_menores', '').strip().lower()
         if apto_menores_param == 'si':
-            queryset = queryset.filter(apto_para_menores=True)
+            queryset = queryset.filter(apto_menores=True)
         elif apto_menores_param == 'no':
-            queryset = queryset.filter(apto_para_menores=False)
+            queryset = queryset.filter(apto_menores=False)
         return queryset.order_by('-id')
 
     def get_context_data(self, **kwargs):

@@ -137,7 +137,19 @@ def admin_revisar_comprobante(request, pk):
             comprobante.estado_transaccion = nuevo_estado
             comprobante.nota_admin = nota_admin
             comprobante.fecha_revision = timezone.now()
-            comprobante.save()
+            
+            from django.core.exceptions import ValidationError
+            try:
+                comprobante.save()
+            except ValidationError as e:
+                if hasattr(e, 'message_dict'):
+                    for field, errors in e.message_dict.items():
+                        for err in errors:
+                            messages.error(request, f"Error en {field}: {err}")
+                else:
+                    for err in e.messages:
+                        messages.error(request, err)
+                return redirect('admin_revisar_comprobante', pk=pk)
 
             # Si se aprueba, marcar la reserva como confirmada (solo si no estaba cancelada por multa)
             if nuevo_estado == 'aprobado' and comprobante.reserva:
