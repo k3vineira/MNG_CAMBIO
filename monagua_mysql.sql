@@ -2,7 +2,7 @@
 -- Script de Base de Datos generado para MySQL Workbench
 -- Proyecto: Monagua (MNG_WEB)
 -- Modo: BUSINESS (25 tablas)
--- Fecha de generación: 2026-08-17 19:43:48
+-- Fecha de generación: 2026-08-17 19:51:18
 -- =============================================================================
 
 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;

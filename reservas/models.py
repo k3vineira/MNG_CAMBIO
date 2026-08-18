@@ -29,7 +29,7 @@ class Reserva(models.Model):
     paquete = models.ForeignKey(
         Paquete,  
         on_delete=models.PROTECT,
-        related_name='reserva',
+        related_name='reservas',
         verbose_name='Paquete Reservado'
     )
     paquete_promocion = models.OneToOneField(
