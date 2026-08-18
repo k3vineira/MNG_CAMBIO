@@ -11,5 +11,5 @@ class SeguroViajeForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Mostrar únicamente seguros/pólizas activas en el formulario
+        
         self.fields['poliza'].queryset = Poliza.objects.filter(estado=True)
