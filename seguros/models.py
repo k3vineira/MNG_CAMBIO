@@ -42,6 +42,7 @@ class SeguroViaje(models.Model):
     poliza = models.ForeignKey(
         Poliza,
         on_delete=models.PROTECT,
+        related_name="seguros_viaje",
         verbose_name="Póliza Asociada"
     )
     numero_poliza = models.CharField(max_length=50, unique=True, verbose_name="Número de Póliza")
