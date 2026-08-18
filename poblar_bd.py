@@ -610,23 +610,34 @@ def poblar_base_datos():
 
     print("7.1 Creando PaquetePromociones...")
     paquete_promociones_creados = []
-    for i in range(10):
-        paquete = paquetes_creados[i]
-        tarifa = Tarifa.objects.filter(paquete=paquete).first()
+    # Crear PaquetePromocion asegurando que correspondan al paquete de las reservas a las que se los asignaremos
+    for idx in range(min(5, len(reservas_creadas))):
+        r = reservas_creadas[idx]
+        tarifa = Tarifa.objects.filter(paquete=r.paquete).first()
         if tarifa:
+            # Seleccionar una promoción de las creadas
+            promo = promociones_creadas[idx % len(promociones_creadas)]
             pp = PaquetePromocion.objects.create(
-                paquete=paquete,
-                promocion=promociones_creadas[i],
+                paquete=r.paquete,
+                promocion=promo,
                 tarifa=tarifa
             )
-            paquete_promociones_creados.append(pp)
-
-    # Asociar paquete_promocion a algunas reservas para probar la relación 1:1 y el descuento
-    for idx, pp in enumerate(paquete_promociones_creados[:5]):
-        if idx < len(reservas_creadas):
-            r = reservas_creadas[idx]
             r.paquete_promocion = pp
             r.save()
+            paquete_promociones_creados.append(pp)
+
+    # Crear algunos PaquetePromocion adicionales para paquetes sin reserva aún
+    for i in range(5, 10):
+        if i < len(paquetes_creados):
+            paquete = paquetes_creados[i]
+            tarifa = Tarifa.objects.filter(paquete=paquete).first()
+            if tarifa:
+                pp = PaquetePromocion.objects.create(
+                    paquete=paquete,
+                    promocion=promociones_creadas[i % len(promociones_creadas)],
+                    tarifa=tarifa
+                )
+                paquete_promociones_creados.append(pp)
 
 # ─────────────────────────────────────────────
     # 8. AUDITORÍA (Acciones del sistema)
