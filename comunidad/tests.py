@@ -53,6 +53,18 @@ def crear_paquete():
     )
 
 
+from reservas.models import Reserva
+
+def crear_reserva(usuario, paquete):
+    """Auxiliar para crear una reserva de prueba."""
+    return Reserva.objects.create(
+        usuario=usuario,
+        paquete=paquete,
+        fecha=datetime.date.today(),
+        monto_total=100000
+    )
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # TESTS DE CALIFICACION
 # ──────────────────────────────────────────────────────────────────────────────
@@ -67,6 +79,8 @@ class CalificacionTest(TestCase):
         """
         self.cliente = crear_cliente()
         self.paquete = crear_paquete()
+        # Creamos una reserva asociada al usuario de este cliente y al paquete
+        self.reserva = crear_reserva(self.cliente.usuario, self.paquete)
 
     def test_crear_calificacion(self):
         """
@@ -75,31 +89,29 @@ class CalificacionTest(TestCase):
         :return: Respuesta de la función.
         """
         cal = Calificacion.objects.create(
-            cliente=self.cliente,
-            paquete=self.paquete,
+            reserva=self.reserva,
             puntaje_estrellas=5,
             comentario='Excelente tour'
         )
         self.assertEqual(cal.puntaje_estrellas, 5)
         self.assertEqual(cal.comentario, 'Excelente tour')
+        self.assertEqual(cal.reserva, self.reserva)
 
-    def test_unique_together_cliente_paquete(self):
+    def test_multiples_calificaciones_mismo_plan(self):
         """
-        test_unique_together_cliente_paquete.
-        
-        :return: Respuesta de la función.
+        Verifica que se puedan crear múltiples calificaciones para la misma reserva (1:N).
         """
-        Calificacion.objects.create(
-            cliente=self.cliente,
-            paquete=self.paquete,
-            puntaje_estrellas=4
+        cal1 = Calificacion.objects.create(
+            reserva=self.reserva,
+            puntaje_estrellas=4,
+            comentario='Primer comentario'
         )
-        with self.assertRaises(Exception):
-            Calificacion.objects.create(
-                cliente=self.cliente,
-                paquete=self.paquete,
-                puntaje_estrellas=3
-            )
+        cal2 = Calificacion.objects.create(
+            reserva=self.reserva,
+            puntaje_estrellas=3,
+            comentario='Segundo comentario'
+        )
+        self.assertEqual(self.reserva.calificaciones.count(), 2)
 
     def test_comentario_puede_estar_vacio(self):
         """
@@ -108,12 +120,12 @@ class CalificacionTest(TestCase):
         :return: Respuesta de la función.
         """
         cal = Calificacion.objects.create(
-            cliente=self.cliente,
-            paquete=self.paquete,
+            reserva=self.reserva,
             puntaje_estrellas=3,
             comentario=''
         )
         self.assertEqual(cal.comentario, '')
+
 
 
 # ──────────────────────────────────────────────────────────────────────────────

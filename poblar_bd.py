@@ -517,7 +517,6 @@ def poblar_base_datos():
             )
 
     # 6.3 Calificaciones
-    combinaciones_calificacion = set()
     comentarios_calificacion = [
         "¡Excelente experiencia! Los guías fueron muy profesionales y amables.",
         "Un viaje inolvidable. Los paisajes de Mongua son espectaculares.",
@@ -530,17 +529,16 @@ def poblar_base_datos():
         "La naturaleza del páramo de Mongua es simplemente impresionante.",
         "Buena experiencia en general, aunque las condiciones climáticas nos afectaron un poco.",
     ]
-    while len(combinaciones_calificacion) < 10:
-        c = random.choice(clientes_creados)
-        p = random.choice(paquetes_creados)
-        if (c.id, p.id) not in combinaciones_calificacion:
-            combinaciones_calificacion.add((c.id, p.id))
-            Calificacion.objects.create(
-                cliente=c,
-                paquete=p,
-                puntaje_estrellas=random.randint(3, 5),
-                comentario=comentarios_calificacion[len(combinaciones_calificacion) - 1]
-            )
+    
+    # Seleccionar 10 reservas aleatorias de las creadas previamente para calificarlas
+    reservas_para_calificar = random.sample(reservas_creadas, k=min(10, len(reservas_creadas)))
+    for idx, r_obj in enumerate(reservas_para_calificar):
+        Calificacion.objects.create(
+            reserva=r_obj,
+            puntaje_estrellas=random.randint(3, 5),
+            comentario=comentarios_calificacion[idx]
+        )
+
 
     # 6.4 Comentarios
     titulos_comentarios = [
@@ -595,14 +593,19 @@ def poblar_base_datos():
         "¿Aún no has reservado? Esta oferta de última hora te conviene.",
     ]
     for i in range(10):
+        f_fin = date(2026, 12, 31) - timedelta(days=random.randint(0, 180))
+        f_inicio = f_fin - timedelta(days=random.randint(15, 60))
         Promocion.objects.create(
             paquete=paquetes_creados[i],
             nombre=nombres_promociones[i],
             descripcion=descripciones_promociones[i],
             descuento=random.choice([10, 15, 20, 25, 30]),
-            fecha_fin=date(2026, 12, 31) - timedelta(days=random.randint(0, 180)),
+            fecha_inicio=f_inicio,
+            fecha_fin=f_fin,
+            codigo_promocion=f"PROM-{random.randint(1000, 9999)}-{i}",
             activa=random.choice([True, True, True, False])
         )
+
 # ─────────────────────────────────────────────
     # 8. AUDITORÍA (Acciones del sistema)
     # ─────────────────────────────────────────────

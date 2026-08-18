@@ -2,7 +2,7 @@
 -- Script de Base de Datos generado para MySQL Workbench
 -- Proyecto: Monagua (MNG_WEB)
 -- Modo: BUSINESS (24 tablas)
--- Fecha de generación: 2026-08-17 13:42:22
+-- Fecha de generación: 2026-08-17 19:02:32
 -- =============================================================================
 
 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
@@ -112,6 +112,7 @@ DROP TABLE IF EXISTS `catalogo_temporada`;
 CREATE TABLE IF NOT EXISTS `catalogo_temporada` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `nombre` VARCHAR(50) NOT NULL,
+  `descripcion` LONGTEXT NOT NULL,
   `fecha_inicio` DATE NOT NULL,
   `fecha_fin` DATE NOT NULL,
   `estado` VARCHAR(20) NOT NULL,
@@ -146,16 +147,11 @@ CREATE TABLE IF NOT EXISTS `comunidad_calificacion` (
   `puntaje_estrellas` SMALLINT UNSIGNED NOT NULL,
   `comentario` TEXT NOT NULL,
   `fecha_calificacion` DATETIME NOT NULL,
-  `cliente_id` BIGINT NOT NULL,
-  `paquete_id` BIGINT NOT NULL,
+  `reserva_id` BIGINT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE INDEX `comunidad_calificacion_cliente_id_paquete_id_f3ea6f54_uniq` (`cliente_id`, `paquete_id` ASC),
-  CONSTRAINT `fk_comunidad_calificacion_paquete_id`
-    FOREIGN KEY (`paquete_id`)
-    REFERENCES `catalogo_paquete` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  CONSTRAINT `fk_comunidad_calificacion_cliente_id`
-    FOREIGN KEY (`cliente_id`)
-    REFERENCES `usuarios_cliente` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+  CONSTRAINT `fk_comunidad_calificacion_reserva_id`
+    FOREIGN KEY (`reserva_id`)
+    REFERENCES `reservas_reserva` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------
@@ -254,9 +250,9 @@ CREATE TABLE IF NOT EXISTS `pago` (
 DROP TABLE IF EXISTS `paquete_actividades`;
 CREATE TABLE IF NOT EXISTS `paquete_actividades` (
   `id` INT NOT NULL AUTO_INCREMENT,
+  `dificultad_nivel` VARCHAR(10) NOT NULL,
   `actividad_id` BIGINT NOT NULL,
   `paquete_id` BIGINT NOT NULL,
-  `dificultad_nivel` VARCHAR(10) NOT NULL,
   PRIMARY KEY (`id`),
   CONSTRAINT `fk_paquete_actividades_paquete_id`
     FOREIGN KEY (`paquete_id`)
@@ -311,9 +307,14 @@ CREATE TABLE IF NOT EXISTS `promociones_promocion` (
   `descripcion` LONGTEXT NOT NULL,
   `descuento` INT UNSIGNED NOT NULL,
   `fecha_fin` DATE NOT NULL,
+  `fecha_inicio` DATE NOT NULL,
+  `codigo_promocion` VARCHAR(20) NOT NULL,
+  `condiciones` TEXT NULL,
+  `codigo_cupon` VARCHAR(30) NULL,
   `activa` TINYINT(1) NOT NULL,
   `paquete_id` BIGINT NOT NULL,
   PRIMARY KEY (`id`),
+  UNIQUE INDEX `uq_promociones_promocion_codigo_promocion` (`codigo_promocion` ASC),
   CONSTRAINT `fk_promociones_promocion_paquete_id`
     FOREIGN KEY (`paquete_id`)
     REFERENCES `catalogo_paquete` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
@@ -328,11 +329,11 @@ CREATE TABLE IF NOT EXISTS `reservas_cancelacion` (
   `motivo` TEXT NOT NULL,
   `penalidad` INT NOT NULL,
   `estado` VARCHAR(20) NOT NULL,
-  `reserva_id` BIGINT NOT NULL,
   `fecha` DATETIME NOT NULL,
   `fecha_reembolso` DATE NULL,
-  `imagen_comprobante` VARCHAR(100) NULL,
   `valor_reembolsado` INT NULL,
+  `imagen_comprobante` VARCHAR(100) NULL,
+  `reserva_id` BIGINT NOT NULL,
   PRIMARY KEY (`id`),
   CONSTRAINT `fk_reservas_cancelacion_reserva_id`
     FOREIGN KEY (`reserva_id`)
@@ -346,11 +347,13 @@ DROP TABLE IF EXISTS `reservas_reserva`;
 CREATE TABLE IF NOT EXISTS `reservas_reserva` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `fecha` DATE NOT NULL,
+  `fecha_inicio` DATE NULL,
   `numero_adultos` INT UNSIGNED NOT NULL,
   `numero_menores` INT UNSIGNED NOT NULL,
   `estado` VARCHAR(20) NOT NULL,
   `monto_total` INT NOT NULL,
   `fecha_registro` DATETIME NOT NULL,
+  `cliente_id` BIGINT NULL,
   `paquete_id` BIGINT NOT NULL,
   `usuario_id` BIGINT NOT NULL,
   PRIMARY KEY (`id`),
@@ -360,7 +363,10 @@ CREATE TABLE IF NOT EXISTS `reservas_reserva` (
     REFERENCES `usuarios_usuario` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `fk_reservas_reserva_paquete_id`
     FOREIGN KEY (`paquete_id`)
-    REFERENCES `catalogo_paquete` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+    REFERENCES `catalogo_paquete` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  CONSTRAINT `fk_reservas_reserva_cliente_id`
+    FOREIGN KEY (`cliente_id`)
+    REFERENCES `usuarios_cliente` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------
@@ -388,10 +394,10 @@ CREATE TABLE IF NOT EXISTS `seguimiento` (
 DROP TABLE IF EXISTS `seguros_poliza`;
 CREATE TABLE IF NOT EXISTS `seguros_poliza` (
   `id` INT NOT NULL AUTO_INCREMENT,
-  `descripcion` LONGTEXT NOT NULL,
-  `estado` TINYINT(1) NOT NULL,
   `nombre_aseguradora` VARCHAR(100) NOT NULL,
+  `descripcion` LONGTEXT NOT NULL,
   `precio_diario` DECIMAL(12, 2) NOT NULL,
+  `estado` TINYINT(1) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -401,9 +407,9 @@ CREATE TABLE IF NOT EXISTS `seguros_poliza` (
 DROP TABLE IF EXISTS `seguros_seguroviaje`;
 CREATE TABLE IF NOT EXISTS `seguros_seguroviaje` (
   `id` INT NOT NULL AUTO_INCREMENT,
-  `costo_seguro` DECIMAL(12, 2) NOT NULL,
-  `fecha_emision` DATETIME NOT NULL,
   `numero_poliza` VARCHAR(50) NOT NULL,
+  `fecha_emision` DATETIME NOT NULL,
+  `costo_seguro` DECIMAL(12, 2) NOT NULL,
   `poliza_id` BIGINT NOT NULL,
   `reserva_id` BIGINT NULL,
   `usuario_id` BIGINT NOT NULL,
@@ -446,10 +452,10 @@ CREATE TABLE IF NOT EXISTS `usuarios_guiaturistico` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `numero_tarjeta_profesional` VARCHAR(50) NOT NULL,
   `experiencia_anos` INT UNSIGNED NOT NULL,
-  `descripcion_experiencia` LONGTEXT NOT NULL,
-  `usuario_id` BIGINT NOT NULL,
-  `entidad_salud` VARCHAR(100) NULL,
   `experiencia_fecha` DATE NULL,
+  `descripcion_experiencia` LONGTEXT NOT NULL,
+  `entidad_salud` VARCHAR(100) NULL,
+  `usuario_id` BIGINT NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE INDEX `uq_usuarios_guiaturistico_usuario_id` (`usuario_id` ASC),
   CONSTRAINT `fk_usuarios_guiaturistico_usuario_id`

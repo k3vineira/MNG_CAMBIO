@@ -11,17 +11,20 @@ from django.conf import settings
 
 class Calificacion(models.Model):
     """
-    Calificación de un paquete turístico realizada por un cliente.
-    Solo se permite una calificación por cliente y paquete.
+    Calificación de una reserva de un paquete turístico realizada por un cliente.
     """
-    cliente = models.ForeignKey('usuarios.Cliente', on_delete=models.CASCADE)
-    paquete = models.ForeignKey('catalogo.Paquete', on_delete=models.CASCADE)
+    reserva = models.ForeignKey(
+        'reservas.Reserva',
+        on_delete=models.CASCADE,
+        related_name='calificaciones',
+        verbose_name='Reserva Calificada',
+        null=True,
+        blank=True
+    )
     puntaje_estrellas = models.PositiveSmallIntegerField()
     comentario = models.TextField(blank=True)
     fecha_calificacion = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        unique_together = ('cliente', 'paquete')
 
 
 class Blog(models.Model):
