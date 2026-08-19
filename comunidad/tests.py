@@ -1,4 +1,5 @@
 from django.test import TestCase
+from django.urls import reverse
 from usuarios.models import Usuario, Cliente
 from catalogo.models import Categoria, Paquete
 from comunidad.models import Calificacion, Blog, PQRS, Comentario
@@ -353,3 +354,59 @@ class ComentarioTest(TestCase):
         c2 = Comentario.objects.create(usuario=self.usuario, mensaje='Segundo')
         comentarios = list(Comentario.objects.all())
         self.assertEqual(comentarios[0].pk, c2.pk)
+
+# ──────────────────────────────────────────────────────────────────────────────
+# TESTS DE VISTAS DE COMENTARIO
+# ──────────────────────────────────────────────────────────────────────────────
+
+class ComentarioViewsTest(TestCase):
+
+    def setUp(self):
+        self.cliente = crear_cliente(username='cliente_vistas')
+        self.admin = crear_usuario(username='admin_vistas')
+        self.admin.is_staff = True
+        self.admin.is_superuser = True
+        self.admin.save()
+        self.paquete = crear_paquete()
+        
+    def test_mis_resenas_get(self):
+        self.client.force_login(self.cliente.usuario)
+        response = self.client.get(reverse('mis_resenas'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'comunidad/private_resenas.html')
+
+    def test_mis_resenas_post(self):
+        self.client.force_login(self.cliente.usuario)
+        data = {
+            'tipo': 'experiencia',
+            'titulo': 'Excelente',
+            'mensaje': 'Muy buen paquete',
+            'valoracion': 5,
+            'paquete_id': self.paquete.id
+        }
+        response = self.client.post(reverse('mis_resenas'), data)
+        self.assertRedirects(response, reverse('mis_resenas'))
+        self.assertTrue(Comentario.objects.filter(titulo='Excelente').exists())
+        
+    def test_listar_comentarios_admin(self):
+        self.client.force_login(self.admin)
+        response = self.client.get(reverse('listar_comentarios'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'comunidad/admin_comentarios.html')
+        
+    def test_toggle_visible(self):
+        com = Comentario.objects.create(usuario=self.cliente.usuario, paquete=self.paquete, mensaje="test", visible=True)
+        self.client.force_login(self.admin)
+        response = self.client.post(reverse('toggle_visible', args=[com.pk]))
+        self.assertRedirects(response, reverse('listar_comentarios'))
+        com.refresh_from_db()
+        self.assertFalse(com.visible)
+
+    def test_responder_comentario(self):
+        com = Comentario.objects.create(usuario=self.cliente.usuario, paquete=self.paquete, mensaje="test")
+        self.client.force_login(self.admin)
+        data = {'admin_respuesta': 'Gracias por comentar'}
+        response = self.client.post(reverse('responder_comentario', args=[com.pk]), data)
+        self.assertRedirects(response, reverse('listar_comentarios'))
+        com.refresh_from_db()
+        self.assertEqual(com.admin_respuesta, 'Gracias por comentar')

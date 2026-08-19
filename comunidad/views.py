@@ -7,10 +7,12 @@ from .forms import PqrsForm, BlogForm
 from django.contrib import messages
 from core.decoradores import requiere_autenticacion, requiere_administrador
 from usuarios.models import Cliente
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Avg
 from auditoria.models import Auditoria
 from auditoria.utils import crear_notificacion_sistema
 from django.core.paginator import Paginator
+from reservas.models import Reserva
+from catalogo.models import Paquete
 
 
 def blog(request):
@@ -296,27 +298,88 @@ def mis_resenas_view(request):
     Renderiza el panel de reseñas del turista.
     Procesa el envío de nuevas experiencias y distribuye las métricas globales.
     """
+    # 1. Obtener paquetes reservados por el usuario
+    paquetes_reservados = Paquete.objects.filter(
+        reservas__usuario=request.user
+    ).distinct()
+
     if request.method == 'POST':
         tipo = request.POST.get('tipo', 'experiencia')
         titulo = request.POST.get('titulo')
         mensaje = request.POST.get('mensaje')
         valoracion = request.POST.get('valoracion', 5)
-        paquete_id = request.POST.get('paquete_id')
+        
+        paquete_id = None
+        
+        # El formulario HTML envía "paquete_ID" en el campo 'tipo' si seleccionan un paquete
+        if tipo.startswith('paquete_'):
+            try:
+                paquete_id = int(tipo.split('_')[1])
+                tipo = 'experiencia'  # Asignamos tipo por defecto ya que es una reseña de paquete
+                
+                # Validar que el usuario realmente haya reservado este paquete
+                if not paquetes_reservados.filter(id=paquete_id).exists():
+                    messages.error(request, 'No puedes reseñar un paquete que no has reservado y confirmado.')
+                    return redirect('mis_resenas')
+            except (IndexError, ValueError):
+                paquete_id = None
+
+        if not titulo or not mensaje:
+            messages.error(request, 'El título y la experiencia son obligatorios.')
+            return redirect('mis_resenas')
+            
+        try:
+            valoracion_int = int(valoracion)
+            if valoracion_int < 1 or valoracion_int > 5:
+                valoracion_int = 5
+        except ValueError:
+            valoracion_int = 5
 
         Comentario.objects.create(
             usuario=request.user,
             tipo=tipo,
             titulo=titulo,
             mensaje=mensaje,
-            valoracion=valoracion,
-            paquete_id=paquete_id if paquete_id else None
+            valoracion=valoracion_int,
+            paquete_id=paquete_id
         )
-        messages.success(request, 'Gracias por tu reseña.')
+        messages.success(request, 'Gracias por tu reseña. Ha sido enviada exitosamente.')
         return redirect('mis_resenas')
 
-    comentarios = Comentario.objects.filter(
-        usuario=request.user).order_by('-fecha_creacion')
+    # Datos para el GET
+    mis_resenas = Comentario.objects.filter(usuario=request.user).order_by('-fecha_creacion')
+    resenas_publicas = Comentario.objects.filter(visible=True).select_related('usuario', 'paquete').order_by('-fecha_creacion')
+
+    # Calcular estadísticas de reseñas públicas
+    total_resenas = resenas_publicas.count()
+    promedio = resenas_publicas.aggregate(Avg('valoracion'))['valoracion__avg'] or 0
+
+    distribucion = {}
+    if total_resenas > 0:
+        dist_query = resenas_publicas.values('valoracion').annotate(count=Count('id'))
+        for item in dist_query:
+            if item['valoracion']:
+                distribucion[item['valoracion']] = item['count']
+
+    stats = {
+        'total': total_resenas,
+        'promedio': promedio
+    }
+
+    # Pre-calcular rangos de estrellas para evitar errores en la plantilla
+    for r in mis_resenas:
+        r.estrellas = range(r.valoracion)
+        r.estrellas_vacias = range(5 - r.valoracion)
+        
+    for r in resenas_publicas:
+        r.estrellas = range(r.valoracion)
+        r.estrellas_vacias = range(5 - r.valoracion)
+
     return render(request, 'comunidad/private_resenas.html', {
         'titulo': 'Mis Experiencias y Reseñas — Monagua',
-        'comentarios': comentarios
+        'mis_resenas': mis_resenas,
+        'resenas_publicas': resenas_publicas,
+        'paquetes_reservados': paquetes_reservados,
+        'stats': stats,
+        'distribucion': distribucion
     })
