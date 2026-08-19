@@ -1,0 +1,104 @@
+{% extends 'base-admin.html' %}
+{% load static %}
+
+{% block title %}Asignación de Guías | Monagua{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-person-badge-fill me-2"></i>Asignación de Guías a Paquetes</h2>
+        <a href="{% url 'crear_plan_guia' %}" class="btn btn-success">
+            <i class="bi bi-plus-circle me-1"></i> Nueva Asignación
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <table class="table table-hover align-middle tabla-dinamica">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Guía</th>
+                        <th>Paquete</th>
+                        <th>Fechas</th>
+                        <th>Idioma</th>
+                        <th>Estado</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for plan in planes %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                {% if plan.guia.usuario.imagen_perfil %}
+                                <img src="{{ plan.guia.usuario.imagen_perfil.url }}" alt="{{ plan.guia.usuario.first_name }}" class="rounded-circle me-2" width="40" height="40" style="object-fit: cover;">
+                                {% else %}
+                                <img src="{% static 'img/avatar_pred.webp' %}" alt="Avatar por defecto" class="rounded-circle me-2" width="40" height="40">
+                                {% endif %}
+                                <div>
+                                    <div class="fw-bold">{{ plan.guia.usuario.nombre_completo }}</div>
+                                    <div class="text-muted small">Licencia: {{ plan.guia.numero_tarjeta_profesional|default:'N/A' }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ plan.paquete.nombre }}</td>
+                        <td>
+                            <div class="small">
+                                <div><i class="bi bi-calendar-event me-1"></i> <strong>Inicio:</strong> {{ plan.fecha_inicio_plan }}</div>
+                                <div><i class="bi bi-calendar-check me-1"></i> <strong>Fin:</strong> {{ plan.fecha_fin_plan }}</div>
+                            </div>
+                        </td>
+                        <td>{{ plan.idioma_servicio }}</td>
+                        <td>
+                            {% if plan.estado == 'activo' %}
+                                <span class="badge bg-success">Activo</span>
+                            {% elif plan.estado == 'completado' %}
+                                <span class="badge bg-primary">Completado</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactivo</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <a href="{% url 'editar_plan_guia' plan.id %}" class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="Editar">
+                                <i class="bi bi-pencil-fill"></i>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modalEliminar{{ plan.id }}" title="Eliminar">
+                                <i class="bi bi-trash-fill"></i>
+                            </button>
+
+                            <!-- Modal Eliminar -->
+                            <div class="modal fade" id="modalEliminar{{ plan.id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <form action="{% url 'eliminar_plan_guia' plan.id %}" method="POST">
+                                            {% csrf_token %}
+                                            <div class="modal-header bg-danger text-white">
+                                                <h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill me-2"></i> Confirmar Eliminación</h5>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                                            </div>
+                                            <div class="modal-body text-start">
+                                                ¿Estás seguro de que deseas eliminar la asignación del guía <strong>{{ plan.guia.usuario.nombre_completo }}</strong> para el paquete <strong>{{ plan.paquete.nombre }}</strong>?
+                                                <br><br>
+                                                <span class="text-danger small">Esta acción no se puede deshacer.</span>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                <button type="submit" class="btn btn-danger">Eliminar</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">No hay guías asignados a paquetes actualmente.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

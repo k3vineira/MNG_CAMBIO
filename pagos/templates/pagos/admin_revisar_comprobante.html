@@ -116,21 +116,57 @@
                 <form method="POST">
                     {% csrf_token %}
                     
-                    <!-- Estado de Pago con Floating Labels -->
+                    <!-- Errores Globales -->
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger shadow-sm mb-3 rounded-4">
+                        <ul class="mb-0">
+                            {% for error in form.non_field_errors %}
+                                <li><i class="bi bi-exclamation-triangle-fill me-1"></i> {{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    <!-- Banco de Origen -->
                     <div class="form-floating mb-3">
-                        <select name="estado" id="id_estado" class="form-select rounded-4 shadow-sm" required>
-                            <option value="pendiente" {% if comprobante.estado_transaccion == 'pendiente' %}selected{% endif %}>Pendiente de revisión</option>
-                            <option value="aprobado" {% if comprobante.estado_transaccion == 'aprobado' %}selected{% endif %}>Aprobado (Confirma automáticamente la reserva)</option>
-                            <option value="rechazado" {% if comprobante.estado_transaccion == 'rechazado' %}selected{% endif %}>Rechazado</option>
-                        </select>
-                        <label for="id_estado">Estado del Pago *</label>
+                        {{ form.banco_origen }}
+                        <label for="{{ form.banco_origen.id_for_label }}">{{ form.banco_origen.label }}</label>
+                        {% if form.banco_origen.errors %}
+                            <div class="text-danger small mt-1 ps-2 fw-bold"><i class="bi bi-x-circle me-1"></i>{{ form.banco_origen.errors.0 }}</div>
+                        {% else %}
+                            <div class="form-text text-muted mt-1 ps-2">Corrígelo o agrégalo si el usuario no lo suministró.</div>
+                        {% endif %}
                     </div>
 
-                    <!-- Nota del Administrador con Floating Labels -->
+                    <!-- Monto -->
+                    <div class="form-floating mb-3">
+                        {{ form.monto }}
+                        <label for="{{ form.monto.id_for_label }}">{{ form.monto.label }}</label>
+                        {% if form.monto.errors %}
+                            <div class="text-danger small mt-1 ps-2 fw-bold"><i class="bi bi-x-circle me-1"></i>{{ form.monto.errors.0 }}</div>
+                        {% else %}
+                            <div class="form-text text-muted mt-1 ps-2">Debe ser igual o mayor al total de la reserva para aprobar.</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Estado de Pago -->
+                    <div class="form-floating mb-3">
+                        {{ form.estado_transaccion }}
+                        <label for="{{ form.estado_transaccion.id_for_label }}">{{ form.estado_transaccion.label }} *</label>
+                        {% if form.estado_transaccion.errors %}
+                            <div class="text-danger small mt-1 ps-2 fw-bold"><i class="bi bi-x-circle me-1"></i>{{ form.estado_transaccion.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Nota del Administrador -->
                     <div class="form-floating mb-4">
-                        <textarea name="nota_admin" id="id_nota_admin" class="form-control rounded-4 shadow-sm u-style-f3d33437" placeholder="Escribe aquí el motivo de rechazo o cualquier nota aclaratoria para el usuario...">{{ comprobante.nota_admin }}</textarea>
-                        <label for="id_nota_admin">Nota del Administrador</label>
-                        <div class="form-text text-muted mt-2 ps-2">Esta nota será visible para el usuario en su historial de comprobantes.</div>
+                        {{ form.nota_admin }}
+                        <label for="{{ form.nota_admin.id_for_label }}">{{ form.nota_admin.label }}</label>
+                        {% if form.nota_admin.errors %}
+                            <div class="text-danger small mt-1 ps-2 fw-bold"><i class="bi bi-x-circle me-1"></i>{{ form.nota_admin.errors.0 }}</div>
+                        {% else %}
+                            <div class="form-text text-muted mt-2 ps-2">Visible para el usuario en su historial. Obligatorio si se rechaza.</div>
+                        {% endif %}
                     </div>
 
                     <div class="d-grid mt-4">
