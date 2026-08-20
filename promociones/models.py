@@ -42,18 +42,11 @@ class PaquetePromocion(models.Model):
         related_name='paquete_promociones',
         verbose_name='Promoción'
     )
-    tarifa = models.ForeignKey(
-        Tarifa,
-        on_delete=models.CASCADE,
-        related_name='paquete_promociones',
-        verbose_name='Tarifa'
-    )
-
     class Meta:
         db_table = 'paquete_promociones'
         verbose_name = 'Paquete Promoción'
         verbose_name_plural = 'Paquetes Promociones'
 
     def __str__(self):
-        return f"{self.paquete.nombre} - Promo: {self.promocion.nombre} (Tarifa: {self.tarifa.id})"
+        return f"{self.paquete.nombre} - {self.promocion.nombre}"
 

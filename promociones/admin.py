@@ -9,7 +9,7 @@ class PromocionAdmin(admin.ModelAdmin):
 
 @admin.register(PaquetePromocion)
 class PaquetePromocionAdmin(admin.ModelAdmin):
-    list_display = ('paquete', 'promocion', 'tarifa')
+    list_display = ('paquete', 'promocion') 
     list_filter = ('paquete', 'promocion')
     search_fields = ('paquete__nombre', 'promocion__nombre')
 
