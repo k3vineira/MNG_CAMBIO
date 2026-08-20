@@ -262,11 +262,45 @@ def enviar_comentario(request):
 @requiere_administrador
 def listar_comentarios(request):
     """Renderiza el módulo de moderación y auditoría de comentarios para el Staff."""
-    comentarios = Comentario.objects.all().select_related(
-        'usuario', 'paquete').order_by('-fecha_creacion')
+    queryset = Comentario.objects.all().select_related('usuario', 'paquete')
+    
+    # Manejar filtros
+    tipo_filtro = request.GET.get('tipo', '')
+    valoracion_filtro = request.GET.get('valoracion', '')
+    
+    if tipo_filtro:
+        queryset = queryset.filter(tipo=tipo_filtro)
+    if valoracion_filtro:
+        queryset = queryset.filter(valoracion=valoracion_filtro)
+        
+    comentarios = queryset.order_by('-fecha_creacion')
+    
+    # Calcular estadísticas globales (sin filtros)
+    estadisticas = Comentario.objects.aggregate(
+        total=Count('id'),
+        total_visibles=Count('id', filter=Q(visible=True)),
+        promedio=Avg('valoracion')
+    )
+    
+    promedio_val = estadisticas['promedio']
+    if promedio_val:
+        promedio_val = round(promedio_val, 1)
+    else:
+        promedio_val = 0
+
+    # Añadir atributos para las estrellas a cada comentario
+    for c in comentarios:
+        c.estrellas = range(c.valoracion)
+        c.estrellas_vacias = range(5 - c.valoracion)
+
     return render(request, 'comunidad/admin_comentarios.html', {
         'titulo': 'Moderación de Comentarios — Administración',
-        'comentarios': comentarios
+        'comentarios': comentarios,
+        'total': estadisticas['total'] or 0,
+        'total_visibles': estadisticas['total_visibles'] or 0,
+        'promedio': promedio_val,
+        'tipo_filtro': tipo_filtro,
+        'valoracion_filtro': valoracion_filtro
     })
 
 @requiere_administrador
