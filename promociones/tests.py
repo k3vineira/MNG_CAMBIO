@@ -17,6 +17,11 @@ class PromocionesTestCase(TestCase):
             username='admin_promo',
             email='admin@promo.com',
             password='password123',
+            first_name='Admin',
+            last_name='Promo',
+            tipo_documento='CC',
+            numero_documento='222111000',
+            telefono='3150000000',
             rol='admin'
         )
         self.client.force_login(self.admin)
