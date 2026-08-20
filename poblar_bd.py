@@ -598,8 +598,7 @@ def poblar_base_datos():
             promo = promociones_creadas[idx % len(promociones_creadas)]
             pp = PaquetePromocion.objects.create(
                 paquete=r.paquete,
-                promocion=promo,
-                tarifa=tarifa
+                promocion=promo
             )
             r.paquete_promocion = pp
             r.save()
@@ -613,8 +612,7 @@ def poblar_base_datos():
             if tarifa:
                 pp = PaquetePromocion.objects.create(
                     paquete=paquete,
-                    promocion=promociones_creadas[i % len(promociones_creadas)],
-                    tarifa=tarifa
+                    promocion=promociones_creadas[i % len(promociones_creadas)]
                 )
                 paquete_promociones_creados.append(pp)
 

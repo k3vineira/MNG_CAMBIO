@@ -72,7 +72,7 @@ class PromocionesTestCase(TestCase):
         pp = PaquetePromocion.objects.create(
             paquete=self.paquete,
             promocion=promo,
-            tarifa=self.tarifa
+            
         )
         self.assertEqual(promo.nombre, 'Descuento de Temporada')
         self.assertEqual(promo.descuento, 15)
@@ -118,7 +118,7 @@ class PromocionesTestCase(TestCase):
         PaquetePromocion.objects.create(
             paquete=self.paquete,
             promocion=promo,
-            tarifa=self.tarifa
+        
         )
         response = self.client.get(reverse('gestion_promociones'))
         self.assertEqual(response.status_code, 200)
