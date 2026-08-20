@@ -92,21 +92,31 @@ class RegistroForm(UserCreationForm):
             'tipo_documento', 'numero_documento', 'telefono'
         )
 
+    def clean_tipo_documento(self):
+        """
+        Valida que el tipo de documento sea obligatorio.
+        """
+        tipo_documento = self.cleaned_data.get('tipo_documento')
+        if not tipo_documento:
+            raise forms.ValidationError("El tipo de documento es obligatorio.")
+        return tipo_documento
+
     def clean_numero_documento(self):
         """
-        Valida que el número de documento sea único en el sistema.
+        Valida que el número de documento sea obligatorio y único en el sistema.
 
         Returns:
             str: El número de documento validado.
 
         Raises:
-            ValidationError: Si el número de documento ya está registrado.
+            ValidationError: Si el número de documento está vacío o ya está registrado.
         """
         numero_documento = self.cleaned_data.get('numero_documento')
-        if numero_documento:
-            if Usuario.objects.filter(numero_documento=numero_documento).exists():
-                raise forms.ValidationError(
-                    "Ya existe un usuario registrado con este número de documento.")
+        if not numero_documento:
+            raise forms.ValidationError("El número de documento es obligatorio.")
+        if Usuario.objects.filter(numero_documento=numero_documento).exists():
+            raise forms.ValidationError(
+                "Ya existe un usuario registrado con este número de documento.")
         return numero_documento
 
     def clean_email(self):
