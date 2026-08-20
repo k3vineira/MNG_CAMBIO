@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.urls import reverse
 from usuarios.models import Usuario, Cliente
 from catalogo.models import Categoria, Paquete
-from comunidad.models import Calificacion, Blog, PQRS, Comentario
+from comunidad.models import Calificacion, Blog, PQRS, Resena, Comentario
 import datetime
 
 
@@ -16,10 +16,16 @@ def crear_usuario(username='testuser', rol=Usuario.Roles.CLIENTE):
     
     :return: Respuesta de la función.
     """
+    import random
     return Usuario.objects.create_user(
         username=username,
         password='pass123',
         email=f'{username}@test.com',
+        first_name='Comunidad',
+        last_name='User',
+        tipo_documento='CC',
+        numero_documento=f'444{random.randint(100000, 999999)}',
+        telefono='3130000000',
         rol=rol
     )
 
@@ -90,6 +96,7 @@ class CalificacionTest(TestCase):
         :return: Respuesta de la función.
         """
         cal = Calificacion.objects.create(
+            usuario=self.cliente.usuario,
             reserva=self.reserva,
             puntaje_estrellas=5,
             comentario='Excelente tour'
@@ -97,17 +104,20 @@ class CalificacionTest(TestCase):
         self.assertEqual(cal.puntaje_estrellas, 5)
         self.assertEqual(cal.comentario, 'Excelente tour')
         self.assertEqual(cal.reserva, self.reserva)
+        self.assertEqual(cal.usuario, self.cliente.usuario)
 
     def test_multiples_calificaciones_mismo_plan(self):
         """
         Verifica que se puedan crear múltiples calificaciones para la misma reserva (1:N).
         """
         cal1 = Calificacion.objects.create(
+            usuario=self.cliente.usuario,
             reserva=self.reserva,
             puntaje_estrellas=4,
             comentario='Primer comentario'
         )
         cal2 = Calificacion.objects.create(
+            usuario=self.cliente.usuario,
             reserva=self.reserva,
             puntaje_estrellas=3,
             comentario='Segundo comentario'
@@ -121,6 +131,7 @@ class CalificacionTest(TestCase):
         :return: Respuesta de la función.
         """
         cal = Calificacion.objects.create(
+            usuario=self.cliente.usuario,
             reserva=self.reserva,
             puntaje_estrellas=3,
             comentario=''
@@ -318,7 +329,7 @@ class ComentarioTest(TestCase):
             usuario=self.usuario,
             mensaje='Sin título'
         )
-        self.assertIn('sin título', str(com))
+        self.assertIn(self.usuario.username, str(com))
 
     def test_visible_default_true(self):
         """

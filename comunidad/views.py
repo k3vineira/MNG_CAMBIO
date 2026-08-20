@@ -232,7 +232,7 @@ def blog_usuario(request):
 
 # --- VIEWS EXTRAÍDAS DE USUARIOS ---
 
-from .models import Comentario
+from .models import Calificacion, Resena, Comentario
 
 @requiere_autenticacion
 def enviar_comentario(request):

@@ -4,7 +4,7 @@ import django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
 django.setup()
 
-from comunidad.models import Calificacion, Blog, PQRS, Comentario, Seguimiento
+from comunidad.models import Calificacion, Blog, PQRS, Seguimiento
 from reservas.models import Reserva, Cancelacion
 from catalogo.models import Categoria, Actividades, Paquete, Temporada, Tarifa
 from usuarios.models import Usuario, Cliente, GuiaTuristico
@@ -46,7 +46,6 @@ def poblar_base_datos():
     Pago.objects.all().delete()
     PaquetePromocion.objects.all().delete()
     Promocion.objects.all().delete()
-    Comentario.objects.all().delete()
     PQRS.objects.all().delete()
     Blog.objects.all().delete()
     Calificacion.objects.all().delete()
@@ -517,7 +516,13 @@ def poblar_base_datos():
                 respuesta="Hemos recibido tu solicitud y se encuentra en revisión/atención por el equipo de Monagua."
             )
 
-    # 6.3 Calificaciones
+    # 6.3 Calificaciones y Reseñas
+    titulos_calificaciones = [
+        "Mi experiencia en Mongua", "¡Increíble aventura!", "Recomendado al 100%",
+        "Un paraíso escondido", "Vacaciones perfectas", "Naturaleza pura",
+        "Excelente servicio", "Viaje memorable", "Mejor de lo esperado",
+        "Un destino imperdible",
+    ]
     comentarios_calificacion = [
         "¡Excelente experiencia! Los guías fueron muy profesionales y amables.",
         "Un viaje inolvidable. Los paisajes de Mongua son espectaculares.",
@@ -535,39 +540,13 @@ def poblar_base_datos():
     reservas_para_calificar = random.sample(reservas_creadas, k=min(10, len(reservas_creadas)))
     for idx, r_obj in enumerate(reservas_para_calificar):
         Calificacion.objects.create(
+            usuario=r_obj.usuario,
+            paquete=r_obj.paquete,
             reserva=r_obj,
-            puntaje_estrellas=random.randint(3, 5),
-            comentario=comentarios_calificacion[idx]
-        )
-
-
-    # 6.4 Comentarios
-    titulos_comentarios = [
-        "Mi experiencia en Mongua", "¡Increíble aventura!", "Recomendado al 100%",
-        "Un paraíso escondido", "Vacaciones perfectas", "Naturaleza pura",
-        "Excelente servicio", "Viaje memorable", "Mejor de lo esperado",
-        "Un destino imperdible",
-    ]
-    mensajes_comentarios = [
-        "Mongua superó todas mis expectativas. Los paisajes del páramo son de otro mundo y la gente es muy acogedora.",
-        "La aventura hacia la Laguna Negra fue lo mejor que he hecho en mis vacaciones. ¡Totalmente recomendado!",
-        "Recomiendo este destino para cualquier amante de la naturaleza. Los senderos están bien mantenidos.",
-        "No sabía que existía un lugar tan hermoso en Boyacá. Mongua es un paraíso que merece ser conocido.",
-        "Pasamos unas vacaciones increíbles en familia. Las actividades son variadas y para todas las edades.",
-        "La conexión con la naturaleza que ofrece Mongua es única. El aire puro del páramo es revitalizante.",
-        "El equipo de guías fue excepcional. Siempre atentos y con un conocimiento profundo de la región.",
-        "Un viaje que quedará grabado en mi memoria por siempre. La hospitalidad de la gente es admirable.",
-        "Vine sin muchas expectativas y me llevo una experiencia que superó todo lo que imaginé.",
-        "Si buscan un destino auténtico, lejos del turismo masivo, Mongua es el lugar perfecto.",
-    ]
-    for i in range(10):
-        Comentario.objects.create(
-            usuario=random.choice(clientes_creados).usuario,
             tipo='experiencia',
-            titulo=titulos_comentarios[i],
-            mensaje=mensajes_comentarios[i],
-            valoracion=random.randint(3, 5),
-            paquete=random.choice(paquetes_creados),
+            titulo=titulos_calificaciones[idx],
+            puntaje_estrellas=random.randint(4, 5),
+            comentario=comentarios_calificacion[idx],
             visible=True
         )
 
@@ -684,8 +663,7 @@ def poblar_base_datos():
     print(f"   • {comprobantes_creados} Comprobantes de Pago")
     print(f"   • 4 Blogs")
     print(f"   • 10 PQRS")
-    print(f"   • 10 Calificaciones")
-    print(f"   • 10 Comentarios")
+    print(f"   • 10 Calificaciones y Reseñas")
     print(f"   • 10 Promociones")
     print(f"   • 10 Registros de Auditoría")
     print("=" * 60)

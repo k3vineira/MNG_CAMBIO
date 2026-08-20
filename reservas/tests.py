@@ -19,7 +19,12 @@ class ReservasYCancelacionesTestCase(TestCase):
         self.user = Usuario.objects.create_user(
             username='cliente_test',
             email='cliente@test.com',
-            password='password123'
+            password='password123',
+            first_name='Cliente',
+            last_name='Test',
+            tipo_documento='CC',
+            numero_documento='777666555',
+            telefono='3100000000'
         )
 
         # Crear categoría y paquete de prueba

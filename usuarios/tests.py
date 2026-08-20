@@ -16,7 +16,10 @@ class AuthenticationAndEmailUniquenessTests(TestCase):
             email='testuser@example.com',
             password='securepassword123',
             first_name='Test',
-            last_name='User'
+            last_name='User',
+            tipo_documento='CC',
+            numero_documento='123456789',
+            telefono='3000000000'
         )
 
     def test_authenticate_by_username(self):
@@ -64,8 +67,8 @@ class AuthenticationAndEmailUniquenessTests(TestCase):
             'first_name': 'New',
             'last_name': 'User',
             'tipo_documento': 'CC',
-            'numero_documento': '123456789',
-            'telefono': '3001234567',
+            'numero_documento': '555666777',
+            'telefono': '3005556667',
             'password1': 'Newpassword123',
             'password2': 'Newpassword123',
         }
@@ -224,6 +227,11 @@ class AdminRoleRestrictionsTests(TestCase):
             username='admin_test',
             email='admin@example.com',
             password='adminpassword123',
+            first_name='Admin',
+            last_name='Test',
+            tipo_documento='CC',
+            numero_documento='999999999',
+            telefono='3009999999',
             rol=Usuario.Roles.ADMIN
         )
         # 2. Crear un usuario Cliente común
@@ -231,6 +239,11 @@ class AdminRoleRestrictionsTests(TestCase):
             username='client_test',
             email='client@example.com',
             password='clientpassword123',
+            first_name='Client',
+            last_name='Test',
+            tipo_documento='CC',
+            numero_documento='888888888',
+            telefono='3008888888',
             rol=Usuario.Roles.CLIENTE
         )
 

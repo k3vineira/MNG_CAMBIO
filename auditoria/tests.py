@@ -11,7 +11,12 @@ class AuditoriaTestCase(TestCase):
         self.user = Usuario.objects.create_user(
             username='user_notif',
             email='user@notif.com',
-            password='password123'
+            password='password123',
+            first_name='Notif',
+            last_name='User',
+            tipo_documento='CC',
+            numero_documento='333222111',
+            telefono='3140000000'
         )
 
     def test_crear_notificacion_sistema_exito(self):

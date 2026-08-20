@@ -1,35 +1,110 @@
 """
-Modelos de datos para la comunidad: Calificaciones, Blog, PQRS y Comentarios.
+Modelos de datos para la comunidad: Calificaciones, Blog, PQRS y Seguimiento.
 """
 
 from django.db import models
 from django.urls import reverse
 from django.conf import settings
 
-# Create your models here.
-
 
 class Calificacion(models.Model):
     """
-    Calificación de una reserva de un paquete turístico realizada por un cliente.
+    Calificación y reseña de una experiencia o reserva de un paquete turístico
+    realizada por un cliente o usuario registrado.
     """
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='calificaciones',
+        verbose_name='Usuario / Cliente'
+    )
+    paquete = models.ForeignKey(
+        'catalogo.Paquete',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='calificaciones',
+        verbose_name='Paquete Turístico'
+    )
     reserva = models.ForeignKey(
         'reservas.Reserva',
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name='calificaciones',
         verbose_name='Reserva Calificada',
         null=True,
         blank=True
     )
-    puntaje_estrellas = models.PositiveSmallIntegerField()
-    comentario = models.TextField(blank=True)
-    fecha_calificacion = models.DateTimeField(auto_now_add=True)
+    tipo = models.CharField(
+        max_length=20,
+        default='experiencia',
+        verbose_name='Tipo',
+        help_text='Tipo de reseña: experiencia, pregunta, etc.'
+    )
+    titulo = models.CharField(
+        max_length=255,
+        verbose_name='Título'
+    )
+    puntaje_estrellas = models.PositiveSmallIntegerField(
+        default=5,
+        verbose_name='Puntaje / Estrellas'
+    )
+    comentario = models.TextField(
+        verbose_name='Comentario / Reseña'
+    )
+    visible = models.BooleanField(
+        default=True,
+        verbose_name='¿Visible?'
+    )
+    admin_respuesta = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name='Respuesta del Admin'
+    )
+    fecha_calificacion = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Fecha de Calificación'
+    )
 
+    # Aliases de retrocompatibilidad
+    @property
+    def valoracion(self):
+        """Alias para puntaje_estrellas."""
+        return self.puntaje_estrellas
+
+    @valoracion.setter
+    def valoracion(self, value):
+        self.puntaje_estrellas = value
+
+    @property
+    def mensaje(self):
+        """Alias para comentario."""
+        return self.comentario
+
+    @mensaje.setter
+    def mensaje(self, value):
+        self.comentario = value
+
+    @property
+    def fecha_creacion(self):
+        """Alias para fecha_calificacion."""
+        return self.fecha_calificacion
+
+    class Meta:
+        db_table = 'comunidad_calificacion'
+        ordering = ['-fecha_calificacion']
+        verbose_name = 'Calificación'
+        verbose_name_plural = 'Calificaciones'
+
+    def __str__(self):
+        """Retorna el usuario y título/paquete de la calificación como representación textual."""
+        nombre_usuario = self.usuario.username if self.usuario else "Anónimo"
+        return f"Calificación de {nombre_usuario} ({self.puntaje_estrellas}★) - {self.titulo or (self.paquete.nombre if self.paquete else 'General')}"
 
 
 class Blog(models.Model):
     """Entrada de blog publicada por un administrador o autor en Mongua Turismo."""
-
 
     usuario = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -59,6 +134,7 @@ class Blog(models.Model):
         """Retorna el título y el autor del blog."""
         return f"{self.titulo} - Por: {self.usuario.get_full_name() or self.usuario.username}"
 
+
 class PQRS(models.Model):
     """Solicitud de Petición, Queja, Reclamo o Sugerencia enviada por un usuario."""
 
@@ -86,7 +162,6 @@ class PQRS(models.Model):
     estado = models.CharField(
         max_length=15, choices=ESTADO_CHOICES, default='abierto'
     )
-    # SE ELIMINA EL CAMPO 'respuesta' DIRECTO PARA EVITAR SOBREESCRITURA
     fecha = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -119,45 +194,7 @@ class Seguimiento(models.Model):
     def __str__(self):
         return f'Seguimiento de {self.pqrs} - {self.fecha_respuesta.strftime("%Y-%m-%d %H:%M:%S")}'
 
-class Comentario(models.Model):
-    """Comentarios y reseñas de experiencias de usuarios."""
-    usuario = models.ForeignKey(
-        'usuarios.Usuario',
-        on_delete=models.CASCADE,
-        related_name='comentarios',
-        verbose_name='Usuario'
-    )
-    tipo = models.CharField(
-        max_length=20,
-        default='experiencia',
-        verbose_name='Tipo',
-        help_text='Tipo de comentario: experiencia, pregunta, etc.'
-    )
-    titulo = models.CharField(
-        max_length=255, blank=True, verbose_name='Título')
-    mensaje = models.TextField(verbose_name='Mensaje')
-    valoracion = models.PositiveSmallIntegerField(
-        default=5, verbose_name='Valoración')
-    paquete = models.ForeignKey(
-        'catalogo.Paquete',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='comentarios',
-        verbose_name='Paquete'
-    )
-    visible = models.BooleanField(default=True, verbose_name='¿Visible?')
-    admin_respuesta = models.TextField(
-        blank=True, null=True, verbose_name='Respuesta del Admin')
-    fecha_creacion = models.DateTimeField(
-        auto_now_add=True, verbose_name='Fecha de Creación')
 
-    class Meta:
-        ordering = ['-fecha_creacion']
-        verbose_name = 'Comentario'
-        verbose_name_plural = 'Comentarios'
-
-    def __str__(self):
-        """Retorna el usuario y título del comentario como representación textual."""
-        return f"Comentario de {self.usuario.username} - {self.titulo or 'sin título'}"
-
+# Aliases de retrocompatibilidad
+Resena = Calificacion
+Comentario = Calificacion

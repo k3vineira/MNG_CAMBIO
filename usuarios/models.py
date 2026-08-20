@@ -39,20 +39,15 @@ class Usuario(AbstractUser):
     tipo_documento = models.CharField(
         max_length=20,
         choices=TipoDocumento.choices,
-        blank=True,
-        null=True,
         verbose_name='Tipo de Documento'
     )
     numero_documento = models.CharField(
         max_length=20,
         unique=True,
-        null=True,
-        blank=True,
         verbose_name='Número de Documento'
     )
     telefono = models.CharField(
         max_length=15,
-        blank=True,
         verbose_name='Teléfono'
     )
     residencia = models.CharField(
@@ -68,17 +63,12 @@ class Usuario(AbstractUser):
     )
 
     def clean(self):
-        """
-        Normaliza el número de documento vacío a None para evitar errores de integridad.
-        """
+        """Validación limpia del modelo."""
         super().clean()
-        # Evita errores de IntegrityError si se guarda como string vacío ("")
-        if self.numero_documento == "":
-            self.numero_documento = None
 
     def save(self, *args, **kwargs):
         """
-        Asigna automáticamente el rol ADMIN a superusuarios y normaliza el número de documento.
+        Asigna automáticamente el rol ADMIN a superusuarios.
 
         Args:
             *args: Argumentos posicionales adicionales.
@@ -88,11 +78,72 @@ class Usuario(AbstractUser):
         if self.is_superuser and self.rol != self.Roles.ADMIN:
             self.rol = self.Roles.ADMIN
 
-        # También limpiar en el save() en caso de que no se llame a clean()
-        if self.numero_documento == "":
-            self.numero_documento = None
-
         super().save(*args, **kwargs)
+
+    # --- ALIAS EN ESPAÑOL LATAM ---
+    @property
+    def nombre_usuario(self):
+        """Alias en español LATAM para username."""
+        return self.username
+
+    @nombre_usuario.setter
+    def nombre_usuario(self, value):
+        self.username = value
+
+    @property
+    def nombres(self):
+        """Alias en español LATAM para first_name."""
+        return self.first_name
+
+    @nombres.setter
+    def nombres(self, value):
+        self.first_name = value
+
+    @property
+    def apellidos(self):
+        """Alias en español LATAM para last_name."""
+        return self.last_name
+
+    @apellidos.setter
+    def apellidos(self, value):
+        self.last_name = value
+
+    @property
+    def es_activo(self):
+        """Alias en español LATAM para is_active."""
+        return self.is_active
+
+    @es_activo.setter
+    def es_activo(self, value):
+        self.is_active = value
+
+    @property
+    def es_personal(self):
+        """Alias en español LATAM para is_staff."""
+        return self.is_staff
+
+    @es_personal.setter
+    def es_personal(self, value):
+        self.is_staff = value
+
+    @property
+    def es_superusuario(self):
+        """Alias en español LATAM para is_superuser."""
+        return self.is_superuser
+
+    @es_superusuario.setter
+    def es_superusuario(self, value):
+        self.is_superuser = value
+
+    @property
+    def fecha_registro(self):
+        """Alias en español LATAM para date_joined."""
+        return self.date_joined
+
+    @property
+    def ultimo_login(self):
+        """Alias en español LATAM para last_login."""
+        return self.last_login
 
     @property
     def nombre_completo(self):
