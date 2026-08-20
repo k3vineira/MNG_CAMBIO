@@ -1,8 +1,8 @@
 -- =============================================================================
 -- Script de Base de Datos generado para MySQL Workbench
 -- Proyecto: Monagua (MNG_WEB)
--- Modo: BUSINESS (24 tablas)
--- Fecha de generación: 2026-08-19 19:39:03
+-- Modo: BUSINESS (23 tablas)
+-- Fecha de generación: 2026-08-20 07:27:42
 -- =============================================================================
 
 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
@@ -293,19 +293,6 @@ CREATE TABLE IF NOT EXISTS `plan_guia` (
   CONSTRAINT `fk_plan_guia_codigo_guia_turistico`
     FOREIGN KEY (`codigo_guia_turistico`)
     REFERENCES `usuarios_guiaturistico` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- -----------------------------------------------------
--- Tabla `monagua_db`.`promociones_banner`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `promociones_banner`;
-CREATE TABLE IF NOT EXISTS `promociones_banner` (
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `imagen` VARCHAR(100) NOT NULL,
-  `titulo` VARCHAR(150) NOT NULL,
-  `enlace` VARCHAR(200) NULL,
-  `activo` TINYINT(1) NOT NULL,
-  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------
