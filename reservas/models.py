@@ -54,8 +54,8 @@ class Reserva(models.Model):
         verbose_name_plural = 'Reservas'
         constraints = [
             models.UniqueConstraint(
-                fields=['usuario', 'paquete', 'fecha'],
-                name='unique_usuario_paquete_fecha'
+                fields=['cliente', 'paquete', 'fecha'],
+                name='unique_cliente_paquete_fecha'
             )
         ]
 

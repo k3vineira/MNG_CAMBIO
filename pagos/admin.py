@@ -4,7 +4,7 @@ from .models import Pago
 
 @admin.register(Pago)
 class PagoAdmin(admin.ModelAdmin):
-    list_display = ('id', 'usuario', 'reserva', 'referencia',
+    list_display = ('id', 'reserva', 'referencia',
                     'banco_origen', 'monto', 'estado_transaccion', 'fecha_envio', 'fecha_pago')
     list_filter = ('estado_transaccion', 'banco_origen', 'fecha_envio')
     search_fields = ('usuario__username', 'usuario__email',

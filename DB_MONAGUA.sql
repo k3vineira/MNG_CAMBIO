@@ -87,7 +87,7 @@ CREATE TABLE `auth_permission` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `auth_permission_content_type_id_codename_01ab375a_uniq` (`content_type_id`,`codename`),
   CONSTRAINT `auth_permission_content_type_id_2f476e4b_fk_django_co` FOREIGN KEY (`content_type_id`) REFERENCES `django_content_type` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=117 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=113 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -230,16 +230,10 @@ CREATE TABLE `comunidad_calificacion` (
   `visible` tinyint(1) NOT NULL,
   `admin_respuesta` longtext,
   `fecha_calificacion` datetime(6) NOT NULL,
-  `paquete_id` bigint DEFAULT NULL,
   `reserva_id` bigint DEFAULT NULL,
-  `usuario_id` bigint DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `comunidad_calificaci_paquete_id_13fdaaee_fk_catalogo_` (`paquete_id`),
   KEY `comunidad_calificaci_reserva_id_19d4b005_fk_reservas_` (`reserva_id`),
-  KEY `comunidad_calificaci_usuario_id_3e0e818f_fk_usuarios_` (`usuario_id`),
-  CONSTRAINT `comunidad_calificaci_paquete_id_13fdaaee_fk_catalogo_` FOREIGN KEY (`paquete_id`) REFERENCES `catalogo_paquete` (`id`),
   CONSTRAINT `comunidad_calificaci_reserva_id_19d4b005_fk_reservas_` FOREIGN KEY (`reserva_id`) REFERENCES `reservas_reserva` (`id`),
-  CONSTRAINT `comunidad_calificaci_usuario_id_3e0e818f_fk_usuarios_` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios_usuario` (`id`),
   CONSTRAINT `comunidad_calificacion_chk_1` CHECK ((`puntaje_estrellas` >= 0))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -303,7 +297,7 @@ CREATE TABLE `django_content_type` (
   `model` varchar(100) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `django_content_type_app_label_model_76bd3d3b_uniq` (`app_label`,`model`)
-) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -319,7 +313,7 @@ CREATE TABLE `django_migrations` (
   `name` varchar(255) NOT NULL,
   `applied` datetime(6) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=33 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -381,12 +375,9 @@ CREATE TABLE `pago` (
   `fecha_envio` datetime(6) NOT NULL,
   `fecha_revision` datetime(6) DEFAULT NULL,
   `reserva_id` bigint DEFAULT NULL,
-  `usuario_id` bigint NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `reserva_id` (`reserva_id`),
-  KEY `pago_usuario_id_377c5c78_fk_usuarios_usuario_id` (`usuario_id`),
-  CONSTRAINT `pago_reserva_id_251d3ecb_fk_reservas_reserva_id` FOREIGN KEY (`reserva_id`) REFERENCES `reservas_reserva` (`id`),
-  CONSTRAINT `pago_usuario_id_377c5c78_fk_usuarios_usuario_id` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios_usuario` (`id`)
+  CONSTRAINT `pago_reserva_id_251d3ecb_fk_reservas_reserva_id` FOREIGN KEY (`reserva_id`) REFERENCES `reservas_reserva` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -450,23 +441,6 @@ CREATE TABLE `plan_guia` (
   KEY `plan_guia_codigo_paquete_9caa4824_fk_catalogo_paquete_id` (`codigo_paquete`),
   CONSTRAINT `plan_guia_codigo_guia_turistic_3198b656_fk_usuarios_` FOREIGN KEY (`codigo_guia_turistico`) REFERENCES `usuarios_guiaturistico` (`id`),
   CONSTRAINT `plan_guia_codigo_paquete_9caa4824_fk_catalogo_paquete_id` FOREIGN KEY (`codigo_paquete`) REFERENCES `catalogo_paquete` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `promociones_banner`
---
-
-DROP TABLE IF EXISTS `promociones_banner`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `promociones_banner` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `imagen` varchar(100) NOT NULL,
-  `titulo` varchar(150) NOT NULL,
-  `enlace` varchar(200) DEFAULT NULL,
-  `activo` tinyint(1) NOT NULL,
-  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -535,14 +509,11 @@ CREATE TABLE `reservas_reserva` (
   `fecha_registro` datetime(6) NOT NULL,
   `cliente_id` bigint DEFAULT NULL,
   `paquete_id` bigint NOT NULL,
-  `usuario_id` bigint NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `unique_usuario_paquete_fecha` (`usuario_id`,`paquete_id`,`fecha`),
-  KEY `reservas_reserva_cliente_id_78618bc5_fk_usuarios_cliente_id` (`cliente_id`),
+  UNIQUE KEY `unique_cliente_paquete_fecha` (`cliente_id`,`paquete_id`,`fecha`),
   KEY `reservas_reserva_paquete_id_4bc9b1f7_fk_catalogo_paquete_id` (`paquete_id`),
   CONSTRAINT `reservas_reserva_cliente_id_78618bc5_fk_usuarios_cliente_id` FOREIGN KEY (`cliente_id`) REFERENCES `usuarios_cliente` (`id`),
   CONSTRAINT `reservas_reserva_paquete_id_4bc9b1f7_fk_catalogo_paquete_id` FOREIGN KEY (`paquete_id`) REFERENCES `catalogo_paquete` (`id`),
-  CONSTRAINT `reservas_reserva_usuario_id_531da18c_fk_usuarios_usuario_id` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios_usuario` (`id`),
   CONSTRAINT `reservas_reserva_chk_1` CHECK ((`numero_adultos` >= 0)),
   CONSTRAINT `reservas_reserva_chk_2` CHECK ((`numero_menores` >= 0))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -600,15 +571,12 @@ CREATE TABLE `seguros_seguroviaje` (
   `costo_seguro` decimal(12,2) NOT NULL,
   `poliza_id` bigint NOT NULL,
   `reserva_id` bigint DEFAULT NULL,
-  `usuario_id` bigint NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `numero_poliza` (`numero_poliza`),
   UNIQUE KEY `reserva_id` (`reserva_id`),
   KEY `seguros_seguroviaje_poliza_id_27277a1c_fk_seguros_poliza_id` (`poliza_id`),
-  KEY `seguros_seguroviaje_usuario_id_69659daf_fk_usuarios_usuario_id` (`usuario_id`),
   CONSTRAINT `seguros_seguroviaje_poliza_id_27277a1c_fk_seguros_poliza_id` FOREIGN KEY (`poliza_id`) REFERENCES `seguros_poliza` (`id`),
-  CONSTRAINT `seguros_seguroviaje_reserva_id_e628d596_fk_reservas_reserva_id` FOREIGN KEY (`reserva_id`) REFERENCES `reservas_reserva` (`id`),
-  CONSTRAINT `seguros_seguroviaje_usuario_id_69659daf_fk_usuarios_usuario_id` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios_usuario` (`id`)
+  CONSTRAINT `seguros_seguroviaje_reserva_id_e628d596_fk_reservas_reserva_id` FOREIGN KEY (`reserva_id`) REFERENCES `reservas_reserva` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -732,4 +700,4 @@ CREATE TABLE `usuarios_usuario_user_permissions` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-08-21  8:07:15
+-- Dump completed on 2026-08-21  9:00:42

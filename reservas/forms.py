@@ -15,9 +15,9 @@ class ReservaForm(ModelForm):
 
     class Meta:
         model = Reserva
-        fields = ['usuario', 'paquete', 'fecha', 'numero_adultos', 'numero_menores']
+        fields = ['cliente', 'paquete', 'fecha', 'numero_adultos', 'numero_menores']
         widgets = {
-            'usuario': Select(attrs={'class': 'form-select'}),
+            'cliente': Select(attrs={'class': 'form-select'}),
             'paquete': Select(attrs={'class': 'form-select'}),
             'fecha': DateInput(
                 format='%Y-%m-%d',
