@@ -6,6 +6,7 @@ from django.db import models
 from django.conf import settings
 from catalogo.models import Paquete
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
 from django.utils import timezone
 
 
@@ -51,6 +52,7 @@ class Reserva(models.Model):
 
 
     monto_total = models.IntegerField(
+        validators=[MinValueValidator(0)],
         verbose_name='Monto Total', editable=False)
 
     fecha_registro = models.DateTimeField(
@@ -144,6 +146,9 @@ class Reserva(models.Model):
         elif not getattr(self, 'monto_total', None):
             self.monto_total = 0
 
+        if self.monto_total < 0:
+            self.monto_total = 0
+
         super().save(*args, **kwargs)
     @property
     def tiene_cancelacion_activa(self):
@@ -175,11 +180,11 @@ class Cancelacion(models.Model):
     ]
     reserva = models.ForeignKey('Reserva', on_delete=models.CASCADE, related_name='cancelaciones')
     motivo = models.TextField()
-    penalidad = models.IntegerField(default=0, verbose_name='Penalidad Aplicada')
+    penalidad = models.IntegerField(default=0, validators=[MinValueValidator(0)], verbose_name='Penalidad Aplicada')
     estado = models.CharField( max_length=20, choices=ESTADOS_CANCELACION, default='pendiente', verbose_name='Estado')
     fecha = models.DateTimeField(auto_now_add=True, verbose_name='Fecha de Solicitud')
     fecha_reembolso = models.DateField(null=True, blank=True, verbose_name='Fecha de Reembolso')
-    valor_reembolsado = models.IntegerField(null=True, blank=True, default=0, verbose_name='Valor Reembolsado')
+    valor_reembolsado = models.IntegerField(null=True, blank=True, default=0, validators=[MinValueValidator(0)], verbose_name='Valor Reembolsado')
     imagen_comprobante = models.ImageField(upload_to='cancelaciones/', null=True, blank=True, verbose_name='Imagen del Comprobante')
 
     class Meta:
