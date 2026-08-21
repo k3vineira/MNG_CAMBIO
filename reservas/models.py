@@ -19,13 +19,6 @@ class Reserva(models.Model):
         ('confirmada', 'Confirmada'),
         ('cancelada', 'Cancelada'),
     ]
-
-    usuario = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='reservas_realizadas',
-        verbose_name='Cliente'
-    )
     paquete = models.ForeignKey(
         Paquete,  
         on_delete=models.PROTECT,

@@ -25,12 +25,6 @@ class SeguroViaje(models.Model):
     Representa la adquisición de un seguro por parte de un usuario para una reserva específica.
     Equivale a la entidad 'seguro_viaje' del MER de draw.io.
     """
-    usuario = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="seguros_viaje",
-        verbose_name="Cliente"
-    )
     reserva = models.OneToOneField(
         Reserva,
         on_delete=models.CASCADE,
@@ -61,4 +55,4 @@ class SeguroViaje(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"Seguro {self.numero_poliza} - {self.usuario.username}"
+        return f"Seguro {self.poliza.nombre_aseguradora} para Reserva {self.reserva.id if self.reserva else 'N/A'}"

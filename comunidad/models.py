@@ -12,22 +12,6 @@ class Calificacion(models.Model):
     Calificación y reseña de una experiencia o reserva de un paquete turístico
     realizada por un cliente o usuario registrado.
     """
-    usuario = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name='calificaciones',
-        verbose_name='Usuario / Cliente'
-    )
-    paquete = models.ForeignKey(
-        'catalogo.Paquete',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='calificaciones',
-        verbose_name='Paquete Turístico'
-    )
     reserva = models.ForeignKey(
         'reservas.Reserva',
         on_delete=models.SET_NULL,

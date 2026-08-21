@@ -20,13 +20,6 @@ class Pago(models.Model):
         ('rechazado',  'Rechazado'),
     ]
 
-    usuario = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='comprobantes',
-        verbose_name='Usuario'
-    )
-
     # Vincular con una reserva específica
     reserva = models.OneToOneField(
         'reservas.Reserva',
