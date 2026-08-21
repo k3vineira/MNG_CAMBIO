@@ -3,7 +3,7 @@ Vistas principales del núcleo de la aplicación, incluyendo la página de inici
 """
 
 from django.shortcuts import render
-
+from promociones.models import Banner
 
 def inicio(request):
     """
@@ -15,5 +15,10 @@ def inicio(request):
     Returns:
         HttpResponse: La página de inicio renderizada.
     """
-    context = {'titulo': 'Monagua — Agencia de Viajes y Turismo'}
+    banners_activos = Banner.objects.filter(activo=True)
+    
+    context = {
+        'titulo': 'Monagua — Agencia de Viajes y Turismo',
+        'banners': banners_activos
+    }
     return render(request, 'index.html', context)
