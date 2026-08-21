@@ -1,8 +1,8 @@
 -- =============================================================================
 -- Script de Base de Datos generado para MySQL Workbench
 -- Proyecto: Monagua (MNG_WEB)
--- Modo: BUSINESS (25 tablas)
--- Fecha de generación: 2026-08-17 20:05:17
+-- Modo: BUSINESS (23 tablas)
+-- Fecha de generación: 2026-08-20 07:27:42
 -- =============================================================================
 
 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
@@ -144,38 +144,26 @@ CREATE TABLE IF NOT EXISTS `comunidad_blog` (
 DROP TABLE IF EXISTS `comunidad_calificacion`;
 CREATE TABLE IF NOT EXISTS `comunidad_calificacion` (
   `id` INT NOT NULL AUTO_INCREMENT,
-  `puntaje_estrellas` SMALLINT UNSIGNED NOT NULL,
   `comentario` TEXT NOT NULL,
   `fecha_calificacion` DATETIME NOT NULL,
   `reserva_id` BIGINT NULL,
+  `admin_respuesta` TEXT NULL,
+  `paquete_id` BIGINT NULL,
+  `tipo` VARCHAR(20) NOT NULL,
+  `titulo` VARCHAR(255) NOT NULL,
+  `usuario_id` BIGINT NULL,
+  `visible` TINYINT(1) NOT NULL,
+  `puntaje_estrellas` SMALLINT UNSIGNED NOT NULL,
   PRIMARY KEY (`id`),
+  CONSTRAINT `fk_comunidad_calificacion_usuario_id`
+    FOREIGN KEY (`usuario_id`)
+    REFERENCES `usuarios_usuario` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  CONSTRAINT `fk_comunidad_calificacion_paquete_id`
+    FOREIGN KEY (`paquete_id`)
+    REFERENCES `catalogo_paquete` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `fk_comunidad_calificacion_reserva_id`
     FOREIGN KEY (`reserva_id`)
     REFERENCES `reservas_reserva` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- -----------------------------------------------------
--- Tabla `monagua_db`.`comunidad_comentario`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `comunidad_comentario`;
-CREATE TABLE IF NOT EXISTS `comunidad_comentario` (
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `tipo` VARCHAR(20) NOT NULL,
-  `titulo` VARCHAR(255) NOT NULL,
-  `mensaje` TEXT NOT NULL,
-  `valoracion` SMALLINT UNSIGNED NOT NULL,
-  `visible` TINYINT(1) NOT NULL,
-  `admin_respuesta` TEXT NULL,
-  `fecha_creacion` DATETIME NOT NULL,
-  `paquete_id` BIGINT NULL,
-  `usuario_id` BIGINT NOT NULL,
-  PRIMARY KEY (`id`),
-  CONSTRAINT `fk_comunidad_comentario_usuario_id`
-    FOREIGN KEY (`usuario_id`)
-    REFERENCES `usuarios_usuario` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  CONSTRAINT `fk_comunidad_comentario_paquete_id`
-    FOREIGN KEY (`paquete_id`)
-    REFERENCES `catalogo_paquete` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------
@@ -305,19 +293,6 @@ CREATE TABLE IF NOT EXISTS `plan_guia` (
   CONSTRAINT `fk_plan_guia_codigo_guia_turistico`
     FOREIGN KEY (`codigo_guia_turistico`)
     REFERENCES `usuarios_guiaturistico` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- -----------------------------------------------------
--- Tabla `monagua_db`.`promociones_banner`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `promociones_banner`;
-CREATE TABLE IF NOT EXISTS `promociones_banner` (
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `imagen` VARCHAR(100) NOT NULL,
-  `titulo` VARCHAR(150) NOT NULL,
-  `enlace` VARCHAR(200) NULL,
-  `activo` TINYINT(1) NOT NULL,
-  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------

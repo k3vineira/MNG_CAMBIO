@@ -42,32 +42,11 @@ class PaquetePromocion(models.Model):
         related_name='paquete_promociones',
         verbose_name='Promoción'
     )
-    tarifa = models.ForeignKey(
-        Tarifa,
-        on_delete=models.CASCADE,
-        related_name='paquete_promociones',
-        verbose_name='Tarifa'
-    )
-
     class Meta:
         db_table = 'paquete_promociones'
         verbose_name = 'Paquete Promoción'
         verbose_name_plural = 'Paquetes Promociones'
 
     def __str__(self):
-        return f"{self.paquete.nombre} - Promo: {self.promocion.nombre} (Tarifa: {self.tarifa.id})"
+        return f"{self.paquete.nombre} - {self.promocion.nombre}"
 
-class Banner(models.Model):
-    """Banner publicitario que se muestra en el sitio web con imagen y enlace opcional."""
-    imagen = models.ImageField(upload_to='banners/', verbose_name="Imagen del Banner")
-    titulo = models.CharField(max_length=150, verbose_name="Título del Banner")
-    enlace = models.URLField(blank=True, null=True, verbose_name="Enlace (Opcional)")
-    activo = models.BooleanField(default=True, verbose_name="¿Activo?")
-
-    class Meta:
-        verbose_name = "Banner"
-        verbose_name_plural = "Banners"
-
-    def __str__(self):
-        """Retorna el título del banner como representación textual."""
-        return self.titulo
