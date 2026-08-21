@@ -33,14 +33,6 @@ class Reserva(models.Model):
         related_name='reservas',
         verbose_name='Paquete Reservado'
     )
-    paquete_promocion = models.OneToOneField(
-        'promociones.PaquetePromocion',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='reserva',
-        verbose_name='Promoción del Paquete'
-    )
     fecha = models.DateField(verbose_name='Fecha de Reserva')
     fecha_inicio = models.DateField(null=True, blank=True, verbose_name='Fecha de inicio')
     cliente = models.ForeignKey(
@@ -100,31 +92,49 @@ class Reserva(models.Model):
 
     def save(self, *args, **kwargs):
         """
-        Calcula el monto_total de la reserva según la temporada y tarifa vigente antes de guardar.
-
-        Args:
-            *args: Argumentos posicionales adicionales.
-            **kwargs: Argumentos de clave-valor adicionales.
+        Calcula el monto_total de la reserva según la temporada, tarifa vigente
+        y promociones activas del paquete antes de guardar.
         """
-       
-        if self.paquete_promocion and self.paquete_promocion.promocion.activa:
-            self.paquete = self.paquete_promocion.paquete
-            tarifa = self.paquete_promocion.tarifa
-            descuento = self.paquete_promocion.promocion.descuento
-            base_monto = (tarifa.precio_adulto * self.numero_adultos) + (tarifa.precio_menor * self.numero_menores)
-            self.monto_total = int(base_monto * (100 - descuento) / 100)
-        elif self.paquete and self.fecha:
+        if self.paquete and self.fecha:
             try:
                 from catalogo.models import Temporada, Tarifa
+
+                # 1. Buscar la temporada en la que cae la fecha de la reserva
                 temporada = Temporada.objects.filter(
-                    fecha_inicio__lte=self.fecha, fecha_fin__gte=self.fecha).first()
+                    fecha_inicio__lte=self.fecha, 
+                    fecha_fin__gte=self.fecha
+                ).first()
 
                 if temporada:
+                    # 2. Buscar la tarifa asignada a este paquete en esta temporada
                     tarifa = Tarifa.objects.filter(
-                        paquete=self.paquete, temporada=temporada).first()
+                        paquete=self.paquete, 
+                        temporada=temporada
+                    ).first()
+
                     if tarifa:
-                        self.monto_total = int(
-                            (tarifa.precio_adulto * self.numero_adultos) + (tarifa.precio_menor * self.numero_menores))
+                        num_adultos = self.numero_adultos or 0
+                        num_menores = self.numero_menores or 0
+                        base_monto = (tarifa.precio_adulto * num_adultos) + (tarifa.precio_menor * num_menores)
+
+                        # 3. Buscar si el paquete tiene alguna promoción activa
+                        descuento = 0
+                        try:
+                            # Busca la relación en la tabla intermedia de promociones
+                            paquete_promo = self.paquete.paquetepromociones_set.filter(
+                                promocion__estado=True # o promocion__activa=True según tu modelo
+                            ).first()
+
+                            if paquete_promo and paquete_promo.promocion:
+                                descuento = getattr(paquete_promo.promocion, 'porcentaje_descuento', 0) or getattr(paquete_promo.promocion, 'descuento', 0)
+                        except Exception:
+                            descuento = 0
+
+                        # 4. Calcular el monto final (con o sin descuento)
+                        if descuento > 0:
+                            self.monto_total = int(base_monto * (100 - descuento) / 100)
+                        else:
+                            self.monto_total = int(base_monto)
                     else:
                         self.monto_total = 0
                 else:
@@ -132,6 +142,7 @@ class Reserva(models.Model):
 
             except Exception:
                 self.monto_total = 0
+
         elif not getattr(self, 'monto_total', None):
             self.monto_total = 0
 
@@ -139,7 +150,6 @@ class Reserva(models.Model):
             self.monto_total = 0
 
         super().save(*args, **kwargs)
-
     @property
     def tiene_cancelacion_activa(self):
         """

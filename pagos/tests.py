@@ -15,10 +15,16 @@ def crear_usuario(username='pago_user'):
     
     :return: Respuesta de la función.
     """
+    import random
     return Usuario.objects.create_user(
         username=username,
         password='pass123',
-        email=f'{username}@test.com'
+        email=f'{username}@test.com',
+        first_name='Pago',
+        last_name='User',
+        tipo_documento='CC',
+        numero_documento=f'555{random.randint(100000, 999999)}',
+        telefono='3120000000'
     )
 
 

@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 django.setup()
 
 from usuarios.models import Cliente
-from comunidad.models import PQRS, Comentario
+from comunidad.models import PQRS, Resena, Comentario
 from pagos.models import Pago
 from catalogo.models import Paquete
 from reservas.models import Reserva

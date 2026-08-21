@@ -60,6 +60,7 @@ class Pago(models.Model):
         verbose_name='Imagen del comprobante'
     )
     descripcion = models.TextField(
+        blank=True,
         verbose_name='Descripción / nota adicional'
     )
     estado_transaccion = models.CharField(
