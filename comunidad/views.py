@@ -263,7 +263,7 @@ def enviar_comentario(request):
 def listar_comentarios(request):
     """Renderiza el módulo de moderación y auditoría de comentarios para el Staff."""
     comentarios = Comentario.objects.all().select_related(
-        'usuario', 'paquete').order_by('-fecha_creacion')
+        'usuario', 'paquete').order_by('-fecha_calificacion')
     return render(request, 'comunidad/admin_comentarios.html', {
         'titulo': 'Moderación de Comentarios — Administración',
         'comentarios': comentarios
@@ -347,19 +347,19 @@ def mis_resenas_view(request):
         return redirect('mis_resenas')
 
     # Datos para el GET
-    mis_resenas = Comentario.objects.filter(usuario=request.user).order_by('-fecha_creacion')
-    resenas_publicas = Comentario.objects.filter(visible=True).select_related('usuario', 'paquete').order_by('-fecha_creacion')
+    mis_resenas = Comentario.objects.filter(usuario=request.user).order_by('-fecha_calificacion')
+    resenas_publicas = Comentario.objects.filter(visible=True).select_related('usuario', 'paquete').order_by('-fecha_calificacion')
 
     # Calcular estadísticas de reseñas públicas
     total_resenas = resenas_publicas.count()
-    promedio = resenas_publicas.aggregate(Avg('valoracion'))['valoracion__avg'] or 0
+    promedio = resenas_publicas.aggregate(Avg('puntaje_estrellas'))['puntaje_estrellas__avg'] or 0
 
     distribucion = {}
     if total_resenas > 0:
-        dist_query = resenas_publicas.values('valoracion').annotate(count=Count('id'))
+        dist_query = resenas_publicas.values('puntaje_estrellas').annotate(count=Count('id'))
         for item in dist_query:
-            if item['valoracion']:
-                distribucion[item['valoracion']] = item['count']
+            if item['puntaje_estrellas']:
+                distribucion[item['puntaje_estrellas']] = item['count']
 
     stats = {
         'total': total_resenas,

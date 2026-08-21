@@ -117,8 +117,8 @@ def dashboard_admin(request):
     total_tours = Paquete.objects.filter(estado=True).count()
     total_pagos_rechazados = Pago.objects.filter(estado_transaccion='rechazado').count()
     
-    from promociones.models import Promocion, Banner
-    total_promociones = Promocion.objects.count() + Banner.objects.count()
+    from promociones.models import Promocion
+    total_promociones = Promocion.objects.count()
 
     current_year = timezone.now().year
     from django.db.models.functions import ExtractMonth, ExtractWeekDay

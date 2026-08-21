@@ -3,7 +3,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 from catalogo.models import Categoria, Paquete, Temporada, Tarifa
-from promociones.models import Promocion, PaquetePromocion, Banner
+from promociones.models import Promocion, PaquetePromocion
 
 class PromocionesTestCase(TestCase):
     def setUp(self):
@@ -81,22 +81,6 @@ class PromocionesTestCase(TestCase):
         self.assertEqual(pp.paquete, self.paquete)
         self.assertEqual(pp.promocion, promo)
 
-    def test_crear_banner(self):
-        """
-        test_crear_banner.
-        
-        :return: Respuesta de la función.
-        """
-        banner = Banner.objects.create(
-            imagen='banners/test_banner.jpg',
-            titulo='Banner Principal',
-            enlace='https://example.com/promo',
-            activo=True
-        )
-        self.assertEqual(banner.titulo, 'Banner Principal')
-        self.assertEqual(banner.enlace, 'https://example.com/promo')
-        self.assertTrue(banner.activo)
-        self.assertEqual(str(banner), 'Banner Principal')
 
     def test_gestion_promociones_view(self):
         """
