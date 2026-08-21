@@ -7,6 +7,8 @@ from django.db import models
 from django.utils import timezone
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
+from decimal import Decimal
 
 
 class Pago(models.Model):
@@ -49,7 +51,8 @@ class Pago(models.Model):
     monto = models.DecimalField(
         max_digits=12,
         decimal_places=2,
-        default=0.00,
+        default=Decimal('0.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
         verbose_name='Monto pagado'
     )
     imagen_comprobante = models.ImageField(
@@ -101,6 +104,9 @@ class Pago(models.Model):
             if not self.nota_admin:
                 raise ValidationError({"nota_admin": "Debe justificar el rechazo añadiendo una nota del administrador."})
 
+        if self.monto is not None and self.monto < 0:
+            raise ValidationError({"monto": "El monto pagado no puede ser negativo."})
+
     def save(self, *args, **kwargs):
         self.clean()
         if self.estado_transaccion == 'aprobado' and self.reserva:
@@ -141,11 +147,13 @@ class Factura(models.Model):
     valor_subtotal = models.DecimalField(
         max_digits=12,
         decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.00'))],
         verbose_name='Valor Subtotal'
     )
     valor_total = models.DecimalField(
         max_digits=12,
         decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.00'))],
         verbose_name='Valor Total'
     )
     reserva = models.OneToOneField(
