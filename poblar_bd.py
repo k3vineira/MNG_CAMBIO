@@ -339,7 +339,7 @@ def poblar_base_datos():
         tarifas_creadas.append(tarifa_base)
 
     # ─────────────────────────────────────────────
-    # 4. RESERVAS Y CANCELACIONES
+   # 4. RESERVAS Y CANCELACIONES
     # ─────────────────────────────────────────────
     print("4. Creando Reservas y Cancelaciones...")
     reservas_creadas = []
@@ -347,13 +347,14 @@ def poblar_base_datos():
     combinaciones_unicas = set()
 
     for tarifa_asociada in tarifas_creadas:
-        fecha_reserva = tarifa_asociada.temporada.fecha_inicio + \
-            timedelta(days=2)
-        usuario_aleatorio = random.choice(clientes_creados).usuario
+        fecha_reserva = tarifa_asociada.temporada.fecha_inicio + timedelta(days=2)
+        
+        # 1. Seleccionamos un cliente directamente de la lista de clientes creados
+        cliente_aleatorio = random.choice(clientes_creados) 
         paquete_asociado = tarifa_asociada.paquete
 
-        identificador = (usuario_aleatorio.id,
-                         paquete_asociado.id, fecha_reserva)
+        # 2. Usamos el ID del cliente en la tupla de combinaciones únicas
+        identificador = (cliente_aleatorio.id, paquete_asociado.id, fecha_reserva)
 
         if identificador in combinaciones_unicas:
             continue
@@ -361,15 +362,16 @@ def poblar_base_datos():
         combinaciones_unicas.add(identificador)
         estado = random.choice(estados_reserva)
 
+        # 3. Asignamos el cliente al parámetro exacto de tu modelo (minúscula: cliente)
         r = Reserva.objects.create(
-            usuario=usuario_aleatorio,
+            cliente=cliente_aleatorio,  # <-- Se usa 'cliente' en minúscula
             paquete=paquete_asociado,
             fecha=fecha_reserva,
             numero_adultos=random.randint(1, 4),
             numero_menores=random.randint(0, 3),
             estado=estado
         )
-        
+        reservas_creadas.append(r)
         # Asignar fecha realista (auto_now_add no deja hacerlo en create)
         dias_antes = random.randint(5, 60)
         fake_registro_date = fecha_reserva - timedelta(days=dias_antes)
@@ -398,8 +400,7 @@ def poblar_base_datos():
             Cancelacion.objects.filter(id=c.id).update(fecha=fake_solicitud)
 
     print(f"  -> {len(reservas_creadas)} reservas creadas.")
-
-    # ─────────────────────────────────────────────
+# ─────────────────────────────────────────────
     # 5. COMPROBANTES DE PAGO
     # ─────────────────────────────────────────────
     print("5. Creando Comprobantes de Pago...")
@@ -408,17 +409,23 @@ def poblar_base_datos():
         'Nequi', 'Daviplata', 'Banco Popular', 'Banco de Occidente'
     ]
     comprobantes_creados = 0
-    reservas_con_comprobante = random.sample(
-        reservas_creadas, min(12, len(reservas_creadas)))
+
+    # 1. Filtramos en memoria las reservas únicas recién creadas
+    reservas_disponibles = list({r.id: r for r in reservas_creadas}.values())
+
+    # 2. Seleccionamos una muestra aleatoria sin repetir ninguna reserva
+    cantidad = min(12, len(reservas_disponibles))
+    reservas_con_comprobante = random.sample(reservas_disponibles, cantidad) if cantidad > 0 else []
 
     for r in reservas_con_comprobante:
         estado_comprobante = random.choice(['pendiente', 'aprobado', 'rechazado'])
+        fecha_base = getattr(r, 'fecha_registro', getattr(r, 'fecha', None))
+
         cp = Pago.objects.create(
-            usuario=r.usuario,
             reserva=r,
             referencia=f"REF-{random.randint(100000, 999999)}",
             banco_origen=random.choice(bancos),
-            monto=Decimal(str(r.monto_total)) if r.monto_total else Decimal('150000'),
+            monto=Decimal(str(getattr(r, 'monto_total', 150000))),
             imagen_comprobante='comprobantes/placeholder.jpg',
             descripcion=random.choice([
                 "Transferencia bancaria realizada exitosamente.",
@@ -429,12 +436,15 @@ def poblar_base_datos():
             estado_transaccion=estado_comprobante,
             nota_admin="Revisado por administración." if estado_comprobante != 'pendiente' else "",
         )
-        fake_envio = r.fecha_registro + timedelta(hours=random.randint(1, 48))
-        Pago.objects.filter(id=cp.id).update(fecha_envio=fake_envio)
+
+        if fecha_base:
+            fake_envio = fecha_base + timedelta(hours=random.randint(1, 48))
+            Pago.objects.filter(id=cp.id).update(fecha_envio=fake_envio)
+
         comprobantes_creados += 1
 
-    print(f"  -> {comprobantes_creados} comprobantes de pago creados.")
-
+    print(f"  -> {comprobantes_creados} comprobantes creados con éxito.")
+    
     # ─────────────────────────────────────────────
     # 6. COMUNIDAD (CALIFICACIONES, BLOG, PQRS, COMENTARIOS)
     # ─────────────────────────────────────────────
@@ -540,8 +550,6 @@ def poblar_base_datos():
     reservas_para_calificar = random.sample(reservas_creadas, k=min(10, len(reservas_creadas)))
     for idx, r_obj in enumerate(reservas_para_calificar):
         Calificacion.objects.create(
-            usuario=r_obj.usuario,
-            paquete=r_obj.paquete,
             reserva=r_obj,
             tipo='experiencia',
             titulo=titulos_calificaciones[idx],

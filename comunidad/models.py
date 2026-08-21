@@ -82,10 +82,8 @@ class Calificacion(models.Model):
         verbose_name_plural = 'Calificaciones'
 
     def __str__(self):
-        """Retorna el usuario y título/paquete de la calificación como representación textual."""
-        nombre_usuario = self.usuario.username if self.usuario else "Anónimo"
-        return f"Calificación de {nombre_usuario} ({self.puntaje_estrellas}★) - {self.titulo or (self.paquete.nombre if self.paquete else 'General')}"
-
+        """Retorna el título de la calificación y el puntaje en estrellas."""
+        return f"{self.titulo} - {self.puntaje_estrellas} estrellas"
 
 class Blog(models.Model):
     """Entrada de blog publicada por un administrador o autor en Mongua Turismo."""

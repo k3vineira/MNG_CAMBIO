@@ -5,6 +5,7 @@ from core.decoradores import requiere_autenticacion, requiere_administrador
 from django.db.models import Avg, Count, Sum, Q
 from .models import Usuario, Cliente, GuiaTuristico
 from comunidad.models import Comentario
+from comunidad.models import Calificacion
 from .forms import PerfilUsuarioForm
 
 # 1. VISTAS PÚBLICAS / ESTÁTICAS
@@ -150,7 +151,7 @@ def dashboard_admin(request):
 
     tasa_confirmacion = int(reservas_confirmadas / total_reservas * 100) if total_reservas > 0 else 0
 
-    val_avg = Comentario.objects.aggregate(Avg('valoracion'))['valoracion__avg']
+    val_avg = Calificacion.objects.aggregate(Avg('puntaje_estrellas'))['puntaje_estrellas__avg']
     valoracion_promedio = round(val_avg, 1) if val_avg is not None else 0.0
 
     ingreso_por_reserva = total_ventas / total_reservas if total_reservas > 0 else 0
@@ -182,17 +183,16 @@ def dashboard_admin(request):
     # Actividad reciente
     from django.utils.timesince import timesince
     actividad_reciente = []
-    for r in Reserva.objects.select_related('usuario', 'paquete').order_by('-fecha_registro')[:5]:
-        nombre_usr = r.usuario.get_full_name() or r.usuario.username
+    for r in Reserva.objects.select_related('cliente', 'paquete').order_by('-fecha_registro')[:5]:
+        nombre_cliente = r.cliente.usuario.get_full_name() or r.cliente.usuario.username
         actividad_reciente.append({
-            'texto': f"Nueva reserva de {nombre_usr} para {r.paquete.nombre}",
+            'texto': f"Nueva reserva de {nombre_cliente} para {r.paquete.nombre}",
             'tiempo_dt': r.fecha_registro,
         })
-    for p in Pago.objects.select_related('usuario', 'reserva').order_by('-fecha_envio')[:5]:
-        nombre_usr = p.usuario.get_full_name() or p.usuario.username
+    for p in Pago.objects.select_related('reserva__paquete').order_by('-fecha_envio')[:5]:
         monto_valor = p.monto or (p.reserva.monto_total if p.reserva else 0)
         actividad_reciente.append({
-            'texto': f"Pago de COP ${monto_valor:,.0f} enviado por {nombre_usr} ({p.get_estado_transaccion_display()})",
+            'texto': f"Pago de COP ${monto_valor:,.0f} enviado por {nombre_cliente} ({p.get_estado_transaccion_display()})",
             'tiempo_dt': p.fecha_envio,
         })
     actividad_reciente.sort(key=lambda x: x['tiempo_dt'], reverse=True)
