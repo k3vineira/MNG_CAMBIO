@@ -14,6 +14,7 @@ from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 from django.contrib.auth.tokens import default_token_generator
 import random
+import time
 
 from usuarios.models import Usuario, Cliente
 from .forms import RegistroForm, RecuperacionPersonalizadaForm
@@ -70,9 +71,10 @@ def password_reset_request_view(request):
             # Generar OTP de 6 dígitos
             otp = str(random.randint(100000, 999999))
             
-            # Guardar en sesión
+            # Guardar en sesión con timestamp de expiración (10 minutos)
             request.session['reset_email'] = email
             request.session['reset_otp'] = otp
+            request.session['reset_otp_time'] = time.time()
             
             # Enviar correo
             subject = 'Código de verificación para recuperar contraseña - Monagua'
@@ -97,16 +99,25 @@ def password_reset_request_view(request):
 def password_reset_otp_verify_view(request):
     """
     Verifica el OTP ingresado por el usuario. Si es correcto, genera
-    los tokens de Django y redirige a la vista de confirmación.
+    los tokens de Django de un solo uso y redirige a la vista de confirmación.
     """
     if 'reset_email' not in request.session or 'reset_otp' not in request.session:
         messages.error(request, 'Tu sesión ha expirado o no has iniciado una recuperación.')
         return redirect('password_reset')
 
+    # Verificar si el OTP ya expiró (más de 10 minutos = 600 segundos)
+    otp_time = request.session.get('reset_otp_time', 0)
+    if time.time() - otp_time > 600:
+        request.session.pop('reset_email', None)
+        request.session.pop('reset_otp', None)
+        request.session.pop('reset_otp_time', None)
+        messages.error(request, 'El código de verificación ha expirado (límite de 10 minutos). Por favor solicita uno nuevo.')
+        return redirect('password_reset')
+
     if request.method == 'POST':
         otp_ingresado = request.POST.get('otp', '').strip()
         if otp_ingresado == request.session['reset_otp']:
-            # OTP correcto, generar token y redirigir
+            # OTP correcto, generar token único y redirigir
             email = request.session['reset_email']
             usuario = Usuario.objects.get(email__iexact=email)
             
@@ -134,9 +145,10 @@ def password_reset_otp_verify_view(request):
                 fail_silently=False,
             )
             
-            # Limpiar sesión
-            del request.session['reset_email']
-            del request.session['reset_otp']
+            # Limpiar sesión inmediatamente para garantizar USO ÚNICO del OTP
+            request.session.pop('reset_email', None)
+            request.session.pop('reset_otp', None)
+            request.session.pop('reset_otp_time', None)
             
             return redirect('password_reset_done')
         else:
@@ -148,6 +160,7 @@ def password_reset_otp_verify_view(request):
     email_oculto = f"{partes[0][0]}***@{partes[1]}" if len(partes) == 2 else email
 
     return render(request, 'authentication/recuperar_otp.html', {'email_oculto': email_oculto})
+
 
 
 def registro_view(request):
@@ -179,6 +192,7 @@ def registro_view(request):
             request.session['registro_data'] = request.POST.dict()
             request.session['registro_email'] = email
             request.session['registro_otp'] = otp
+            request.session['registro_otp_time'] = time.time()
             
             # Enviar correo
             subject = 'Código de verificación para tu cuenta - Monagua'
@@ -214,6 +228,16 @@ def registro_otp_verify_view(request):
         messages.error(request, 'Tu sesión ha expirado o no has iniciado un registro.')
         return redirect('registro')
 
+    # Verificar si el OTP ya expiró (más de 10 minutos = 600 segundos)
+    otp_time = request.session.get('registro_otp_time', 0)
+    if time.time() - otp_time > 600:
+        request.session.pop('registro_data', None)
+        request.session.pop('registro_otp', None)
+        request.session.pop('registro_email', None)
+        request.session.pop('registro_otp_time', None)
+        messages.error(request, 'El código de verificación ha expirado (límite de 10 minutos). Por favor regístrate de nuevo.')
+        return redirect('registro')
+
     if request.method == 'POST':
         otp_ingresado = request.POST.get('otp', '').strip()
         if otp_ingresado == request.session['registro_otp']:
@@ -240,6 +264,7 @@ def registro_otp_verify_view(request):
                 request.session.pop('registro_data', None)
                 request.session.pop('registro_otp', None)
                 request.session.pop('registro_email', None)
+                request.session.pop('registro_otp_time', None)
                 
                 if next_url:
                     response = redirect(next_url)
@@ -258,6 +283,7 @@ def registro_otp_verify_view(request):
     email_oculto = f"{partes[0][0]}***@{partes[1]}" if len(partes) == 2 else email
 
     return render(request, 'authentication/registro_otp.html', {'email_oculto': email_oculto})
+
 
 
 class UsuarioLoginView(LoginView):
