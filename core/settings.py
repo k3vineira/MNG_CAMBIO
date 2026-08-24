@@ -157,6 +157,8 @@ MEDIA_ROOT = BASE_DIR / "media"
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "inicio"
 LOGOUT_REDIRECT_URL = "inicio"
+PASSWORD_RESET_TIMEOUT = 900  # Token de recuperación expira en 15 minutos (un solo uso)
+
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"

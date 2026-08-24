@@ -1,116 +1,141 @@
 {% extends "base.html" %}
 {% load static %}
+{% block titulo %}Verificar Correo - Monagua{% endblock %}
+
 {% block content %}
-
-<!-- Fondo completo -->
-<div class="min-vh-100 d-flex align-items-center justify-content-center px-3 pb-5 pt-5" style="background-image: linear-gradient(rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.15)), url('{% static "img/Fondo.webp" %}'); background-size: cover; background-position: center; background-attachment: fixed;">
-  <div class="w-100" style="max-width: 500px;">
- 
-    <!-- Tarjeta principal -->
-    <div class="card border-0 shadow-lg rounded-4 overflow-hidden bg-white bg-opacity-75">
- 
-      <!-- Imagen de portada superior -->
-      <div class="position-relative" style="height: 180px; background-image: url('{% static 'img/Fondo6.png' %}'); background-size: cover; background-position: center;">
-        <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-25"></div>
-      </div>
- 
-      <div class="card-body p-4 p-md-5 position-relative pt-5">
-        
-        <!-- Ícono flotante circular sobre el borde -->
-        <div class="position-absolute top-0 start-50 translate-middle">
-          <div class="d-flex align-items-center justify-content-center rounded-circle bg-white border border-success border-opacity-25 shadow-lg" style="width: 80px; height: 80px;">
-            <i class="bi bi-shield-check text-success fs-2"></i>
-          </div>
-        </div>
-
-        <!-- Encabezado -->
-        <div class="text-center mb-4">
-          <h1 class="h3 fw-bold text-dark mb-2">Verifica tu correo electrónico</h1>
-          <p class="text-muted small mb-0">
-            Hemos enviado un código de 6 dígitos a <br>
-            <strong>{{ email_oculto }}</strong>
-          </p>
-        </div>
-
-        <!-- Separador -->
-        <hr class="text-muted opacity-25 my-4">
-
-
-
-        <!-- Formulario -->
-        <form method="POST" action="">
-          {% csrf_token %}
-
-          <!-- Badge de paso -->
-          <div class="d-flex align-items-center gap-2 mb-3">
-            <span class="badge bg-success rounded-pill px-3 py-2 small">Paso 2</span>
-            <span class="text-muted small">Ingresa el código OTP para crear tu cuenta</span>
-          </div>
-
-          <!-- Input OTP -->
-          <div class="mb-4">
-            <label for="otp_input" class="form-label small fw-semibold text-secondary mb-2">
-              Código de seguridad
-            </label>
-            <div class="input-group">
-              <span class="input-group-text bg-light border-end-0 rounded-start-3">
-                <i class="bi bi-123 text-success"></i>
-              </span>
-              <input
-                type="text"
-                id="otp_input"
-                name="otp"
-                class="form-control border-start-0 bg-light rounded-end-3 shadow-none py-3 text-center fs-4 fw-bold u-style-00241e05"
-                placeholder="000000"
-                maxlength="6"
-                pattern="\d{6}"
-                title="Debe contener exactamente 6 números"
-                required
-                autofocus
-                autocomplete="one-time-code"
-              >
-            </div>
-            <div class="form-text ps-1">
-              <i class="bi bi-info-circle me-1"></i>
-              Revisa tu bandeja de entrada o tu carpeta de spam.
-            </div>
-          </div>
-
-          <!-- Botón principal -->
-          <div class="d-grid mb-3">
-            <button type="submit" id="btn_verificar" class="btn btn-success fw-bold py-3 rounded-3 shadow-sm">
-              <i class="bi bi-check-circle me-2"></i>Crear Cuenta
-            </button>
-          </div>
-
-          <!-- Volver a intentar -->
-          <div class="text-center">
-            <a href="{% url 'registro' %}" class="btn btn-link text-muted text-decoration-none small fw-semibold">
-              <i class="bi bi-arrow-left me-1"></i>Volver al formulario de registro
-            </a>
-          </div>
-
-        </form>
-
-      </div>
+<!-- ============================================================ -->
+<!-- CONTENEDOR PRINCIPAL: Formulario Centrado con Fondo -->
+<!-- ============================================================ -->
+<div
+  class="min-vh-100 d-flex flex-column justify-content-center align-items-center pt-5 pb-5 px-3"
+  style="
+    background-image: url('{% static 'img/difuminado.jpg' %}');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+  "
+>
+  <div
+    class="w-100 p-2 p-sm-4 my-5"
+    style="max-width: 520px"
+    data-aos="fade-up"
+    data-aos-duration="1000"
+  >
+    <!-- Botón de retroceso estilo Meta -->
+    <div class="mb-3" data-aos="fade-right" data-aos-delay="50">
+      <a
+        href="{% url 'registro' %}"
+        class="btn btn-light rounded-circle d-inline-flex align-items-center justify-content-center border shadow-xs"
+        style="width: 38px; height: 38px"
+        title="Volver al formulario de registro"
+      >
+        <i class="bi bi-chevron-left text-dark"></i>
+      </a>
     </div>
 
-    <!-- Nota de seguridad -->
-    <div class="text-center mt-4">
-      <p class="small text-muted mb-0">
-        <i class="bi bi-lock-fill me-1 text-success"></i>
-        Conexión segura — tus datos están protegidos.
+    <!-- Branding y Cabecera Editorial -->
+    <div class="mb-4" data-aos="fade-up" data-aos-delay="100">
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <img
+          src="{% static 'img/Logo.webp' %}"
+          alt="Logo Monagua"
+          width="28"
+          height="28"
+        />
+        <span class="fw-bold text-success small text-uppercase tracking-wider"
+          >Monagua</span
+        >
+      </div>
+      <h1 class="h3 fw-bold text-dark mb-2">Verifica tu correo electrónico</h1>
+      <p class="text-muted small fw-medium mb-0">
+        Hemos enviado un código de seguridad de 6 dígitos a <br />
+        <strong class="text-dark">{{ email_oculto }}</strong>
       </p>
     </div>
 
-    <!-- Logo Monagua -->
-    <div class="text-center mt-3">
-      <img src="{% static 'img/Logo.webp' %}" alt="Logo Monagua" width="60" height="60" class="opacity-75">
-    </div>
+    <!-- Alertas de Errores Django / Mensajes -->
+    {% if messages %}
+      {% for message in messages %}
+      <div
+        class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} border-0 rounded-4 small mb-3 alert-dismissible fade show shadow-sm"
+        role="alert"
+      >
+        <div class="d-flex align-items-center">
+          <i class="bi bi-exclamation-circle me-2"></i>{{ message }}
+        </div>
+        <button
+          type="button"
+          class="btn-close small"
+          data-bs-dismiss="alert"
+          aria-label="Close"
+        ></button>
+      </div>
+      {% endfor %}
+    {% endif %}
 
+    <!-- Formulario OTP -->
+    <form method="POST" action="">
+      {% csrf_token %}
+
+      <!-- Sección: Input OTP -->
+      <div class="mb-4" data-aos="fade-up" data-aos-delay="150">
+        <label for="otp_input" class="form-label small fw-semibold text-secondary ps-3 mb-1">
+          Código de seguridad (OTP)
+        </label>
+        <input
+          type="text"
+          id="otp_input"
+          name="otp"
+          class="form-control rounded-pill py-3 px-4 text-center fs-3 fw-bold tracking-wider"
+          placeholder="000000"
+          maxlength="6"
+          pattern="\d{6}"
+          title="Debe contener exactamente 6 números"
+          required
+          autofocus
+          autocomplete="one-time-code"
+          style="letter-spacing: 0.3em;"
+        />
+        <p class="small text-muted ps-3 mt-2 mb-0" style="font-size: 0.78rem">
+          <i class="bi bi-info-circle me-1"></i>
+          Revisa tu bandeja de entrada o tu carpeta de correo no deseado (spam).
+        </p>
+      </div>
+
+      <!-- Botones de Acción -->
+      <div class="d-grid gap-2 pt-1 mb-4" data-aos="fade-up" data-aos-delay="200">
+        <button
+          type="submit"
+          id="btn_verificar"
+          class="btn btn-success rounded-pill py-3 fw-bold shadow-sm"
+        >
+          Crear Cuenta
+        </button>
+        <a
+          href="{% url 'registro' %}"
+          class="btn btn-light rounded-pill py-3 fw-semibold text-secondary border-0 shadow-sm text-center"
+        >
+          Volver al formulario de registro
+        </a>
+      </div>
+    </form>
+
+    <!-- Pie sutil -->
+    <div class="text-center" data-aos="fade-up" data-aos-delay="250">
+      <p class="small text-muted mb-0">
+        ¿Necesitas ayuda?
+        <a
+          href="{% url 'nosotros' %}"
+          class="link-secondary fw-semibold text-decoration-none ms-1"
+          >Contáctanos</a
+        >
+      </p>
+    </div>
   </div>
 </div>
 
+<!-- Scripts -->
 <script src="{% static 'js/auth/alertas.js' %}"></script>
 <script src="{% static 'js/auth/otp.js' %}"></script>
+{% block mascota %}{% endblock %}
 {% endblock %}

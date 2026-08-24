@@ -1,4 +1,5 @@
 {% load static %}
+{% if '/autenticacion/' not in request.path and request.resolver_match.app_name != 'autenticacion' %}
 <!-- ── Mascot: Cóndy El Cóndor ── -->
 <div id="condor-mascot-container" class="position-fixed">
     <!-- Toggle Button (para colapsar/desplegar) -->
@@ -120,6 +121,8 @@ document.addEventListener("DOMContentLoaded", function() {
     const img = document.getElementById('condor-img');
     const toggleBtn = document.getElementById('condor-toggle-btn');
     
+    if (!mascot || !toggleBtn || !img) return;
+
     const tips = [
         "¡Hola! Soy Cóndy, tu guía en Monagua. ¡Exploremos el Páramo de Mongua juntos!",
         "¡No dejes basura en los senderos! Mantengamos el páramo limpio.",
@@ -171,8 +174,10 @@ document.addEventListener("DOMContentLoaded", function() {
     
     // Close bubble when clicking anywhere else
     document.addEventListener('click', function() {
-        bubble.classList.add('d-none');
-        img.classList.add('condor-bounce');
+        if (bubble) bubble.classList.add('d-none');
+        if (img) img.classList.add('condor-bounce');
     });
 });
 </script>
+{% endif %}
+
