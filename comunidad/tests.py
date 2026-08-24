@@ -64,8 +64,10 @@ from reservas.models import Reserva
 
 def crear_reserva(usuario, paquete):
     """Auxiliar para crear una reserva de prueba."""
+    from usuarios.models import Cliente
+    cliente, _ = Cliente.objects.get_or_create(usuario=usuario)
     return Reserva.objects.create(
-        usuario=usuario,
+        cliente=cliente,
         paquete=paquete,
         fecha=datetime.date.today(),
         monto_total=100000
@@ -406,7 +408,8 @@ class ComentarioViewsTest(TestCase):
         self.assertTemplateUsed(response, 'comunidad/admin_comentarios.html')
         
     def test_toggle_visible(self):
-        com = Comentario.objects.create(usuario=self.cliente.usuario, paquete=self.paquete, mensaje="test", visible=True)
+        reserva = crear_reserva(self.cliente.usuario, self.paquete)
+        com = Comentario.objects.create(reserva=reserva, mensaje="test", visible=True)
         self.client.force_login(self.admin)
         response = self.client.post(reverse('toggle_visible', args=[com.pk]))
         self.assertRedirects(response, reverse('listar_comentarios'))
@@ -414,7 +417,8 @@ class ComentarioViewsTest(TestCase):
         self.assertFalse(com.visible)
 
     def test_responder_comentario(self):
-        com = Comentario.objects.create(usuario=self.cliente.usuario, paquete=self.paquete, mensaje="test")
+        reserva = crear_reserva(self.cliente.usuario, self.paquete)
+        com = Comentario.objects.create(reserva=reserva, mensaje="test")
         self.client.force_login(self.admin)
         data = {'admin_respuesta': 'Gracias por comentar'}
         response = self.client.post(reverse('responder_comentario', args=[com.pk]), data)

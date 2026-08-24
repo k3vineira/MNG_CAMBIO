@@ -1,68 +1,56 @@
 <form method="POST" action="">
   {% csrf_token %}
 
-  <!-- Badge de paso -->
-  <div class="d-flex align-items-center gap-2 mb-4">
-    <span class="badge bg-success rounded-pill px-3 py-2 small">Paso único</span>
-    <span class="text-muted small">Verifica tu identidad</span>
-  </div>
-
   <!-- Input Correo -->
-  <div class="mb-4">
-    <label for="email_apodo" class="form-label small fw-semibold text-secondary mb-2">
+  <div class="mb-3" data-aos="fade-up" data-aos-delay="150">
+    <label for="email_apodo" class="form-label small fw-semibold text-secondary ps-3 mb-1">
       Correo electrónico
     </label>
-    <div class="input-group">
-      <span class="input-group-text bg-light border-end-0 rounded-start-3">
-        <i class="bi bi-envelope text-success"></i>
-      </span>
-      <input
-        type="email"
-        id="email_apodo"
-        name="email"
-        class="form-control border-start-0 bg-light rounded-end-3 shadow-none py-3"
-        placeholder="ejemploMongua@gmail.com"
-        autofocus
-        {% if request.POST.email %}value="{{ request.POST.email }}"{% endif %}
-      >
-    </div>
+    <input
+      type="email"
+      id="email_apodo"
+      name="email"
+      class="form-control rounded-pill py-3 px-4"
+      placeholder="aventura@monagua.com"
+      autofocus
+      {% if request.POST.email %}value="{{ request.POST.email }}"{% endif %}
+    />
   </div>
 
   <!-- Input Número de Documento -->
-  <div class="mb-4">
-    <label for="documento_apodo" class="form-label small fw-semibold text-secondary mb-2">
+  <div class="mb-4" data-aos="fade-up" data-aos-delay="200">
+    <label for="documento_apodo" class="form-label small fw-semibold text-secondary ps-3 mb-1">
       Número de documento
     </label>
-    <div class="input-group">
-      <span class="input-group-text bg-light border-end-0 rounded-start-3">
-        <i class="bi bi-card-text text-success"></i>
-      </span>
-      <input
-        type="text"
-        id="documento_apodo"
-        name="numero_documento"
-        class="form-control border-start-0 bg-light rounded-end-3 shadow-none py-3"
-        placeholder="Tu número de documento"
-        {% if request.POST.numero_documento %}value="{{ request.POST.numero_documento }}"{% endif %}
-      >
-    </div>
-    <div class="form-text ps-1">
+    <input
+      type="text"
+      id="documento_apodo"
+      name="numero_documento"
+      class="form-control rounded-pill py-3 px-4"
+      placeholder="1000000000"
+      oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+      {% if request.POST.numero_documento %}value="{{ request.POST.numero_documento }}"{% endif %}
+    />
+    <p class="small text-muted ps-3 mt-2 mb-0" style="font-size: 0.78rem">
       <i class="bi bi-info-circle me-1"></i>
-      Usa los datos con los que te registraste en Monagua (debes ingresar al menos un dato).
-    </div>
+      Ingresa al menos uno de los datos con los que te registraste en Monagua.
+    </p>
   </div>
 
-  <!-- Botón -->
-  <div class="d-grid mb-3">
-    <button type="submit" id="btn_buscar_apodo" class="btn btn-success fw-bold py-3 rounded-3 shadow-sm">
-      <i class="bi bi-search me-2"></i>Buscar mi apodo
+  <!-- Botones de Acción -->
+  <div class="d-grid gap-2 pt-1 mb-4" data-aos="fade-up" data-aos-delay="250">
+    <button
+      type="submit"
+      id="btn_buscar_apodo"
+      class="btn btn-success rounded-pill py-3 fw-bold shadow-sm"
+    >
+      Buscar mi apodo
     </button>
-  </div>
-
-  <!-- Volver -->
-  <div class="text-center">
-    <a href="{% url 'password_reset' %}" class="btn btn-link text-muted text-decoration-none small fw-semibold">
-      <i class="bi bi-arrow-left me-1"></i>Volver a recuperar contraseña
+    <a
+      href="{% url 'password_reset' %}"
+      class="btn btn-light rounded-pill py-3 fw-semibold text-secondary border-0 shadow-sm text-center"
+    >
+      Volver a recuperar contraseña
     </a>
   </div>
 </form>
