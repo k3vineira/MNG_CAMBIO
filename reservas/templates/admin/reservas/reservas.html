@@ -106,10 +106,8 @@
                 <tbody>
                     {% for reserva in reservas %}
                     <tr>
-                        <td class="ps-4 py-3 fw-bold text-dark">
-                            {{ reserva.usuario.get_full_name|default:reserva.usuario.username }}
-                            <small class="text-muted d-block fw-normal">{{ reserva.usuario.email }}</small>
-                        </td>
+                        
+    
                         <td class="py-3 fw-semibold text-secondary">
                             {{ reserva.paquete.nombre }}
                             <small class="text-muted d-block fw-normal">Reserva #{{ reserva.id }}</small>
