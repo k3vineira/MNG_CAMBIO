@@ -16,8 +16,10 @@ class Reserva(models.Model):
     Calcula automáticamente el monto total según las tarifas y temporadas activas.
     """
     ESTADO_CHOICES = [
-        ('pendiente', 'Pendiente'),
+        ('pendiente', 'Pendiente de Pago'),
+        ('pagada', 'Pagada / En revisión'),
         ('confirmada', 'Confirmada'),
+        ('completada', 'Completada'),
         ('cancelada', 'Cancelada'),
     ]
 
@@ -57,6 +59,23 @@ class Reserva(models.Model):
 
     fecha_registro = models.DateTimeField(
         auto_now_add=True, verbose_name='Fecha de Registro')
+
+    # --- Campos de Pago Integrados ---
+    ESTADO_PAGO_CHOICES = [
+        ('pendiente', 'Pendiente de revisión'),
+        ('aprobado', 'Aprobado'),
+        ('rechazado', 'Rechazado'),
+        ('sin_pago', 'Sin pago reportado'),
+    ]
+
+    referencia_pago = models.CharField(max_length=100, blank=True, null=True, verbose_name='Número de referencia / transacción')
+    banco_origen_pago = models.CharField(max_length=100, blank=True, null=True, verbose_name='Banco / medio de pago')
+    monto_pagado = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name='Monto pagado')
+    imagen_comprobante = models.ImageField(upload_to='comprobantes/%Y/%m/', blank=True, null=True, verbose_name='Imagen del comprobante')
+    estado_pago = models.CharField(max_length=20, choices=ESTADO_PAGO_CHOICES, default='sin_pago', verbose_name='Estado del Pago')
+    fecha_pago = models.DateTimeField(blank=True, null=True, verbose_name='Fecha exacta del pago bancario')
+    nota_admin_pago = models.TextField(blank=True, verbose_name='Nota del administrador sobre el pago')
+    fecha_envio_pago = models.DateTimeField(blank=True, null=True, verbose_name='Fecha de envío del comprobante')
 
     class Meta:
         verbose_name = 'Reserva'
