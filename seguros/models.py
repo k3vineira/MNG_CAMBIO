@@ -12,6 +12,7 @@ class Aseguradora(models.Model):
     estado = models.BooleanField(default=True, verbose_name="¿Activa?")
 
     class Meta:
+        db_table = "seguroviaje"
         verbose_name = "Aseguradora"
         verbose_name_plural = "Aseguradoras"
 
@@ -19,7 +20,7 @@ class Aseguradora(models.Model):
         return f"{self.nombre_aseguradora} (${self.precio_diario}/día)"
 
 
-class Poliza(models.Model):
+class PolizaViaje(models.Model):
     """
     Representa la póliza emitida a un usuario para una reserva.
     Equivale a la entidad 'seguro_viaje'.
@@ -43,7 +44,7 @@ class Poliza(models.Model):
     costo_seguro = models.DecimalField(max_digits=12, decimal_places=2, editable=False, verbose_name="Costo de Seguro")
 
     class Meta:
-        db_table = "seguros_poliza"
+        db_table = "poliza"
         verbose_name = "Póliza Emitida"
         verbose_name_plural = "Pólizas Emitidas"
 

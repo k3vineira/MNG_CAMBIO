@@ -5,10 +5,9 @@ from .models import PlanGuia
 class PlanGuiaForm(forms.ModelForm):
     class Meta:
         model = PlanGuia
-        fields = ['guia', 'paquete', 'fecha_inicio_plan', 'fecha_fin_plan', 'idioma_servicio', 'estado']
+        fields = ['guia', 'fecha_inicio_plan', 'fecha_fin_plan', 'idioma_servicio', 'estado']
         widgets = {
             'guia': forms.Select(attrs={'class': 'form-select'}),
-            'paquete': forms.Select(attrs={'class': 'form-select'}),
             'fecha_inicio_plan': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'fecha_fin_plan': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'idioma_servicio': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej. Español, Inglés'}),
