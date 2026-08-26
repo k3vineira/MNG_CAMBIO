@@ -6,6 +6,7 @@ from django.db import models
 from django.conf import settings
 from catalogo.models import Paquete
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
 from django.utils import timezone
 
 
@@ -15,8 +16,10 @@ class Reserva(models.Model):
     Calcula automáticamente el monto total según las tarifas y temporadas activas.
     """
     ESTADO_CHOICES = [
-        ('pendiente', 'Pendiente'),
+        ('pendiente', 'Pendiente de Pago'),
+        ('pagada', 'Pagada / En revisión'),
         ('confirmada', 'Confirmada'),
+        ('completada', 'Completada'),
         ('cancelada', 'Cancelada'),
     ]
     paquete = models.ForeignKey(
@@ -44,10 +47,28 @@ class Reserva(models.Model):
 
 
     monto_total = models.IntegerField(
+        validators=[MinValueValidator(0)],
         verbose_name='Monto Total', editable=False)
 
     fecha_registro = models.DateTimeField(
         auto_now_add=True, verbose_name='Fecha de Registro')
+
+    # --- Campos de Pago Integrados ---
+    ESTADO_PAGO_CHOICES = [
+        ('pendiente', 'Pendiente de revisión'),
+        ('aprobado', 'Aprobado'),
+        ('rechazado', 'Rechazado'),
+        ('sin_pago', 'Sin pago reportado'),
+    ]
+
+    referencia_pago = models.CharField(max_length=100, blank=True, null=True, verbose_name='Número de referencia / transacción')
+    banco_origen_pago = models.CharField(max_length=100, blank=True, null=True, verbose_name='Banco / medio de pago')
+    monto_pagado = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name='Monto pagado')
+    imagen_comprobante = models.ImageField(upload_to='comprobantes/%Y/%m/', blank=True, null=True, verbose_name='Imagen del comprobante')
+    estado_pago = models.CharField(max_length=20, choices=ESTADO_PAGO_CHOICES, default='sin_pago', verbose_name='Estado del Pago')
+    fecha_pago = models.DateTimeField(blank=True, null=True, verbose_name='Fecha exacta del pago bancario')
+    nota_admin_pago = models.TextField(blank=True, verbose_name='Nota del administrador sobre el pago')
+    fecha_envio_pago = models.DateTimeField(blank=True, null=True, verbose_name='Fecha de envío del comprobante')
 
     class Meta:
         verbose_name = 'Reserva'
@@ -137,6 +158,9 @@ class Reserva(models.Model):
         elif not getattr(self, 'monto_total', None):
             self.monto_total = 0
 
+        if self.monto_total < 0:
+            self.monto_total = 0
+
         super().save(*args, **kwargs)
     @property
     def tiene_cancelacion_activa(self):
@@ -168,11 +192,11 @@ class Cancelacion(models.Model):
     ]
     reserva = models.ForeignKey('Reserva', on_delete=models.CASCADE, related_name='cancelaciones')
     motivo = models.TextField()
-    penalidad = models.IntegerField(default=0, verbose_name='Penalidad Aplicada')
+    penalidad = models.IntegerField(default=0, validators=[MinValueValidator(0)], verbose_name='Penalidad Aplicada')
     estado = models.CharField( max_length=20, choices=ESTADOS_CANCELACION, default='pendiente', verbose_name='Estado')
     fecha = models.DateTimeField(auto_now_add=True, verbose_name='Fecha de Solicitud')
     fecha_reembolso = models.DateField(null=True, blank=True, verbose_name='Fecha de Reembolso')
-    valor_reembolsado = models.IntegerField(null=True, blank=True, default=0, verbose_name='Valor Reembolsado')
+    valor_reembolsado = models.IntegerField(null=True, blank=True, default=0, validators=[MinValueValidator(0)], verbose_name='Valor Reembolsado')
     imagen_comprobante = models.ImageField(upload_to='cancelaciones/', null=True, blank=True, verbose_name='Imagen del Comprobante')
 
     class Meta:

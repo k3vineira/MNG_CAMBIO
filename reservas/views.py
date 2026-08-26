@@ -74,6 +74,40 @@ class ReservaListView(ListView):
         context['estado_seleccionado'] = self.request.GET.get('estado', '')
         return context
 
+
+from django.http import JsonResponse
+import json
+
+@requiere_administrador
+def cambiar_estado_reserva(request, reserva_id):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            nuevo_estado = data.get('estado')
+            
+            reserva = get_object_or_404(Reserva, id=reserva_id)
+            if nuevo_estado not in dict(Reserva.ESTADO_CHOICES).keys():
+                return JsonResponse({'success': False, 'error': 'Estado no válido.'}, status=400)
+            
+            estado_anterior = reserva.estado
+            reserva.estado = nuevo_estado
+            reserva.save()
+            
+            crear_notificacion_sistema(
+                usuario=request.user,
+                accion=f"RESERVA {nuevo_estado.upper()}",
+                tabla_afectada="Reservas",
+                observacion=f"La reserva #{reserva.id} para el paquete '{reserva.paquete.nombre}' ha cambiado a {nuevo_estado} de forma rápida.",
+                valor_anterior=f"Estado: {estado_anterior}",
+                nuevo_valor=f"Estado: {nuevo_estado}"
+            )
+            
+            return JsonResponse({'success': True, 'estado': nuevo_estado, 'mensaje': f'Estado actualizado a {nuevo_estado}'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    return JsonResponse({'success': False, 'error': 'Método no permitido.'}, status=405)
+
+
     
 @method_decorator(requiere_administrador, name='dispatch')
 class ReservaCreateView(SuccessMessageMixin, CreateView):
@@ -206,7 +240,7 @@ class ReservaDeleteView(DeleteView):
 @login_required(login_url='login')
 def mis_reservas_usuario(request):
     mis_reservas = Reserva.objects.filter(usuario=request.user)\
-        .select_related('paquete', 'pago')\
+        .select_related('paquete')\
         .prefetch_related('cancelaciones')\
         .order_by('-id')
 
@@ -295,7 +329,7 @@ class CancelacionCreateView(CreateView):
 
         nombre_cliente = self.request.user.first_name or self.request.user.username
 
-        if reserva.estado.lower() == 'pendiente' and not hasattr(reserva, 'pago'):
+        if reserva.estado.lower() == 'pendiente' and reserva.estado_pago == 'sin_pago':
             reserva.estado = 'cancelada'
             reserva.save()
 
@@ -395,7 +429,7 @@ class CancelacionDeleteView(DeleteView):
 @login_required(login_url='login')
 def mis_cancelaciones_usuario(request):
     mis_cancelaciones = Cancelacion.objects.filter(reserva__usuario=request.user)\
-        .select_related('reserva__paquete', 'reserva__pago')\
+        .select_related('reserva__paquete')\
         .order_by('-id')
 
     context = {
@@ -716,8 +750,8 @@ def ver_factura(request, reserva_id):
         messages.error(request, "La factura solo está disponible para reservas confirmadas y pagadas.")
         return redirect('mis_reservas_usuario')
         
-    comprobante = reserva.pago if (hasattr(reserva, 'pago') and reserva.pago.estado_transaccion == 'aprobado') else None
-    metodo_pago = comprobante.banco_origen if comprobante else "Transferencia Bancaria"
+    comprobante = reserva if reserva.estado_pago == 'aprobado' else None
+    metodo_pago = comprobante.banco_origen_pago if comprobante else "Transferencia Bancaria"
     
     abs_url = request.build_absolute_uri(reverse('ver_factura', args=[reserva.id]))
     qr_base64 = get_qr_base64(abs_url)

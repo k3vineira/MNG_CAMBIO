@@ -44,6 +44,78 @@
 
 </section>
 
+{% if banners %}
+<!-- SECCIÓN DE BANNERS PROMOCIONALES (CARRUSEL) -->
+<section class="py-4" style="background-color: #f8f9fa;">
+  <div class="container">
+    <div id="promotionalBanners" class="carousel slide carousel-fade shadow-sm rounded-4 overflow-hidden" data-bs-ride="carousel" data-aos="fade-up">
+      <!-- Indicadores -->
+      <div class="carousel-indicators">
+        {% for banner in banners %}
+          <button type="button" data-bs-target="#promotionalBanners" data-bs-slide-to="{{ forloop.counter0 }}" {% if forloop.first %}class="active" aria-current="true"{% endif %} aria-label="Slide {{ forloop.counter }}"></button>
+        {% endfor %}
+      </div>
+
+      <!-- Estilos Responsive para el Banner -->
+      <style>
+        .banner-img-responsive {
+          width: 100%;
+          height: 30vh;
+          min-height: 250px;
+          max-height: 450px;
+          object-fit: cover;
+          object-position: center;
+        }
+        @media (max-width: 768px) {
+          .banner-img-responsive {
+            min-height: 200px;
+          }
+          .carousel-caption {
+            bottom: 10px !important;
+            padding: 5px !important;
+          }
+          .carousel-caption h5 {
+            font-size: 1rem;
+          }
+        }
+      </style>
+      
+      <!-- Imágenes -->
+      <div class="carousel-inner">
+        {% for banner in banners %}
+          <div class="carousel-item {% if forloop.first %}active{% endif %}" data-bs-interval="5000">
+            {% if banner.enlace %}
+              <a href="{{ banner.enlace }}" target="_blank">
+            {% endif %}
+            
+            <img src="{{ banner.imagen.url }}" class="d-block banner-img-responsive" alt="{{ banner.titulo }}">
+            
+            {% if banner.enlace %}
+              </a>
+            {% endif %}
+            
+            <!-- Título Opcional -->
+            <div class="carousel-caption d-none d-md-block" style="background: rgba(0,0,0,0.5); border-radius: 8px; padding: 10px; backdrop-filter: blur(5px); bottom: 20px;">
+              <h5 class="mb-0 fw-light text-white">{{ banner.titulo }}</h5>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <!-- Controles -->
+      <button class="carousel-control-prev" type="button" data-bs-target="#promotionalBanners" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Anterior</span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#promotionalBanners" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Siguiente</span>
+      </button>
+    </div>
+  </div>
+</section>
+{% endif %}
+
 <!-- SECCIÓN DE CARRERAS (ESTILO PREMIUM - BOOTSTRAP 5) -->
 <section class="py-5" style="background-color: #1A261F; color: #1c1c1a;">
     <div class="container py-5 d-flex flex-column justify-content-between" style="min-height: 500px;">

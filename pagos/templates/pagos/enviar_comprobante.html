@@ -81,7 +81,68 @@
                     </div>
                 </div>
                 <div class="card-body p-4 p-md-5">
-                    {% crispy form %}
+                    <form method="post" enctype="multipart/form-data" action="{% url 'enviar_comprobante' %}" id="formComprobante">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="form-group col-md-12 mb-3">
+                                <label for="id_reserva" class="form-label requiredField">Reserva o Penalidad a Vincular<span class="asteriskField">*</span></label>
+                                <select name="reserva" id="id_reserva" class="form-select" required>
+                                    <option value="">— Selecciona la reserva —</option>
+                                    {% for r in reservas_elegibles %}
+                                        <option value="{{ r.id }}" {% if selected_reserva_id|add:"0" == r.id %}selected{% endif %}>
+                                            {% if r.multa %}[Multa] {{ r.paquete.nombre }} — Valor: COP ${{ r.multa|floatformat:0|intcomma }}{% else %}[Reserva] {{ r.paquete.nombre }} — Valor: COP ${{ r.monto_total|floatformat:0|intcomma }} (Fecha: {{ r.fecha }}){% endif %}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="form-group col-md-6 mb-3">
+                                <label for="id_referencia" class="form-label requiredField">Nº de Referencia / Transacción<span class="asteriskField">*</span></label>
+                                <input type="text" name="referencia" maxlength="100" class="textinput form-control" required id="id_referencia">
+                            </div>
+                            <div class="form-group col-md-6 mb-3">
+                                <label for="id_banco_origen" class="form-label requiredField">Banco o Medio de Pago<span class="asteriskField">*</span></label>
+                                <select name="banco_origen" class="select form-select" required id="id_banco_origen">
+                                    <option value="" selected>— Selecciona el banco o medio de pago —</option>
+                                    <option value="Nequi">Nequi</option>
+                                    <option value="Daviplata">Daviplata</option>
+                                    <option value="Bancolombia">Bancolombia</option>
+                                    <option value="Banco de Bogotá">Banco de Bogotá</option>
+                                    <option value="Davivienda">Davivienda</option>
+                                    <option value="BBVA">BBVA</option>
+                                    <option value="Banco de Occidente">Banco de Occidente</option>
+                                    <option value="Lulo Bank">Lulo Bank</option>
+                                    <option value="RappiPay">RappiPay</option>
+                                    <option value="Otro">Otro (Especificar en descripción)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="form-group col-md-6 mb-3">
+                                <label for="id_monto" class="form-label requiredField">Monto Exacto Pagado<span class="asteriskField">*</span></label>
+                                <input type="number" name="monto" value="0.00" min="0" step="0.01" class="numberinput form-control" required id="id_monto">
+                            </div>
+                            <div class="form-group col-md-6 mb-3">
+                                <label for="id_imagen_comprobante" class="form-label">Imagen o Captura del Comprobante</label>
+                                <input type="file" name="imagen_comprobante" class="clearablefileinput form-control" accept="image/*" id="id_imagen_comprobante">
+                                <small class="form-text text-muted">Sube un archivo legible (PNG, JPG, JPEG, WebP).</small>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="form-group col-md-12 mb-3">
+                                <label for="id_descripcion" class="form-label">Notas o Detalles Adicionales</label>
+                                <textarea name="descripcion" cols="40" rows="3" class="textarea form-control" id="id_descripcion"></textarea>
+                                <small class="form-text text-muted">Si seleccionaste "Otro" en banco, especifícalo aquí.</small>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-5 ms-auto mt-3">
+                                <button type="submit" class="btn btn-success w-100 rounded-pill py-3 fw-bold shadow-sm">Enviar Reporte</button>
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -90,8 +151,7 @@
 </div>
 
 <script>
-document.getElementById('id_imagen').addEventListener('change', function(event) {
-    // Basic image preview can still work if we inject an img tag after the input
+document.getElementById('id_imagen_comprobante').addEventListener('change', function(event) {
     let previewContainer = document.getElementById('previewContainer');
     if (!previewContainer) {
         previewContainer = document.createElement('div');
@@ -99,7 +159,7 @@ document.getElementById('id_imagen').addEventListener('change', function(event) 
         previewContainer.className = 'mt-3 d-none';
         previewContainer.innerHTML = `
             <p class="small text-muted mb-2">Vista previa de la imagen cargada:</p>
-            <img id="previewImagen" class="img-fluid img-thumbnail rounded-4 shadow-sm u-style-05ee5681" style="max-height: 300px; object-fit: contain; width: auto;" alt="Vista previa">
+            <img id="previewImagen" class="img-fluid img-thumbnail rounded-4 shadow-sm" style="max-height: 300px; object-fit: contain; width: auto;" alt="Vista previa">
         `;
         event.target.parentNode.appendChild(previewContainer);
     }
@@ -118,8 +178,6 @@ document.getElementById('id_imagen').addEventListener('change', function(event) 
     }
 });
 
-// Since the bank dropdown is standard now, no need for complex JS replacement
-// 'Otro' behavior can be handled simply:
 document.getElementById('id_banco_origen').addEventListener('change', function() {
     const descField = document.getElementById('id_descripcion');
     if (this.value === 'Otro') {

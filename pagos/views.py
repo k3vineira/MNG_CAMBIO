@@ -1,20 +1,19 @@
 """
-Vistas para la gestión de comprobantes de pago: envío, revisión y administración por parte del staff.
+Vistas para la gestión de comprobantes de pago integrados directamente en Reserva.
 """
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.utils import timezone
-from .models import Pago
 from reservas.models import Reserva, Cancelacion
-from django.db.models import Q, OuterRef, Subquery
+from django.db.models import Q, OuterRef, Subquery, Sum
 from core.decoradores import requiere_autenticacion, requiere_administrador
-from .forms import PagoForm, RevisarComprobanteForm
+from decimal import Decimal
 
 
 @requiere_autenticacion
 def enviar_comprobante(request):
-    """Usuario sube un comprobante de pago vinculado a una reserva o multa."""
+    """Usuario sube un comprobante de pago vinculado a una reserva."""
     penalidad_subquery = Cancelacion.objects.filter(
         reserva=OuterRef('pk'),
         estado='aceptada'
@@ -28,36 +27,52 @@ def enviar_comprobante(request):
         multa=Subquery(penalidad_subquery)
     ).distinct()
 
-    # Excluir reservas que ya tengan comprobantes en proceso para evitar duplicidad real
-    reservas_usuario = reservas_usuario.exclude(pago__estado_transaccion__in=['aprobado', 'pendiente'])
+    # Excluir reservas que ya tengan comprobantes en proceso para evitar duplicidad
+    reservas_usuario = reservas_usuario.exclude(estado_pago__in=['aprobado', 'pendiente'])
 
     if request.method == 'POST':
-        form = PagoForm(request.POST, request.FILES, reservas=reservas_usuario)
-        if form.is_valid():
-            comprobante = form.save(commit=False)
-            comprobante.usuario = request.user
+        reserva_id = request.POST.get('reserva')
+        if not reserva_id:
+            messages.error(request, 'Debe seleccionar una reserva válida.')
+            return redirect('enviar_comprobante')
             
-            # The form already validates that the reserva is within the queryset (reservas_usuario)
-            comprobante.save()
-            messages.success(request, '¡Comprobante enviado! Será revisado por el equipo en breve.')
-            return redirect('mis_comprobantes')
-        else:
-            messages.error(request, 'Por favor, corrige los errores en el formulario y completa todos los campos obligatorios.')
+        reserva = get_object_or_404(Reserva, id=reserva_id, usuario=request.user)
+        
+        # Manually updating fields instead of form since Pago model is gone
+        reserva.referencia_pago = request.POST.get('referencia', '')
+        reserva.banco_origen_pago = request.POST.get('banco_origen', '')
+        try:
+            reserva.monto_pagado = Decimal(request.POST.get('monto', '0'))
+        except:
+            reserva.monto_pagado = Decimal('0.00')
+            
+        if 'imagen_comprobante' in request.FILES:
+            reserva.imagen_comprobante = request.FILES['imagen_comprobante']
+            
+        reserva.estado_pago = 'pendiente'
+        reserva.fecha_envio_pago = timezone.now()
+        reserva.save()
+        
+        messages.success(request, '¡Comprobante enviado! Será revisado por el equipo en breve.')
+        return redirect('mis_comprobantes')
 
     else:
-        form = PagoForm(reservas=reservas_usuario)
-        # Select initial reservation if passed via GET parameter
+        # Pass the queryset to template to show dropdown
         selected_reserva_id = request.GET.get('reserva_id')
-        if selected_reserva_id:
-            form.initial['reserva'] = selected_reserva_id
 
-    comprobantes = Pago.objects.filter(usuario=request.user)
+    comprobantes = Reserva.objects.filter(usuario=request.user).exclude(estado_pago='sin_pago').order_by('-fecha_envio_pago')
+    
+    total_pendientes = comprobantes.filter(estado_pago='pendiente').count()
+    total_aprobados = comprobantes.filter(estado_pago='aprobado').aggregate(t=Sum('monto_pagado'))['t'] or Decimal('0.00')
+    total_rechazados = comprobantes.filter(estado_pago='rechazado').count()
+
     context = {
-        'form':               form,
-        'comprobantes':       comprobantes,
-        'total_pendientes':   comprobantes.filter(estado_transaccion='pendiente').count(),
-        'total_aprobados':    sum(p.monto or (p.reserva.monto_total if p.reserva else 0) for p in comprobantes.filter(estado_transaccion='aprobado').select_related('reserva')),
-        'total_rechazados':   comprobantes.filter(estado_transaccion='rechazado').count(),
+        'reservas_elegibles': reservas_usuario,
+        'selected_reserva_id': selected_reserva_id,
+        'comprobantes': comprobantes,
+        'total_pendientes': total_pendientes,
+        'total_aprobados': total_aprobados,
+        'total_rechazados': total_rechazados,
     }
     return render(request, 'pagos/enviar_comprobante.html', context)
 
@@ -65,26 +80,17 @@ def enviar_comprobante(request):
 @requiere_autenticacion
 def mis_comprobantes(request):
     """Usuario ve el historial de sus comprobantes optimizado."""
-    from django.db.models import Sum, DecimalField
-    from django.db.models.functions import Coalesce, Cast
-
-    comprobantes = Pago.objects.filter(usuario=request.user)\
-        .select_related('reserva', 'reserva__paquete')\
-        .order_by('-fecha_envio')
+    comprobantes = Reserva.objects.filter(usuario=request.user).exclude(estado_pago='sin_pago')\
+        .select_related('paquete')\
+        .order_by('-fecha_envio_pago')
         
-    monto_aprobado = comprobantes.filter(estado_transaccion='aprobado').aggregate(
-        total=Sum(Coalesce(
-            'monto',
-            Cast('reserva__monto_total', DecimalField(max_digits=12, decimal_places=2)),
-            output_field=DecimalField(max_digits=12, decimal_places=2)
-        ))
-    )['total'] or 0
+    monto_aprobado = comprobantes.filter(estado_pago='aprobado').aggregate(t=Sum('monto_pagado'))['t'] or Decimal('0.00')
 
     context = {
         'comprobantes':     comprobantes,
-        'total_pendientes': comprobantes.filter(estado_transaccion='pendiente').count(),
+        'total_pendientes': comprobantes.filter(estado_pago='pendiente').count(),
         'total_aprobados':  monto_aprobado,
-        'total_rechazados': comprobantes.filter(estado_transaccion='rechazado').count(),
+        'total_rechazados': comprobantes.filter(estado_pago='rechazado').count(),
     }
     return render(request, 'pagos/mis_comprobantes.html', context)
 
@@ -93,21 +99,17 @@ def mis_comprobantes(request):
 def admin_comprobantes(request):
     """Admin ve todos los comprobantes con filtros por estado."""
     estado_filtro = request.GET.get('estado', '')
-    comprobantes = Pago.objects.select_related(
-        'usuario', 'reserva').all()
+    comprobantes = Reserva.objects.exclude(estado_pago='sin_pago').select_related('usuario', 'paquete').order_by('-fecha_envio_pago')
 
     if estado_filtro:
-        comprobantes = comprobantes.filter(estado_transaccion=estado_filtro)
+        comprobantes = comprobantes.filter(estado_pago=estado_filtro)
     else:
-        # Excluir rechazados de la vista general
-        comprobantes = comprobantes.exclude(estado_transaccion='rechazado')
+        comprobantes = comprobantes.exclude(estado_pago='rechazado')
 
-    total = Pago.objects.count()
-    total_pendientes = Pago.objects.filter(
-        estado_transaccion='pendiente').count()
-    total_aprobados = sum(p.monto or (p.reserva.monto_total if p.reserva else 0) for p in Pago.objects.filter(estado_transaccion='aprobado').select_related('reserva'))
-    total_rechazados = Pago.objects.filter(
-        estado_transaccion='rechazado').count()
+    total = Reserva.objects.exclude(estado_pago='sin_pago').count()
+    total_pendientes = Reserva.objects.filter(estado_pago='pendiente').count()
+    total_aprobados = Reserva.objects.filter(estado_pago='aprobado').aggregate(t=Sum('monto_pagado'))['t'] or Decimal('0.00')
+    total_rechazados = Reserva.objects.filter(estado_pago='rechazado').count()
 
     context = {
         'comprobantes':     comprobantes,
@@ -122,134 +124,86 @@ def admin_comprobantes(request):
 
 @requiere_administrador
 def admin_revisar_comprobante(request, pk):
-    """Admin aprueba, rechaza o deja pendiente un comprobante."""
-    from django.core.exceptions import ValidationError
-    comprobante = get_object_or_404(Pago, pk=pk)
+    """Admin aprueba, rechaza o deja pendiente un comprobante integrado."""
+    comprobante = get_object_or_404(Reserva, pk=pk)
 
     if request.method == 'POST':
-        if comprobante.estado_transaccion in ('aprobado', 'rechazado'):
+        if comprobante.estado_pago in ('aprobado', 'rechazado'):
             messages.error(request, 'Este comprobante ya ha sido procesado y no puede modificarse.')
             return redirect('admin_comprobantes')
 
-        form = RevisarComprobanteForm(request.POST, instance=comprobante)
-        if form.is_valid():
-            # Actualizamos el objeto comprobante con los datos limpios del formulario
-            nuevo_estado = form.cleaned_data.get('estado_transaccion')
-            comprobante.fecha_revision = timezone.now()
-            
-            try:
-                # El método save() del modelo Pago ejecuta self.clean(), el cual valida el estado
-                comprobante.save()
-            except ValidationError as e:
-                # Si falla la validación del modelo, inyectamos los errores en el formulario
-                if hasattr(e, 'message_dict'):
-                    for field, errors in e.message_dict.items():
-                        for err in errors:
-                            # Map model fields to form fields if they match
-                            form.add_error(field if field in form.fields else None, err)
-                else:
-                    for err in e.messages:
-                        form.add_error(None, err)
+        nuevo_estado = request.POST.get('estado_pago')
+        nota_admin = request.POST.get('nota_admin_pago', '')
+        
+        comprobante.estado_pago = nuevo_estado
+        comprobante.nota_admin_pago = nota_admin
+        
+        if nuevo_estado == 'aprobado':
+            if comprobante.estado != 'cancelada':
+                comprobante.estado = 'confirmada'
                 
-                # Volvemos a renderizar la plantilla con el formulario que contiene los errores y los datos introducidos
-                context = {'comprobante': comprobante, 'form': form}
-                return render(request, 'pagos/admin_revisar_comprobante.html', context)
+                comprobante.save()
+                from core.utils import enviar_correo_confirmacion_con_factura
+                try:
+                    enviar_correo_confirmacion_con_factura(comprobante, request=request)
+                except Exception as e:
+                    print(f"Error enviando correo de pago exitoso con factura: {e}")
 
-            # --- SI SE APRUEBA LA TRANSACCIÓN (Y SE GUARDÓ CON ÉXITO) ---
-            if nuevo_estado == 'aprobado' and comprobante.reserva:
-                if comprobante.reserva.estado != 'cancelada':
-                    comprobante.reserva.estado = 'confirmada'
-                    comprobante.reserva.save()
-                    
-                    # Enviar correo de éxito con la factura en PDF adjunta (encriptada) y nuevo diseño tipo OTP
-                    from core.utils import enviar_correo_confirmacion_con_factura
-                    try:
-                        enviar_correo_confirmacion_con_factura(comprobante.reserva, request=request)
-                    except Exception as e:
-                        print(f"Error enviando correo de pago exitoso con factura: {e}")
-
-                    messages.success(
-                        request,
-                        f'Comprobante #{pk} APROBADO. La Reserva #{comprobante.reserva.id} ha sido confirmada y se ha notificado al cliente.'
-                    )
-                    return redirect('admin_comprobantes')
-                else:
-                    messages.success(
-                        request,
-                        f'Comprobante #{pk} APROBADO para el pago de la multa de la Reserva #{comprobante.reserva.id}.'
-                    )
-            elif nuevo_estado == 'rechazado':
-                messages.warning(
-                    request,
-                    f'Comprobante #{pk} marcado como RECHAZADO.'
-                )
+                messages.success(request, f'Comprobante #{pk} APROBADO. La Reserva #{comprobante.id} ha sido confirmada y se ha notificado al cliente.')
+                return redirect('admin_comprobantes')
             else:
-                messages.success(
-                    request,
-                    f'Comprobante #{pk} marcado como {comprobante.get_estado_transaccion_display()}.'
-                )
-            return redirect('admin_comprobantes')
+                comprobante.save()
+                messages.success(request, f'Comprobante #{pk} APROBADO para el pago de la multa de la Reserva #{comprobante.id}.')
+        elif nuevo_estado == 'rechazado':
+            comprobante.save()
+            messages.warning(request, f'Comprobante #{pk} marcado como RECHAZADO.')
+        else:
+            comprobante.save()
+            messages.success(request, f'Comprobante #{pk} marcado como Pendiente.')
+            
+        return redirect('admin_comprobantes')
 
-    else:
-        # En solicitudes GET, instanciamos el formulario con los datos actuales
-        form = RevisarComprobanteForm(instance=comprobante)
-
-    context = {'comprobante': comprobante, 'form': form}
+    context = {'comprobante': comprobante}
     return render(request, 'pagos/admin_revisar_comprobante.html', context)
 
 
 @requiere_administrador
 def admin_eliminar_comprobante(request, pk):
-    """Admin elimina un comprobante."""
+    """Admin elimina/resetea los datos de pago de una reserva."""
     if request.method == 'POST':
-        comp = get_object_or_404(Pago, id=pk)
-        comp.delete()
-        messages.success(request, f'Comprobante #{pk} eliminado correctamente.')
+        res = get_object_or_404(Reserva, id=pk)
+        res.referencia_pago = ''
+        res.banco_origen_pago = ''
+        res.monto_pagado = 0
+        if res.imagen_comprobante:
+            res.imagen_comprobante.delete()
+        res.estado_pago = 'sin_pago'
+        res.nota_admin_pago = ''
+        res.save()
+        messages.success(request, f'Datos de pago de la reserva #{pk} eliminados correctamente.')
     return redirect('admin_comprobantes')
-
-    # PÁGINA DE PAGOS RECHAZADOS Y CANCELACIONES RECHAZADAS
 
 
 @requiere_autenticacion
 def mis_rechazos(request):
-    """
-    Muestra al usuario autenticado sus pagos rechazados y cancelaciones rechazadas.
-
-    Args:
-        request (HttpRequest): Objeto de solicitud HTTP.
-
-    Returns:
-        HttpResponse: Página con los comprobantes y cancelaciones rechazadas del usuario.
-    """
+    """Muestra al usuario autenticado sus pagos rechazados y cancelaciones rechazadas."""
     if request.user.is_staff:
         return redirect('dashboard')
 
-    try:
-        from pagos.models import Pago
-        pagos_rechazados = Pago.objects.filter(
-            usuario=request.user,
-            estado_transaccion='rechazado'
-        ).select_related('reserva__paquete').order_by('-fecha_revision')
-    except ImportError:
-        pagos_rechazados = []
+    pagos_rechazados = Reserva.objects.filter(
+        usuario=request.user,
+        estado_pago='rechazado'
+    ).select_related('paquete').order_by('-fecha_envio_pago')
 
-    try:
-        from reservas.models import Cancelacion
-        cancelaciones_rechazadas = Cancelacion.objects.filter(
-            reserva__usuario=request.user,
-            estado='rechazada'
-        ).select_related('reserva__paquete').order_by('-id')
-    except ImportError:
-        cancelaciones_rechazadas = []
-
-    total_pagos_rechazados = len(pagos_rechazados) if isinstance(pagos_rechazados, list) else pagos_rechazados.count()
-    total_cancelaciones_rechazadas = len(cancelaciones_rechazadas) if isinstance(cancelaciones_rechazadas, list) else cancelaciones_rechazadas.count()
+    cancelaciones_rechazadas = Cancelacion.objects.filter(
+        reserva__usuario=request.user,
+        estado='rechazada'
+    ).select_related('reserva__paquete').order_by('-id')
 
     context = {
         'pagos_rechazados': pagos_rechazados,
         'cancelaciones_rechazadas': cancelaciones_rechazadas,
-        'total_pagos_rechazados': total_pagos_rechazados,
-        'total_cancelaciones_rechazadas': total_cancelaciones_rechazadas,
+        'total_pagos_rechazados': pagos_rechazados.count(),
+        'total_cancelaciones_rechazadas': cancelaciones_rechazadas.count(),
     }
-
     return render(request, 'private/rechazos.html', context)

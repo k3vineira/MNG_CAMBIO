@@ -232,7 +232,7 @@ def blog_usuario(request):
 
 # --- VIEWS EXTRAÍDAS DE USUARIOS ---
 
-from .models import Calificacion, Resena, Comentario
+from .models import Comentario
 
 @requiere_autenticacion
 def enviar_comentario(request):
@@ -262,11 +262,45 @@ def enviar_comentario(request):
 @requiere_administrador
 def listar_comentarios(request):
     """Renderiza el módulo de moderación y auditoría de comentarios para el Staff."""
-    comentarios = Comentario.objects.all().select_related(
-        'usuario', 'paquete').order_by('-fecha_calificacion')
+    queryset = Comentario.objects.all().select_related('usuario', 'paquete')
+    
+    # Manejar filtros
+    tipo_filtro = request.GET.get('tipo', '')
+    valoracion_filtro = request.GET.get('valoracion', '')
+    
+    if tipo_filtro:
+        queryset = queryset.filter(tipo=tipo_filtro)
+    if valoracion_filtro:
+        queryset = queryset.filter(valoracion=valoracion_filtro)
+        
+    comentarios = queryset.order_by('-fecha_creacion')
+    
+    # Calcular estadísticas globales (sin filtros)
+    estadisticas = Comentario.objects.aggregate(
+        total=Count('id'),
+        total_visibles=Count('id', filter=Q(visible=True)),
+        promedio=Avg('valoracion')
+    )
+    
+    promedio_val = estadisticas['promedio']
+    if promedio_val:
+        promedio_val = round(promedio_val, 1)
+    else:
+        promedio_val = 0
+
+    # Añadir atributos para las estrellas a cada comentario
+    for c in comentarios:
+        c.estrellas = range(c.valoracion)
+        c.estrellas_vacias = range(5 - c.valoracion)
+
     return render(request, 'comunidad/admin_comentarios.html', {
         'titulo': 'Moderación de Comentarios — Administración',
-        'comentarios': comentarios
+        'comentarios': comentarios,
+        'total': estadisticas['total'] or 0,
+        'total_visibles': estadisticas['total_visibles'] or 0,
+        'promedio': promedio_val,
+        'tipo_filtro': tipo_filtro,
+        'valoracion_filtro': valoracion_filtro
     })
 
 @requiere_administrador
@@ -347,19 +381,19 @@ def mis_resenas_view(request):
         return redirect('mis_resenas')
 
     # Datos para el GET
-    mis_resenas = Comentario.objects.filter(usuario=request.user).order_by('-fecha_calificacion')
-    resenas_publicas = Comentario.objects.filter(visible=True).select_related('usuario', 'paquete').order_by('-fecha_calificacion')
+    mis_resenas = Comentario.objects.filter(usuario=request.user).order_by('-fecha_creacion')
+    resenas_publicas = Comentario.objects.filter(visible=True).select_related('usuario', 'paquete').order_by('-fecha_creacion')
 
     # Calcular estadísticas de reseñas públicas
     total_resenas = resenas_publicas.count()
-    promedio = resenas_publicas.aggregate(Avg('puntaje_estrellas'))['puntaje_estrellas__avg'] or 0
+    promedio = resenas_publicas.aggregate(Avg('valoracion'))['valoracion__avg'] or 0
 
     distribucion = {}
     if total_resenas > 0:
-        dist_query = resenas_publicas.values('puntaje_estrellas').annotate(count=Count('id'))
+        dist_query = resenas_publicas.values('valoracion').annotate(count=Count('id'))
         for item in dist_query:
-            if item['puntaje_estrellas']:
-                distribucion[item['puntaje_estrellas']] = item['count']
+            if item['valoracion']:
+                distribucion[item['valoracion']] = item['count']
 
     stats = {
         'total': total_resenas,
