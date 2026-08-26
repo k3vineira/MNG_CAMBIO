@@ -1,6 +1,5 @@
 from django.db import models
-from usuarios.models import GuiaTuristico
-from catalogo.models import Paquete
+from django.conf import settings
 
 class PlanGuia(models.Model):
     """
@@ -24,18 +23,10 @@ class PlanGuia(models.Model):
         verbose_name="Estado"
     )
     guia = models.ForeignKey(
-        GuiaTuristico,
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="planes_guia",
-        db_column="codigo_guia_turistico",
-        verbose_name="Guía Turístico"
-    )
-    paquete = models.ForeignKey(
-        Paquete,
-        on_delete=models.CASCADE,
-        related_name="planes_guia",
-        db_column="codigo_paquete",
-        verbose_name="Paquete"
+        verbose_name="Guía Turístico (Usuario)"
     )
 
     class Meta:
@@ -44,5 +35,5 @@ class PlanGuia(models.Model):
         verbose_name_plural = "Planes Guía"
 
     def __str__(self):
-        nombre_guia = self.guia.usuario.nombre_completo
-        return f"Guía: {nombre_guia} - Paquete: {self.paquete.nombre} ({self.fecha_inicio_plan} a {self.fecha_fin_plan})"
+        nombre_guia = self.guia.get_full_name() or self.guia.username
+        return f"Plan de Guía: {nombre_guia} ({self.fecha_inicio_plan} a {self.fecha_fin_plan})"

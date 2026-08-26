@@ -102,6 +102,12 @@ class Reserva(models.Model):
                     f"Ya tienes una reserva registrada para el paquete '{self.paquete.nombre}' en la fecha {self.fecha}."
                 )
 
+        if self.numero_menores > 0 and self.numero_adultos == 0:
+            raise ValidationError("No se pueden registrar reservas para menores sin la compañía de al menos un adulto.")
+        
+        if self.numero_menores > 10:
+            raise ValidationError("El número de menores no puede exceder el límite permitido (10) por reserva.")
+
     def save(self, *args, **kwargs):
         """
         Calcula el monto_total de la reserva según la temporada, tarifa vigente

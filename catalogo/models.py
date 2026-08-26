@@ -97,6 +97,14 @@ class Paquete(models.Model):
     hora_encuentro = models.TimeField()
     categoria = models.ForeignKey(Categoria, models.CASCADE, related_name='paquetes')
     actividades = models.ManyToManyField('Actividades', through='PaqueteActividad')
+    plan_guia = models.ForeignKey(
+        'guias.PlanGuia',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='paquetes',
+        verbose_name='Plan de Guía'
+    )
     estado = models.BooleanField(default=True, verbose_name='¿Está Activo?')
 
     def __str__(self):
