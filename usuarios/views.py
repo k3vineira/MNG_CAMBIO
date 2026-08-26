@@ -5,7 +5,6 @@ from core.decoradores import requiere_autenticacion, requiere_administrador
 from django.db.models import Avg, Count, Sum, Q
 from .models import Usuario, Cliente, GuiaTuristico
 from comunidad.models import Comentario
-from comunidad.models import Calificacion
 from .forms import PerfilUsuarioForm
 
 # 1. VISTAS PÚBLICAS / ESTÁTICAS
@@ -44,7 +43,6 @@ def dashboard_turista(request):
         return redirect('dashboard')
 
     from reservas.models import Reserva
-    from pagos.models import Pago
     from comunidad.models import Comentario, PQRS
     from django.db.models import Sum, Count, Q, DecimalField
     from django.db.models.functions import Coalesce, Cast
@@ -61,12 +59,8 @@ def dashboard_turista(request):
     reservas_pendientes = res_stats['pendientes'] or 0
     reservas_canceladas = res_stats['canceladas'] or 0
 
-    total_invertido = Pago.objects.filter(usuario=request.user, estado_transaccion='aprobado').aggregate(
-        total=Sum(Coalesce(
-            'monto',
-            Cast('reserva__monto_total', DecimalField(max_digits=12, decimal_places=2)),
-            output_field=DecimalField(max_digits=12, decimal_places=2)
-        ))
+    total_invertido = Reserva.objects.filter(usuario=request.user, estado_pago='aprobado').aggregate(
+        total=Sum('monto_pagado')
     )['total'] or 0
 
     total_comentarios = Comentario.objects.filter(usuario=request.user).count()
@@ -96,7 +90,6 @@ def dashboard_admin(request):
     from django.utils import timezone
     from django.db.models import Sum, Count, Avg
     from reservas.models import Reserva, Cancelacion
-    from pagos.models import Pago
     from catalogo.models import Paquete
     from comunidad.models import Comentario
 
@@ -114,9 +107,9 @@ def dashboard_admin(request):
     reservas_pendientes = res_stats['pendientes']
     reservas_canceladas = res_stats['canceladas']
 
-    total_ventas = Pago.objects.filter(estado_transaccion='aprobado').aggregate(Sum('monto'))['monto__sum'] or 0
+    total_ventas = Reserva.objects.filter(estado_pago='aprobado').aggregate(Sum('monto_pagado'))['monto_pagado__sum'] or 0
     total_tours = Paquete.objects.filter(estado=True).count()
-    total_pagos_rechazados = Pago.objects.filter(estado_transaccion='rechazado').count()
+    total_pagos_rechazados = Reserva.objects.filter(estado_pago='rechazado').count()
     
     from promociones.models import Promocion
     total_promociones = Promocion.objects.count()
@@ -125,10 +118,10 @@ def dashboard_admin(request):
     from django.db.models.functions import ExtractMonth, ExtractWeekDay
 
     # Agregación directa de ingresos por mes en BD (evita iterar objetos)
-    ingresos_qs = Pago.objects.filter(
-        estado_transaccion='aprobado',
-        fecha_envio__year=current_year
-    ).annotate(mes=ExtractMonth('fecha_envio')).values('mes').annotate(total=Sum('monto')).order_by('mes')
+    ingresos_qs = Reserva.objects.filter(
+        estado_pago='aprobado',
+        fecha_envio_pago__year=current_year
+    ).annotate(mes=ExtractMonth('fecha_envio_pago')).values('mes').annotate(total=Sum('monto_pagado')).order_by('mes')
 
     ingresos_mensuales = [0.0] * 12
     for item in ingresos_qs:
@@ -151,7 +144,7 @@ def dashboard_admin(request):
 
     tasa_confirmacion = int(reservas_confirmadas / total_reservas * 100) if total_reservas > 0 else 0
 
-    val_avg = Calificacion.objects.aggregate(Avg('puntaje_estrellas'))['puntaje_estrellas__avg']
+    val_avg = Comentario.objects.aggregate(Avg('valoracion'))['valoracion__avg']
     valoracion_promedio = round(val_avg, 1) if val_avg is not None else 0.0
 
     ingreso_por_reserva = total_ventas / total_reservas if total_reservas > 0 else 0
@@ -183,17 +176,18 @@ def dashboard_admin(request):
     # Actividad reciente
     from django.utils.timesince import timesince
     actividad_reciente = []
-    for r in Reserva.objects.select_related('cliente', 'paquete').order_by('-fecha_registro')[:5]:
-        nombre_cliente = r.cliente.usuario.get_full_name() or r.cliente.usuario.username
+    for r in Reserva.objects.select_related('usuario', 'paquete').order_by('-fecha_registro')[:5]:
+        nombre_usr = r.usuario.get_full_name() or r.usuario.username
         actividad_reciente.append({
-            'texto': f"Nueva reserva de {nombre_cliente} para {r.paquete.nombre}",
+            'texto': f"Nueva reserva de {nombre_usr} para {r.paquete.nombre}",
             'tiempo_dt': r.fecha_registro,
         })
-    for p in Pago.objects.select_related('reserva__paquete').order_by('-fecha_envio')[:5]:
-        monto_valor = p.monto or (p.reserva.monto_total if p.reserva else 0)
+    for p in Reserva.objects.exclude(estado_pago='sin_pago').select_related('usuario').order_by('-fecha_envio_pago')[:5]:
+        nombre_usr = p.usuario.get_full_name() or p.usuario.username
+        monto_valor = p.monto_pagado
         actividad_reciente.append({
-            'texto': f"Pago de COP ${monto_valor:,.0f} enviado por {nombre_cliente} ({p.get_estado_transaccion_display()})",
-            'tiempo_dt': p.fecha_envio,
+            'texto': f"Pago de COP ${monto_valor:,.0f} enviado por {nombre_usr} ({p.get_estado_pago_display()})",
+            'tiempo_dt': p.fecha_envio_pago,
         })
     actividad_reciente.sort(key=lambda x: x['tiempo_dt'], reverse=True)
     actividad_reciente = actividad_reciente[:5]
@@ -499,18 +493,15 @@ def get_estadisticas_context(user, is_admin=False):
     from django.db.models import Sum, Count, Avg, Max
     from django.utils import timezone
     from reservas.models import Reserva
-    from pagos.models import Pago
     from comunidad.models import Comentario, PQRS
 
     # Base querysets
     if is_admin:
         reservas = Reserva.objects.all()
-        pagos = Pago.objects.all()
         comentarios = Comentario.objects.all()
         pqrs_qs = PQRS.objects.all()
     else:
         reservas = Reserva.objects.filter(usuario=user)
-        pagos = Pago.objects.filter(usuario=user)
         comentarios = Comentario.objects.filter(usuario=user)
         pqrs_qs = PQRS.objects.filter(cliente__usuario=user)
 
@@ -519,12 +510,8 @@ def get_estadisticas_context(user, is_admin=False):
 
     # Basic KPI metrics (optimizado con agregación en BD)
     today = datetime.date.today()
-    total_invertido = pagos.filter(estado_transaccion='aprobado').aggregate(
-        total=Sum(Coalesce(
-            'monto',
-            Cast('reserva__monto_total', DecimalField(max_digits=12, decimal_places=2)),
-            output_field=DecimalField(max_digits=12, decimal_places=2)
-        ))
+    total_invertido = reservas.filter(estado_pago='aprobado').aggregate(
+        total=Sum('monto_pagado')
     )['total'] or 0
 
     res_metrics = reservas.aggregate(
@@ -573,17 +560,17 @@ def get_estadisticas_context(user, is_admin=False):
             'fecha': r.fecha_registro,
         })
     # Obtener comprobantes de pago recientes
-    for p in pagos.select_related('usuario', 'reserva', 'reserva__paquete').order_by('-fecha_envio')[:5]:
+    for p in reservas.exclude(estado_pago='sin_pago').select_related('usuario', 'paquete').order_by('-fecha_envio_pago')[:5]:
         nombre_usr = p.usuario.get_full_name() or p.usuario.username
-        monto_valor = p.monto or (p.reserva.monto_total if p.reserva else 0)
+        monto_valor = p.monto_pagado
         monto_formatted = f"COP ${monto_valor:,.0f}"
         if is_admin:
-            desc = f"Pago de {monto_formatted} enviado por {nombre_usr} ({p.get_estado_transaccion_display()})"
+            desc = f"Pago de {monto_formatted} enviado por {nombre_usr} ({p.get_estado_pago_display()})"
         else:
-            desc = f"Pago de {monto_formatted} enviado ({p.get_estado_transaccion_display()})"
+            desc = f"Pago de {monto_formatted} enviado ({p.get_estado_pago_display()})"
         actividad_reciente.append({
             'descripcion': desc,
-            'fecha': p.fecha_envio,
+            'fecha': p.fecha_envio_pago,
         })
     # Ordenar por fecha decreciente
     actividad_reciente.sort(key=lambda x: x['fecha'], reverse=True)
@@ -615,9 +602,9 @@ def get_estadisticas_context(user, is_admin=False):
         m = r.fecha.month - 1
         meses_datos[m] += 1
         
-    for p in pagos.filter(estado_transaccion='aprobado', fecha_envio__year=current_year).select_related('reserva'):
-        m = p.fecha_envio.month - 1
-        monto_valor = p.monto or (p.reserva.monto_total if p.reserva else 0)
+    for p in reservas.filter(estado_pago='aprobado', fecha_envio_pago__year=current_year):
+        m = p.fecha_envio_pago.month - 1
+        monto_valor = p.monto_pagado
         meses_inversion[m] += float(monto_valor)
         
     reporte_mensual = []
@@ -651,13 +638,13 @@ def get_estadisticas_context(user, is_admin=False):
     start_year = current_year - 4
     for y in range(start_year, current_year + 1):
         y_reservas = reservas.filter(fecha__year=y)
-        y_pagos = pagos.filter(estado_transaccion='aprobado', fecha_envio__year=y)
+        y_pagos = reservas.filter(estado_pago='aprobado', fecha_envio_pago__year=y)
         
         y_total_res = y_reservas.count()
         y_total_conf = y_reservas.filter(estado='confirmada').count()
         y_total_canc = y_reservas.filter(estado='cancelada').count()
         y_total_comp = y_reservas.filter(estado='confirmada', fecha__lt=today).count()
-        y_inversion = float(y_pagos.aggregate(Sum('monto'))['monto__sum'] or 0)
+        y_inversion = float(y_pagos.aggregate(Sum('monto_pagado'))['monto_pagado__sum'] or 0)
         y_ticket = y_inversion / y_total_res if y_total_res > 0 else 0
         y_porcentaje_exito = int(y_total_conf / y_total_res * 100) if y_total_res > 0 else 0
         
@@ -706,14 +693,14 @@ def get_estadisticas_context(user, is_admin=False):
 
     # Payment history
     historial_pagos = []
-    for p in pagos.select_related('reserva', 'reserva__paquete').order_by('-fecha_envio')[:10]:
+    for p in reservas.exclude(estado_pago='sin_pago').select_related('paquete').order_by('-fecha_envio_pago')[:10]:
         historial_pagos.append({
-            'codigo': f"#{p.pk}" if p.pk else "#—",
-            'reserva_nombre': p.reserva.paquete.nombre if (p.reserva and p.reserva.paquete) else "Reserva Múltiple",
-            'metodo': p.banco_origen,
-            'estado_transaccion': p.estado_transaccion,
-            'fecha': p.fecha_envio,
-            'monto': p.monto or (p.reserva.monto_total if p.reserva else 0)
+            'codigo': f"#{p.pk}",
+            'reserva_nombre': p.paquete.nombre if p.paquete else "Reserva Múltiple",
+            'metodo': p.banco_origen_pago,
+            'estado_transaccion': p.estado_pago,
+            'fecha': p.fecha_envio_pago,
+            'monto': p.monto_pagado
         })
 
     # Reviews

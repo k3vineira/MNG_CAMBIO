@@ -4,7 +4,6 @@ Vistas principales del núcleo de la aplicación, incluyendo la página de inici
 
 from django.shortcuts import render
 
-
 def inicio(request):
     """
     Renderiza la página de inicio pública del sitio Monagua.
@@ -15,5 +14,8 @@ def inicio(request):
     Returns:
         HttpResponse: La página de inicio renderizada.
     """
-    context = {'titulo': 'Monagua — Agencia de Viajes y Turismo'}
+    
+    context = {
+        'titulo': 'Monagua — Agencia de Viajes y Turismo',
+    }
     return render(request, 'index.html', context)
