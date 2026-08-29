@@ -189,20 +189,75 @@ class Cliente(models.Model):
         verbose_name='Cuenta de Usuario'
     )
     pais = models.CharField(
-        max_length=100,
+        max_length=3,
         blank=True,
         verbose_name='País'
     )
     departamento = models.CharField(
-        max_length=100,
+        max_length=10,
         blank=True,
-        verbose_name='Departamento'
+        verbose_name='Departamento (ID/Código)'
     )
     ciudad = models.CharField(
-        max_length=100,
+        max_length=10,
         blank=True,
-        verbose_name='Ciudad'
+        verbose_name='Ciudad (ID/Código)'
     )
+
+    @property
+    def nombre_pais(self):
+        """Retorna el nombre completo del país a partir de su código ISO3."""
+        if not self.pais:
+            return ""
+        import os
+        import json
+        json_path = os.path.join(os.path.dirname(__file__), 'countries.json')
+        if os.path.exists(json_path):
+            try:
+                with open(json_path, 'r', encoding='utf-8') as f:
+                    countries = json.load(f)
+                return countries.get(self.pais, self.pais)
+            except Exception:
+                pass
+        return self.pais
+
+    @property
+    def nombre_departamento(self):
+        """Retorna el nombre completo del departamento a partir del código DANE (o fallback si no es Colombia)."""
+        if not self.departamento:
+            return ""
+        if self.pais != 'COL':
+            return self.departamento
+        import os
+        import json
+        json_path = os.path.join(os.path.dirname(__file__), 'colombia_dane.json')
+        if os.path.exists(json_path):
+            try:
+                with open(json_path, 'r', encoding='utf-8') as f:
+                    dane_data = json.load(f)
+                return dane_data.get('departments', {}).get(self.departamento, self.departamento)
+            except Exception:
+                pass
+        return self.departamento
+
+    @property
+    def nombre_ciudad(self):
+        """Retorna el nombre completo del municipio/ciudad a partir del código DANE (o fallback si no es Colombia)."""
+        if not self.ciudad:
+            return ""
+        if self.pais != 'COL':
+            return self.ciudad
+        import os
+        import json
+        json_path = os.path.join(os.path.dirname(__file__), 'colombia_dane.json')
+        if os.path.exists(json_path):
+            try:
+                with open(json_path, 'r', encoding='utf-8') as f:
+                    dane_data = json.load(f)
+                return dane_data.get('municipalities', {}).get(self.ciudad, self.ciudad)
+            except Exception:
+                pass
+        return self.ciudad
 
     class Meta:
         verbose_name = 'Cliente'
