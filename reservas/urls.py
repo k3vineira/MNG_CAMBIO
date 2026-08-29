@@ -17,6 +17,7 @@ urlpatterns = [
          views.ReservaUpdateView.as_view(), name='editar_reserva'),
     path('reservas/eliminar/<int:pk>/',
          views.ReservaDeleteView.as_view(), name='eliminar_reserva'),
+    path('reservas/cambiar-estado/<int:reserva_id>/', views.cambiar_estado_reserva, name='cambiar_estado_reserva'),
     # Rutas para CRUD de cancelaciones
     path('cancelaciones/', views.CancelacionListView.as_view(),
          name='listar_cancelaciones'),

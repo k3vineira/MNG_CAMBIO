@@ -6,17 +6,26 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.conf import settings
 
+class Rol(models.Model):
+    """
+    Entidad que define los roles del sistema (ej: Administrador, Cliente, Guía Turístico).
+    """
+    nombre = models.CharField(max_length=50, unique=True, verbose_name='Nombre del Rol')
+    descripcion = models.TextField(blank=True, verbose_name='Descripción')
+
+    class Meta:
+        verbose_name = 'Rol'
+        verbose_name_plural = 'Roles'
+
+    def __str__(self):
+        return self.nombre
+
 
 class Usuario(AbstractUser):
     """
     Modelo de usuario personalizado que extiende AbstractUser con campos adicionales
     como rol, tipo de documento, teléfono e imagen de perfil.
     """
-    class Roles(models.TextChoices):
-        ADMIN = 'ADMIN', 'Administrador'
-        CLIENTE = 'CLIENTE', 'Cliente'
-        GUIA = 'GUIA', 'Guía Turístico'
-
     class TipoDocumento(models.TextChoices):
         CC = 'CC', 'Cédula de Ciudadanía'
         CE = 'CE', 'Cédula de Extranjería'
@@ -30,10 +39,11 @@ class Usuario(AbstractUser):
         verbose_name='Correo Electrónico'
     )
 
-    rol = models.CharField(
-        max_length=20,
-        choices=Roles.choices,
-        default=Roles.CLIENTE,
+    rol = models.ForeignKey(
+        Rol,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         verbose_name='Rol'
     )
     tipo_documento = models.CharField(
@@ -75,8 +85,9 @@ class Usuario(AbstractUser):
             **kwargs: Argumentos de clave-valor adicionales.
         """
         # Garantiza que si es superusuario de Django, tome automáticamente el rol ADMIN
-        if self.is_superuser and self.rol != self.Roles.ADMIN:
-            self.rol = self.Roles.ADMIN
+        if self.is_superuser and not self.rol:
+            rol_admin, _ = Rol.objects.get_or_create(nombre='ADMIN')
+            self.rol = rol_admin
 
         super().save(*args, **kwargs)
 
@@ -160,12 +171,12 @@ class Usuario(AbstractUser):
     @property
     def es_guia(self):
         """Retorna si el usuario tiene el rol de Guía Turístico."""
-        return self.rol == self.Roles.GUIA
+        return self.rol and self.rol.nombre == 'GUIA'
 
     @property
     def es_turista(self):
         """Retorna si el usuario tiene el rol de Cliente / Turista."""
-        return self.rol == self.Roles.CLIENTE
+        return self.rol and self.rol.nombre == 'CLIENTE'
 
     class Meta:
         verbose_name = 'Usuario'

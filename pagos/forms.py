@@ -45,6 +45,9 @@ class PagoForm(forms.ModelForm):
             'imagen_comprobante': 'Sube un archivo legible (PNG, JPG, JPEG, WebP).',
             'descripcion': 'Si seleccionaste "Otro" en banco, especifícalo aquí.',
         }
+        widgets = {
+            'monto': forms.NumberInput(attrs={'min': '0', 'step': '0.01'}),
+        }
 
     def __init__(self, *args, **kwargs):
         # We need to receive the user's reservations to populate the 'reserva' field
@@ -107,7 +110,7 @@ class RevisarComprobanteForm(forms.ModelForm):
         }
         widgets = {
             'banco_origen': forms.TextInput(attrs={'class': 'form-control rounded-4 shadow-sm', 'placeholder': 'Banco o Medio de Pago'}),
-            'monto': forms.NumberInput(attrs={'class': 'form-control rounded-4 shadow-sm', 'placeholder': 'Monto Verificado', 'step': '0.01'}),
+            'monto': forms.NumberInput(attrs={'class': 'form-control rounded-4 shadow-sm', 'placeholder': 'Monto Verificado', 'step': '0.01', 'min': '0'}),
             'estado_transaccion': forms.Select(attrs={'class': 'form-select rounded-4 shadow-sm'}),
             'nota_admin': forms.Textarea(attrs={'class': 'form-control rounded-4 shadow-sm', 'rows': 3, 'placeholder': 'Motivo de rechazo o nota aclaratoria...'}),
         }

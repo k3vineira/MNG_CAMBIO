@@ -16,6 +16,12 @@ class Promocion(models.Model):
     condiciones = models.TextField(blank=True, null=True, verbose_name="Condiciones")
     codigo_cupon = models.CharField(max_length=30, blank=True, null=True, verbose_name="Código de cupón")
     activa = models.BooleanField(default=True, verbose_name="¿Activa?")
+    paquetes = models.ManyToManyField(
+        Paquete,
+        related_name='promociones',
+        blank=True,
+        verbose_name="Paquetes con Promoción"
+    )
 
     class Meta:
         verbose_name = "Promoción"
@@ -24,29 +30,4 @@ class Promocion(models.Model):
     def __str__(self):
         """Retorna el nombre y porcentaje de descuento de la promoción."""
         return f"{self.nombre} ({self.descuento}%)"
-
-class PaquetePromocion(models.Model):
-    """
-    Entidad intermedia que asocia un Paquete, una Promocion y una Tarifa.
-    Equivale a la tabla intermedia 'paquete_promociones' del MER.
-    """
-    paquete = models.ForeignKey(
-        Paquete,
-        on_delete=models.CASCADE,
-        related_name='paquete_promociones',
-        verbose_name='Paquete'
-    )
-    promocion = models.ForeignKey(
-        Promocion,
-        on_delete=models.CASCADE,
-        related_name='paquete_promociones',
-        verbose_name='Promoción'
-    )
-    class Meta:
-        db_table = 'paquete_promociones'
-        verbose_name = 'Paquete Promoción'
-        verbose_name_plural = 'Paquetes Promociones'
-
-    def __str__(self):
-        return f"{self.paquete.nombre} - {self.promocion.nombre}"
 
